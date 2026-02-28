@@ -12,12 +12,7 @@ import * as ts from 'typescript-eslint';
 
 const config = defineConfig(
   {
-    files: [
-      'src/**/*.tsx',
-      'src/**/*.ts',
-      'eslint.config.js',
-      'vite.config.ts',
-    ],
+    files: ['src/**/*.tsx', 'src/**/*.ts', 'eslint.config.js', 'vite.config.ts'],
     extends: [
       js.configs.recommended,
       ...ts.configs.recommendedTypeChecked,
@@ -67,15 +62,7 @@ const config = defineConfig(
       'import-x/order': [
         'error',
         {
-          'groups': [
-            'builtin',
-            'external',
-            'internal',
-            'parent',
-            'index',
-            'sibling',
-            'type',
-          ],
+          'groups': ['builtin', 'external', 'internal', 'parent', 'index', 'sibling', 'type'],
           'newlines-between': 'ignore',
           'alphabetize': { order: 'asc', caseInsensitive: false },
         },
@@ -106,6 +93,9 @@ const config = defineConfig(
     },
     plugins: {
       '@stylistic': stylistic,
+    },
+    settings: {
+      react: { version: 'detect' },
     },
   },
   {

@@ -1,0 +1,33 @@
+@import 'tailwindcss';
+
+:root {
+  color: #172a42;
+  font-family:
+    'Avenir Next',
+    'SUIT Variable',
+    'Pretendard',
+    'Noto Sans KR',
+    sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(120% 80% at 8% 10%, #fff7dd 0%, rgba(255, 247, 221, 0) 55%),
+    radial-gradient(90% 70% at 94% 84%, #dce9ff 0%, rgba(220, 233, 255, 0) 50%),
+    linear-gradient(170deg, #fffef9 0%, #f5f8ff 100%);
+}

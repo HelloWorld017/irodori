@@ -1,4 +1,5 @@
-import { createContext, useContext, useEffectEvent, useMemo } from 'react';
+import { createContext, useContext, useMemo } from 'react';
+import { useLatestRef } from '@/hooks/useLatestRef';
 import { useCreateSignal, useSignal } from '@/hooks/useSignal';
 import type { Signal } from '@/hooks/useSignal';
 import type { ReactNode } from 'react';
@@ -17,11 +18,12 @@ export const buildContext = <T, TProps = Record<string, unknown>>(
 
   const useSelectedContext = <TSelected,>(selector: (value: T) => TSelected) => {
     const contextSignal = useContext(Context);
-    const latestSelector = useEffectEvent(selector);
+    const latestSelector = useLatestRef(selector);
     const selectedSignal = useMemo<Signal<TSelected>>(
       () => ({
-        get: () => latestSelector(contextSignal.get()),
-        subscribe: onUpdate => contextSignal.subscribe(value => onUpdate(latestSelector(value))),
+        get: () => latestSelector.current(contextSignal.get()),
+        subscribe: onUpdate =>
+          contextSignal.subscribe(value => onUpdate(latestSelector.current(value))),
       }),
       [contextSignal, latestSelector]
     );

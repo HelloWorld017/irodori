@@ -14,5 +14,5 @@
   ],
   "customFunctions": ["classes"],
   "tailwindFunctions": ["classes"],
-  "tailwindStylesheet": "./src/ui/style.css"
+  "tailwindStylesheet": "./src/styles/index.css"
 }
