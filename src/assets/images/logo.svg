@@ -141,4 +141,4 @@
       <feGaussianBlur result="effect1_foregroundBlur_19_2" stdDeviation="10" />
     </filter>
   </defs>
-</svg>;
+</svg>

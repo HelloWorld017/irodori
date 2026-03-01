@@ -1,7 +1,8 @@
 @import 'tailwindcss';
+@import 'pretendard-jp/dist/web/static/pretendard-jp.css';
 
 :root {
-  --font-sans: 'Avenir Next', 'SUIT Variable', 'Pretendard', 'Noto Sans KR', sans-serif;
+  --font-sans: 'Avenir Next', 'SUIT Variable', 'Pretendard JP', 'Noto Sans KR', sans-serif;
   --color-highlight: rgb(231, 174, 67);
   color: #172a42;
   font-family: var(--font-sans);
