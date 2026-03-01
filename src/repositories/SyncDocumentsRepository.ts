@@ -31,28 +31,16 @@ type UpsertableDocument = {
   data?: SyncDocumentData;
 };
 
-const isSyncDocumentData = (value: unknown): value is SyncDocumentData =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
-
 const parseSyncDocumentData = (data: string | null): SyncDocumentData | undefined => {
   if (!data) {
     return undefined;
   }
 
   try {
-    const parsed = JSON.parse(data) as unknown;
-    return isSyncDocumentData(parsed) ? parsed : undefined;
+    return JSON.parse(data) as SyncDocumentData;
   } catch {
     return undefined;
   }
-};
-
-const serializeSyncDocumentData = (data: SyncDocumentData | undefined): string | null => {
-  if (data === undefined) {
-    return null;
-  }
-
-  return JSON.stringify(data);
 };
 
 export class SyncDocumentsRepository implements Repository {
@@ -138,7 +126,7 @@ export class SyncDocumentsRepository implements Repository {
       at: document.at,
       seq: document.seq,
       del: document.del,
-      data: document.data,
+      data: document.data as SyncDocumentData,
     }));
 
     await this.writeDocuments(upsertableDocuments);
@@ -186,7 +174,7 @@ export class SyncDocumentsRepository implements Repository {
 
     await this.db.transaction().execute(async trx => {
       for (const document of documents) {
-        const serializedData = serializeSyncDocumentData(document.data);
+        const serializedData = JSON.stringify(document.data);
 
         await trx
           .insertInto('sync_documents')
