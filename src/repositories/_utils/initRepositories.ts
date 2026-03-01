@@ -8,8 +8,11 @@ export const initRepositories = async (uuid: string) => {
   const db = new Kysely<Database>({ dialect: sqlocal.dialect });
   const repo = Object.fromEntries(
     Object.entries(RepositoryClasses).map(([key, Repository]) => [key, new Repository(db)] as const)
-  ) as Repositories;
+  ) as Omit<Repositories, 'withTransaction'>;
 
   await Promise.all(Object.values(repo).map(repository => repository.initialize()));
-  return repo;
+  return {
+    ...repo,
+    withTransaction: callback => db.transaction().execute(callback),
+  } satisfies Repositories;
 };

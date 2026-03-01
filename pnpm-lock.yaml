@@ -8,32 +8,35 @@ importers:
 
   .:
     dependencies:
+      '@tanstack/react-query':
+        specifier: 5.90.21
+        version: 5.90.21(react@19.2.4)
       clxdb:
-        specifier: ^0.9.0
-        version: 0.9.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        specifier: 0.11.0
+        version: 0.11.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       ink-mde:
-        specifier: ^0.34.0
+        specifier: 0.34.0
         version: 0.34.0
       kysely:
-        specifier: ^0.28.11
+        specifier: 0.28.11
         version: 0.28.11
       react:
-        specifier: ^19.2.4
+        specifier: 19.2.4
         version: 19.2.4
       react-dom:
-        specifier: ^19.2.4
+        specifier: 19.2.4
         version: 19.2.4(react@19.2.4)
       sqlocal:
-        specifier: ^0.17.0
+        specifier: 0.17.0
         version: 0.17.0(kysely@0.28.11)(react@19.2.4)(vite@7.3.1(@types/node@25.3.2)(jiti@2.6.1)(lightningcss@1.31.1))
       tailwind-merge:
-        specifier: ^3.4.0
+        specifier: 3.5.0
         version: 3.5.0
       ts-pattern:
-        specifier: ^5.9.0
+        specifier: 5.9.0
         version: 5.9.0
       wouter:
-        specifier: ^3.9.0
+        specifier: 3.9.0
         version: 3.9.0(react@19.2.4)
     devDependencies:
       '@eslint/js':
@@ -937,6 +940,14 @@ packages:
     peerDependencies:
       vite: ^5.2.0 || ^6 || ^7
 
+  '@tanstack/query-core@5.90.20':
+    resolution: {integrity: sha512-OMD2HLpNouXEfZJWcKeVKUgQ5n+n3A2JFmBaScpNDUqSrQSjiveC7dKMe53uJUg1nDG16ttFPz2xfilz6i2uVg==}
+
+  '@tanstack/react-query@5.90.21':
+    resolution: {integrity: sha512-0Lu6y5t+tvlTJMTO7oh5NSpJfpg/5D41LlThfepTixPYkJ0sE2Jj0m0f6yYqujBwIXlId87e234+MxG3D3g7kg==}
+    peerDependencies:
+      react: ^18 || ^19
+
   '@tybys/wasm-util@0.10.1':
     resolution: {integrity: sha512-9tTaPJLSiejZKx+Bmog4uSubteqTvFrVrURwkmHixBo0G4seD0zUxp98E1DzUBJxLQ3NPwXrGKDiVjwx/DpPsg==}
 
@@ -1311,8 +1322,8 @@ packages:
     resolution: {integrity: sha512-oKnbhFyRIXpUuez8iBMmyEa4nbj4IOQyuhc/wy9kY7/WVPcwIO9VA668Pu8RkO7+0G76SLROeyw9CpQ061i4mA==}
     engines: {node: '>=10'}
 
-  clxdb@0.9.0:
-    resolution: {integrity: sha512-dnL60O1MlIIKnjvr/VFEjqYnqwz3MnSnwsuBQmlCKf7aYIOb6yarnJtmmmrkHJr8/pedCLH4jwTVmES1TLsiWw==}
+  clxdb@0.11.0:
+    resolution: {integrity: sha512-ugoMZqPfPhl4oyVUrc0OsGHhWtJjV5OaQc1DR4oUTVHEuX/LY3/Zpb8HfDZ9HClfks/B8vU7A3ZSeiTtIUqNvw==}
     peerDependencies:
       react: '>=18.0.0'
       react-dom: '>=18.0.0'
@@ -3667,6 +3678,13 @@ snapshots:
       tailwindcss: 4.2.1
       vite: 7.3.1(@types/node@25.3.2)(jiti@2.6.1)(lightningcss@1.31.1)
 
+  '@tanstack/query-core@5.90.20': {}
+
+  '@tanstack/react-query@5.90.21(react@19.2.4)':
+    dependencies:
+      '@tanstack/query-core': 5.90.20
+      react: 19.2.4
+
   '@tybys/wasm-util@0.10.1':
     dependencies:
       tslib: 2.8.1
@@ -4077,7 +4095,7 @@ snapshots:
       ansi-styles: 4.3.0
       supports-color: 7.2.0
 
-  clxdb@0.9.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
+  clxdb@0.11.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
       cors-manager: 1.0.6
       tailwind-merge: 3.5.0

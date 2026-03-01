@@ -1,6 +1,8 @@
-import { sql, type Kysely } from 'kysely';
-import type { Repository } from '@/types';
+import { sql } from 'kysely';
+import type { Database, Executor } from '.';
+import type { Repository } from '@/types/Repository';
 import type { DatabaseDocument, ShardDocument } from 'clxdb';
+import type { Kysely } from 'kysely';
 
 type SyncDocumentData = Record<string, unknown>;
 
@@ -16,7 +18,7 @@ export type SyncDocumentsDatabase = {
   sync_documents: SyncDocumentsTable;
 };
 
-export type PendingSyncDocument = {
+type PendingSyncDocument = {
   id: string;
   at: number;
   del: boolean;
@@ -31,15 +33,59 @@ type UpsertableDocument = {
   data?: SyncDocumentData;
 };
 
+const isSyncDocumentData = (value: unknown): value is SyncDocumentData =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
 const parseSyncDocumentData = (data: string | null): SyncDocumentData | undefined => {
   if (!data) {
     return undefined;
   }
 
   try {
-    return JSON.parse(data) as SyncDocumentData;
+    const parsed = JSON.parse(data) as unknown;
+    return isSyncDocumentData(parsed) ? parsed : undefined;
   } catch {
     return undefined;
+  }
+};
+
+const serializeSyncDocumentData = (data: SyncDocumentData | undefined): string | null => {
+  if (data === undefined) {
+    return null;
+  }
+
+  return JSON.stringify(data);
+};
+
+const writeDocuments = async (
+  executor: Executor,
+  documents: UpsertableDocument[]
+): Promise<void> => {
+  if (documents.length === 0) {
+    return;
+  }
+
+  for (const doc of documents) {
+    const serializedData = serializeSyncDocumentData(doc.data);
+
+    await executor
+      .insertInto('sync_documents')
+      .values({
+        id: doc.id,
+        at: doc.at,
+        seq: doc.seq,
+        del: doc.del ? 1 : 0,
+        data: serializedData,
+      })
+      .onConflict(conflict =>
+        conflict.column('id').doUpdateSet({
+          at: doc.at,
+          seq: doc.seq,
+          del: doc.del ? 1 : 0,
+          data: serializedData,
+        })
+      )
+      .execute();
   }
 };
 
@@ -47,7 +93,7 @@ export class SyncDocumentsRepository implements Repository {
   private readonly subscribers = new Set<() => void>();
   private schemaInitialized = false;
 
-  constructor(private readonly db: Kysely<SyncDocumentsDatabase>) {}
+  constructor(private readonly db: Kysely<Database>) {}
 
   async initialize(): Promise<void> {
     if (this.schemaInitialized) {
@@ -67,13 +113,13 @@ export class SyncDocumentsRepository implements Repository {
 
     await sql`
       CREATE INDEX IF NOT EXISTS sync_documents_seq_idx
-      ON sync_documents seq
+      ON sync_documents (seq)
     `.execute(this.db);
 
     this.schemaInitialized = true;
   }
 
-  async read(ids: string[]): Promise<(DatabaseDocument | null)[]> {
+  async readDocuments(ids: string[]): Promise<(DatabaseDocument | null)[]> {
     if (ids.length === 0) {
       return [];
     }
@@ -93,7 +139,7 @@ export class SyncDocumentsRepository implements Repository {
         return null;
       }
 
-      const document: DatabaseDocument = {
+      const doc: DatabaseDocument = {
         id: row.id,
         at: row.at,
         seq: row.seq,
@@ -103,10 +149,10 @@ export class SyncDocumentsRepository implements Repository {
       const parsedData = parseSyncDocumentData(row.data);
 
       if (parsedData !== undefined) {
-        document.data = parsedData;
+        doc.data = parsedData;
       }
 
-      return document;
+      return doc;
     });
   }
 
@@ -120,39 +166,39 @@ export class SyncDocumentsRepository implements Repository {
     return rows.map(row => row.id);
   }
 
-  async upsert(documents: ShardDocument[]): Promise<void> {
-    const upsertableDocuments: UpsertableDocument[] = documents.map(document => ({
-      id: document.id,
-      at: document.at,
-      seq: document.seq,
-      del: document.del,
-      data: document.data as SyncDocumentData,
+  async upsertDocuments(executor: Executor, documents: ShardDocument[]): Promise<void> {
+    const upsertableDocuments: UpsertableDocument[] = documents.map(doc => ({
+      id: doc.id,
+      at: doc.at,
+      seq: doc.seq,
+      del: doc.del,
+      data: doc.data as SyncDocumentData,
     }));
 
-    await this.writeDocuments(upsertableDocuments);
+    await writeDocuments(executor, upsertableDocuments);
   }
 
-  async delete(documents: ShardDocument[]): Promise<void> {
-    const upsertableDocuments: UpsertableDocument[] = documents.map(document => ({
-      id: document.id,
-      at: document.at,
-      seq: document.seq,
+  async deleteDocuments(executor: Executor, documents: ShardDocument[]): Promise<void> {
+    const upsertableDocuments: UpsertableDocument[] = documents.map(doc => ({
+      id: doc.id,
+      at: doc.at,
+      seq: doc.seq,
       del: true,
     }));
 
-    await this.writeDocuments(upsertableDocuments);
+    await writeDocuments(executor, upsertableDocuments);
   }
 
-  async stagePending(documents: PendingSyncDocument[]): Promise<void> {
-    const upsertableDocuments: UpsertableDocument[] = documents.map(document => ({
-      id: document.id,
-      at: document.at,
+  async stageDocuments(executor: Executor, documents: PendingSyncDocument[]): Promise<void> {
+    const upsertableDocuments: UpsertableDocument[] = documents.map(doc => ({
+      id: doc.id,
+      at: doc.at,
       seq: null,
-      del: document.del,
-      data: document.data,
+      del: doc.del,
+      data: doc.data,
     }));
 
-    await this.writeDocuments(upsertableDocuments);
+    await writeDocuments(executor, upsertableDocuments);
 
     if (upsertableDocuments.length > 0) {
       this.notifySubscribers();
@@ -165,37 +211,6 @@ export class SyncDocumentsRepository implements Repository {
     return () => {
       this.subscribers.delete(onUpdate);
     };
-  }
-
-  private async writeDocuments(documents: UpsertableDocument[]): Promise<void> {
-    if (documents.length === 0) {
-      return;
-    }
-
-    await this.db.transaction().execute(async trx => {
-      for (const document of documents) {
-        const serializedData = JSON.stringify(document.data);
-
-        await trx
-          .insertInto('sync_documents')
-          .values({
-            id: document.id,
-            at: document.at,
-            seq: document.seq,
-            del: document.del ? 1 : 0,
-            data: serializedData,
-          })
-          .onConflict(conflict =>
-            conflict.column('id').doUpdateSet({
-              at: document.at,
-              seq: document.seq,
-              del: document.del ? 1 : 0,
-              data: serializedData,
-            })
-          )
-          .execute();
-      }
-    });
   }
 
   private notifySubscribers(): void {
