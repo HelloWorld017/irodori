@@ -1,4 +1,5 @@
 import { IconPencil, IconTrash } from '@/fragments/_icons';
+import { formatDate } from '@/utils/date';
 import type { Notebook as NotebookModel } from '@/repositories/NotebooksRepository';
 
 type NotebookProps = {
@@ -9,11 +10,12 @@ type NotebookProps = {
 };
 
 export const Notebook = ({ notebook, onOpen, onEdit, onDelete }: NotebookProps) => (
-  <div className="flex flex-col gap-3">
+  <div className="flex gap-6">
     <button
       type="button"
       onClick={() => onOpen(notebook.id)}
-      className="relative flex aspect-[3/4] w-full flex-col overflow-hidden rounded-xl text-left"
+      className="relative flex aspect-[3/4] w-28 flex-col overflow-hidden rounded-xl text-left
+        md:w-36"
       style={{ backgroundColor: `oklch(from ${notebook.color} calc(l * 0.8) calc(c * 0.3) h)` }}
     >
       <div
@@ -33,8 +35,8 @@ export const Notebook = ({ notebook, onOpen, onEdit, onDelete }: NotebookProps) 
 
       <div className="relative flex h-full flex-col p-4 pl-6 md:p-5 md:pl-7">
         <div
-          className="sm:text-md line-clamp-2 text-sm leading-snug font-semibold wrap-break-word
-            text-white md:text-lg"
+          className="line-clamp-2 text-base leading-snug font-semibold wrap-break-word text-white
+            md:text-lg"
         >
           {notebook.title}
         </div>
@@ -42,24 +44,32 @@ export const Notebook = ({ notebook, onOpen, onEdit, onDelete }: NotebookProps) 
       </div>
     </button>
 
-    <div className="mt-2 flex flex-wrap items-center justify-between gap-2 pl-1">
-      <h2 className="line-clamp-2 font-semibold">{notebook.title}</h2>
-      <div className="flex">
+    <div className="flex flex-1 flex-col items-start justify-between gap-2 py-3">
+      <div className="flex-1">
+        <h2 className="line-clamp-2 text-lg font-semibold">{notebook.title}</h2>
+        <div className="mt-1 text-tertiary">{formatDate(notebook.createdAt)} 부터 작성 중</div>
+        <div className="mt-1 text-secondary">
+          {notebook.description || '아직 설명이 없어요. 이 일기장의 이야기를 적어보세요.'}
+        </div>
+      </div>
+      <div className="-mx-1 flex gap-1">
         <button
           type="button"
           onClick={() => onEdit(notebook)}
-          className="rounded-lg bg-base-background p-2 text-xs font-medium text-secondary transition
-            hover:bg-elevated-background"
+          className="flex items-center gap-2 rounded-lg bg-base-background p-2 text-sm font-medium
+            text-secondary transition hover:bg-elevated-background"
         >
-          <IconPencil aria-label="수정" />
+          <IconPencil />
+          수정
         </button>
         <button
           type="button"
           onClick={() => onDelete(notebook)}
-          className="rounded-lg bg-base-background p-2 text-xs font-medium text-secondary transition
-            hover:text-primary"
+          className="flex items-center gap-2 rounded-lg bg-base-background p-2 text-sm font-medium
+            text-secondary transition hover:bg-elevated-background"
         >
-          <IconTrash aria-label="삭제" />
+          <IconTrash />
+          삭제
         </button>
       </div>
     </div>

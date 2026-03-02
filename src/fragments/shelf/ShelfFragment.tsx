@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { AnimatePresence } from 'motion/react';
 import { useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { useServices } from '@/fragments/_providers/DatabaseProvider';
@@ -6,7 +7,7 @@ import { useShowToast } from '@/fragments/_providers/ToastProvider';
 import { buildRoute } from '@/utils/route';
 import { DeleteNotebookModal } from './_components/DeleteNotebookModal';
 import { NotebookFormModal } from './_components/NotebookFormModal';
-import { NotebookGrid } from './_components/NotebookGrid';
+import { NotebookList } from './_components/NotebookList';
 import { ShelfHeader } from './_components/ShelfHeader';
 import { NOTEBOOK_COLORS } from './_constants/notebook';
 import {
@@ -140,7 +141,7 @@ const ShelfView = () => {
 
   return (
     <main
-      className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-6 px-5 py-8 sm:px-8
+      className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-12 px-5 py-8 sm:px-8
         sm:py-10"
     >
       <ShelfHeader notebookCount={notebooks.length} />
@@ -166,41 +167,46 @@ const ShelfView = () => {
       ) : null}
 
       {notebooksQuery.isSuccess && notebooks.length > 0 ? (
-        <NotebookGrid
+        <NotebookList
           notebooks={notebooks}
+          onCreateNotebook={openCreateModal}
           onOpenNotebook={handleOpenNotebook}
           onEditNotebook={openEditModal}
           onDeleteNotebook={openDeleteModal}
         />
       ) : null}
 
-      {modalKind === 'create' ? (
-        <NotebookFormModal
-          mode="create"
-          initialValue={{ title: '', description: '', color: NOTEBOOK_COLORS[0] }}
-          pending={createNotebookMutation.isPending}
-          onClose={handleCloseModal}
-          onSubmit={({ title, description, color }) => {
-            createNotebookMutation.mutate({ title, description, color });
-          }}
-        />
-      ) : null}
+      <AnimatePresence>
+        {modalKind === 'create' ? (
+          <NotebookFormModal
+            mode="create"
+            initialValue={{ title: '', description: '', color: NOTEBOOK_COLORS[0] }}
+            pending={createNotebookMutation.isPending}
+            onClose={handleCloseModal}
+            onSubmit={({ title, description, color }) => {
+              createNotebookMutation.mutate({ title, description, color });
+            }}
+          />
+        ) : null}
+      </AnimatePresence>
 
-      {modalKind === 'edit' && selectedNotebook ? (
-        <NotebookFormModal
-          mode="edit"
-          initialValue={{
-            title: selectedNotebook.title,
-            description: selectedNotebook.description,
-            color: selectedNotebook.color,
-          }}
-          pending={updateNotebookMutation.isPending}
-          onClose={handleCloseModal}
-          onSubmit={({ title, description, color }) => {
-            updateNotebookMutation.mutate({ id: selectedNotebook.id, title, description, color });
-          }}
-        />
-      ) : null}
+      <AnimatePresence>
+        {modalKind === 'edit' && selectedNotebook ? (
+          <NotebookFormModal
+            mode="edit"
+            initialValue={{
+              title: selectedNotebook.title,
+              description: selectedNotebook.description,
+              color: selectedNotebook.color,
+            }}
+            pending={updateNotebookMutation.isPending}
+            onClose={handleCloseModal}
+            onSubmit={({ title, description, color }) => {
+              updateNotebookMutation.mutate({ id: selectedNotebook.id, title, description, color });
+            }}
+          />
+        ) : null}
+      </AnimatePresence>
 
       {modalKind === 'delete' && selectedNotebook ? (
         <DeleteNotebookModal

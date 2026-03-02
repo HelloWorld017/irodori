@@ -1,4 +1,4 @@
-import { Pencil, Trash, X } from 'lucide-react';
+import { BookPlus, Pencil, Trash, X } from 'lucide-react';
 import type { ComponentProps, ComponentType } from 'react';
 
 const wrapLucideComponent = <T extends ComponentType>(LucideIcon: T) => {
@@ -12,6 +12,7 @@ const wrapLucideComponent = <T extends ComponentType>(LucideIcon: T) => {
   return IconComponent;
 };
 
+export const IconBookPlus = wrapLucideComponent(BookPlus);
 export const IconTrash = wrapLucideComponent(Trash);
 export const IconPencil = wrapLucideComponent(Pencil);
 export const IconX = wrapLucideComponent(X);

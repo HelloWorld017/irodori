@@ -1,20 +1,23 @@
 import { Notebook } from './Notebook';
+import { NotebookCreate } from './NotebookCreate';
 import type { Notebook as NotebookModel } from '@/repositories/NotebooksRepository';
 
-type NotebookGridProps = {
+type NotebookListProps = {
   notebooks: NotebookModel[];
+  onCreateNotebook: () => void;
   onOpenNotebook: (notebookId: string) => void;
   onEditNotebook: (notebook: NotebookModel) => void;
   onDeleteNotebook: (notebook: NotebookModel) => void;
 };
 
-export const NotebookGrid = ({
+export const NotebookList = ({
   notebooks,
+  onCreateNotebook,
   onOpenNotebook,
   onEditNotebook,
   onDeleteNotebook,
-}: NotebookGridProps) => (
-  <ul className="grid grid-cols-3 gap-4 sm:grid-cols-4 md:grid-cols-5 xl:grid-cols-6">
+}: NotebookListProps) => (
+  <ul className="grid grid-cols-1 gap-4 md:grid-cols-2">
     {notebooks.map(notebook => (
       <li key={notebook.id}>
         <Notebook
@@ -25,5 +28,8 @@ export const NotebookGrid = ({
         />
       </li>
     ))}
+    <li>
+      <NotebookCreate onCreate={onCreateNotebook} />
+    </li>
   </ul>
 );

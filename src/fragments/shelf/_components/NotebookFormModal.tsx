@@ -1,3 +1,4 @@
+import { motion } from 'motion/react';
 import { useState } from 'react';
 import { ColorPicker } from './ColorPicker';
 
@@ -27,10 +28,16 @@ export const NotebookFormModal = ({
   const [color, setColor] = useState(initialValue.color);
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-primary/45 px-4 py-8">
+    <motion.div
+      className="fixed inset-0 z-40 flex items-center justify-center px-4 py-8"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      <button className="absolute inset-0 bg-backdrop" onClick={() => onClose()} />
       <section
-        className="w-full max-w-md rounded-2xl bg-base-background p-5 shadow-elevated ring-1
-          ring-line"
+        className="relative w-full max-w-md rounded-2xl bg-base-background p-5 shadow-elevated
+          ring-1 ring-line"
       >
         <header className="mb-5 flex items-start justify-between gap-4">
           <div>
@@ -106,6 +113,6 @@ export const NotebookFormModal = ({
           </footer>
         </form>
       </section>
-    </div>
+    </motion.div>
   );
 };

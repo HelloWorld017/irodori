@@ -17,9 +17,11 @@
   /* Base Colors */
   --color-primary: var(--color-default-900);
   --color-secondary: var(--color-default-600);
+  --color-tertiary: var(--color-default-400);
   --color-line: var(--color-default-200);
   --color-base-background: var(--color-default-50);
   --color-elevated-background: var(--color-default-100);
+  --color-backdrop: rgb(from var(--color-default-900) r g b / 0.4);
 
   /* Semantic Colors */
   --color-error-foreground: var(--color-rose-200);
