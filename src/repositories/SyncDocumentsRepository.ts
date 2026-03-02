@@ -107,7 +107,7 @@ export class SyncDocumentsRepository implements Repository {
         seq INTEGER,
         del INTEGER NOT NULL DEFAULT 0,
         data TEXT,
-        PRIMARY KEY id
+        PRIMARY KEY (id)
       )
     `.execute(this.db);
 
