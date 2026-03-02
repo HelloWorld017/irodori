@@ -12,8 +12,8 @@ importers:
         specifier: 5.90.21
         version: 5.90.21(react@19.2.4)
       clxdb:
-        specifier: 0.11.0
-        version: 0.11.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        specifier: 0.12.0
+        version: 0.12.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       ink-mde:
         specifier: 0.34.0
         version: 0.34.0
@@ -1328,8 +1328,8 @@ packages:
     resolution: {integrity: sha512-oKnbhFyRIXpUuez8iBMmyEa4nbj4IOQyuhc/wy9kY7/WVPcwIO9VA668Pu8RkO7+0G76SLROeyw9CpQ061i4mA==}
     engines: {node: '>=10'}
 
-  clxdb@0.11.0:
-    resolution: {integrity: sha512-ugoMZqPfPhl4oyVUrc0OsGHhWtJjV5OaQc1DR4oUTVHEuX/LY3/Zpb8HfDZ9HClfks/B8vU7A3ZSeiTtIUqNvw==}
+  clxdb@0.12.0:
+    resolution: {integrity: sha512-yTUMPUTtIJCw6O5g/kbe4+jBIe15BNkV922XXKtR3Cm1ufOkd/zkyjkrD4Z6nNTTrQ5V8bgjXM8syuiC+dlySA==}
     peerDependencies:
       react: '>=18.0.0'
       react-dom: '>=18.0.0'
@@ -4116,7 +4116,7 @@ snapshots:
       ansi-styles: 4.3.0
       supports-color: 7.2.0
 
-  clxdb@0.11.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
+  clxdb@0.12.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
       cors-manager: 1.0.6
       tailwind-merge: 3.5.0
