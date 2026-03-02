@@ -35,7 +35,7 @@ const Toast = ({ toast, index, onDismiss }: ToastProps) => {
       exit={{ opacity: 0, x: 6 }}
       transition={{ duration: 0.2, ease: 'easeOut' }}
     >
-      <p className="font-medium">{toast.message}</p>
+      <p className="font-semibold">{toast.message}</p>
       <button
         type="button"
         onClick={() => onDismiss(toast.id)}

@@ -25,6 +25,11 @@ type OnboardingViewProps = {
 const OnboardingView = ({ buttonLabel, disabled, onStart }: OnboardingViewProps) => (
   <main
     className="relative flex min-h-screen flex-col items-center justify-center px-6 py-12 sm:px-8"
+    style={{
+      background:
+        'radial-gradient(120% 80% at 8% 10%, #fff7dd 0%, rgba(255, 247, 221, 0) 55%),' +
+        'linear-gradient(170deg, #fff8f5 0%, #fffef9 100%)',
+    }}
   >
     <section
       className="w-full max-w-[26rem] rounded-[2rem] bg-elevated-background

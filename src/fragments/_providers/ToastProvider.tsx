@@ -15,7 +15,7 @@ export type ShowToastInput = {
   durationMs?: number;
 };
 
-const DEFAULT_DURATION_MS = 30000;
+const DEFAULT_DURATION_MS = 10000;
 
 const [ToastProvider, useToast] = buildContext(() => {
   const [toasts, setToasts] = useState<ToastItem[]>([]);

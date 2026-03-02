@@ -1,0 +1,224 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
+import { useLocation } from 'wouter';
+import { useServices } from '@/fragments/_providers/DatabaseProvider';
+import { useShowToast } from '@/fragments/_providers/ToastProvider';
+import { buildRoute } from '@/utils/route';
+import { DeleteNotebookModal } from './_components/DeleteNotebookModal';
+import { EmptyShelf } from './_components/EmptyShelf';
+import { NotebookFormModal } from './_components/NotebookFormModal';
+import { NotebookGrid } from './_components/NotebookGrid';
+import { ShelfHeader } from './_components/ShelfHeader';
+import {
+  ShelfProvider,
+  useCloseShelfModal,
+  useOpenCreateModal,
+  useOpenDeleteModal,
+  useOpenEditModal,
+  useSelectedNotebook,
+  useShelfModalKind,
+} from './_providers/ShelfProvider';
+
+const notebooksQueryKey = ['notebooks'];
+
+const ShelfView = () => {
+  const services = useServices();
+  const showToast = useShowToast();
+  const queryClient = useQueryClient();
+  const [, navigate] = useLocation();
+
+  const modalKind = useShelfModalKind();
+  const selectedNotebook = useSelectedNotebook();
+  const openCreateModal = useOpenCreateModal();
+  const openEditModal = useOpenEditModal();
+  const openDeleteModal = useOpenDeleteModal();
+  const closeModal = useCloseShelfModal();
+
+  useEffect(() => {
+    if (!services) {
+      navigate(buildRoute('onboarding'), { replace: true });
+    }
+  }, [navigate, services]);
+
+  const notebooksQuery = useQuery({
+    queryKey: notebooksQueryKey,
+    enabled: services !== null,
+    queryFn: () => {
+      if (!services) {
+        throw new Error('Database is not initialized.');
+      }
+
+      return services.notebooks.list();
+    },
+  });
+
+  const invalidateNotebooks = () => queryClient.invalidateQueries({ queryKey: notebooksQueryKey });
+
+  const createNotebookMutation = useMutation({
+    mutationFn: (input: { title: string; description: string }) => {
+      if (!services) {
+        throw new Error('Database is not initialized.');
+      }
+
+      return services.notebooks.create(input);
+    },
+    onSuccess: async () => {
+      await invalidateNotebooks();
+      closeModal();
+      showToast({ kind: 'success', message: '노트북을 만들었어요.' });
+    },
+    onError: () => {
+      showToast({
+        kind: 'error',
+        message: '노트북 생성에 실패했어요. 잠시 후 다시 시도해 주세요.',
+      });
+    },
+  });
+
+  const updateNotebookMutation = useMutation({
+    mutationFn: (input: { id: string; title: string; description: string }) => {
+      if (!services) {
+        throw new Error('Database is not initialized.');
+      }
+
+      return services.notebooks.update(input);
+    },
+    onSuccess: async () => {
+      await invalidateNotebooks();
+      closeModal();
+      showToast({ kind: 'success', message: '노트북 정보를 수정했어요.' });
+    },
+    onError: () => {
+      showToast({
+        kind: 'error',
+        message: '노트북 수정에 실패했어요. 잠시 후 다시 시도해 주세요.',
+      });
+    },
+  });
+
+  const removeNotebookMutation = useMutation({
+    mutationFn: (input: { id: string }) => {
+      if (!services) {
+        throw new Error('Database is not initialized.');
+      }
+
+      return services.notebooks.remove(input);
+    },
+    onSuccess: async () => {
+      await invalidateNotebooks();
+      closeModal();
+      showToast({ kind: 'success', message: '노트북을 삭제했어요.' });
+    },
+    onError: () => {
+      showToast({
+        kind: 'error',
+        message: '노트북 삭제에 실패했어요. 잠시 후 다시 시도해 주세요.',
+      });
+    },
+  });
+
+  const isMutating =
+    createNotebookMutation.isPending ||
+    updateNotebookMutation.isPending ||
+    removeNotebookMutation.isPending;
+
+  const handleCloseModal = () => {
+    if (isMutating) {
+      return;
+    }
+
+    closeModal();
+  };
+
+  const handleOpenNotebook = (notebookId: string) => {
+    navigate(buildRoute('entries', { id: notebookId }));
+  };
+
+  const notebooks = notebooksQuery.data ?? [];
+
+  return (
+    <main
+      className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-6 px-5 py-8 sm:px-8
+        sm:py-10"
+    >
+      <ShelfHeader notebookCount={notebooks.length} />
+
+      {notebooksQuery.isPending ? (
+        <section className="rounded-2xl bg-elevated-background p-6 ring-1 ring-line">
+          <p className="text-sm font-medium text-secondary">일기장을 불러오는 중이에요...</p>
+        </section>
+      ) : null}
+
+      {notebooksQuery.isError ? (
+        <section className="rounded-2xl bg-elevated-background p-6 ring-1 ring-line">
+          <p className="text-sm text-secondary">일기장을 불러오지 못했어요.</p>
+          <button
+            type="button"
+            onClick={() => notebooksQuery.refetch()}
+            className="mt-4 rounded-lg bg-highlight px-3 py-2 text-sm font-medium
+              text-highlight-foreground transition hover:bg-highlight-hover"
+          >
+            다시 시도
+          </button>
+        </section>
+      ) : null}
+
+      {notebooksQuery.isSuccess && notebooks.length === 0 ? (
+        <EmptyShelf onCreate={openCreateModal} />
+      ) : null}
+
+      {notebooksQuery.isSuccess && notebooks.length > 0 ? (
+        <NotebookGrid
+          notebooks={notebooks}
+          onOpenNotebook={handleOpenNotebook}
+          onEditNotebook={openEditModal}
+          onDeleteNotebook={openDeleteModal}
+        />
+      ) : null}
+
+      {modalKind === 'create' ? (
+        <NotebookFormModal
+          mode="create"
+          initialValue={{ title: '', description: '' }}
+          pending={createNotebookMutation.isPending}
+          onClose={handleCloseModal}
+          onSubmit={({ title, description }) => {
+            createNotebookMutation.mutate({ title, description });
+          }}
+        />
+      ) : null}
+
+      {modalKind === 'edit' && selectedNotebook ? (
+        <NotebookFormModal
+          mode="edit"
+          initialValue={{
+            title: selectedNotebook.title,
+            description: selectedNotebook.description,
+          }}
+          pending={updateNotebookMutation.isPending}
+          onClose={handleCloseModal}
+          onSubmit={({ title, description }) => {
+            updateNotebookMutation.mutate({ id: selectedNotebook.id, title, description });
+          }}
+        />
+      ) : null}
+
+      {modalKind === 'delete' && selectedNotebook ? (
+        <DeleteNotebookModal
+          notebook={selectedNotebook}
+          pending={removeNotebookMutation.isPending}
+          onClose={handleCloseModal}
+          onConfirm={() => {
+            removeNotebookMutation.mutate({ id: selectedNotebook.id });
+          }}
+        />
+      ) : null}
+    </main>
+  );
+};
+
+export const ShelfFragment = () => (
+  <ShelfProvider>
+    <ShelfView />
+  </ShelfProvider>
+);

@@ -31,7 +31,7 @@ Related Drafts:
 
 ## 3. Directory and File Structure Rules
 
-- Any directory at depth 3 or deeper (for example `src/utils/example`) must provide an `index.ts`.
+- Any directory with semantic name (`src/utils/example`: yes, `src/fragments/_providers`: no) must provide an `index.ts`.
 - `index.ts` files must not contain business logic; they are for aggregation/re-export only.
 - In `src/fragments`, internal nested utility directories should use `_` prefix:
   - `_components`, `_providers`, `_utils`, `_types`
