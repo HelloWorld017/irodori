@@ -195,6 +195,23 @@ export class TagsRepository implements SyncedRepository<TagSyncData, Executor>, 
     return rows.map(toTag);
   }
 
+  async listTagsByIds(ids: string[]): Promise<Tag[]> {
+    if (ids.length === 0) {
+      return [];
+    }
+
+    const rows = await this.db
+      .selectFrom('tags')
+      .selectAll()
+      .where('id', 'in', ids)
+      .where('deleted_at', 'is', null)
+      .orderBy('sort_order', 'asc')
+      .orderBy('created_at', 'asc')
+      .execute();
+
+    return rows.map(toTag);
+  }
+
   async readTagById(id: string): Promise<Tag | null> {
     const row = await this.db
       .selectFrom('tags')

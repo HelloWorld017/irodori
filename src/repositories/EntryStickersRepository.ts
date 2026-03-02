@@ -163,6 +163,23 @@ export class EntryStickersRepository
     return rows.map(toEntrySticker);
   }
 
+  async listEntryStickersByEntryIds(entryIds: string[]): Promise<EntrySticker[]> {
+    if (entryIds.length === 0) {
+      return [];
+    }
+
+    const rows = await this.db
+      .selectFrom('entry_stickers')
+      .selectAll()
+      .where('entry_id', 'in', entryIds)
+      .where('deleted_at', 'is', null)
+      .orderBy('entry_id', 'asc')
+      .orderBy('slot', 'asc')
+      .execute();
+
+    return rows.map(toEntrySticker);
+  }
+
   async upsertEntrySticker(
     executor: Executor,
     input: UpsertEntryStickerInput

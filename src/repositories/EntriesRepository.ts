@@ -1,7 +1,9 @@
 import { sql } from 'kysely';
 import { z } from 'zod';
+import { buildSingleFieldCursorWhere } from '@/utils/cursor';
 import { parseSyncDataOrThrow } from './_utils/parseSyncData';
 import type { Database, Executor } from '.';
+import type { CursorPageInput, CursorPageResult, SingleFieldCursor } from '@/types/Cursor';
 import type {
   Repository,
   SyncDeletePayload,
@@ -16,6 +18,8 @@ export type EntriesTable = {
   title: string;
   body_md: string;
   cover_asset_id: string | null;
+  entry_index: number;
+  entry_date: number;
   created_at: number;
   updated_at: number;
   deleted_at: number | null;
@@ -31,9 +35,18 @@ export type Entry = {
   title: string;
   bodyMd: string;
   coverAssetId: string | null;
+  index: number;
+  date: number;
   createdAt: number;
   updatedAt: number;
   deletedAt: number | null;
+};
+
+export type EntrySummary = Omit<Entry, 'bodyMd'>;
+export type EntryListCursor = SingleFieldCursor<'index', number>;
+
+export type ListEntrySummariesByNotebookIdInput = CursorPageInput<EntryListCursor> & {
+  notebookId: string;
 };
 
 export type EntrySyncData = {
@@ -41,6 +54,8 @@ export type EntrySyncData = {
   title: string;
   bodyMd: string;
   coverAssetId: string | null;
+  index: number;
+  date: number;
   createdAt: number;
   updatedAt: number;
   deletedAt: number | null;
@@ -52,6 +67,7 @@ export type CreateEntryInput = {
   title: string;
   bodyMd: string;
   coverAssetId: string | null;
+  date: number;
   createdAt: number;
   updatedAt: number;
 };
@@ -75,6 +91,33 @@ const toEntry = (row: Selectable<EntriesTable>): Entry => ({
   title: row.title,
   bodyMd: row.body_md,
   coverAssetId: row.cover_asset_id,
+  index: row.entry_index,
+  date: row.entry_date,
+  createdAt: row.created_at,
+  updatedAt: row.updated_at,
+  deletedAt: row.deleted_at,
+});
+
+const toEntrySummary = (
+  row: Pick<
+    Selectable<EntriesTable>,
+    | 'id'
+    | 'notebook_id'
+    | 'title'
+    | 'cover_asset_id'
+    | 'entry_index'
+    | 'entry_date'
+    | 'created_at'
+    | 'updated_at'
+    | 'deleted_at'
+  >
+): EntrySummary => ({
+  id: row.id,
+  notebookId: row.notebook_id,
+  title: row.title,
+  coverAssetId: row.cover_asset_id,
+  index: row.entry_index,
+  date: row.entry_date,
   createdAt: row.created_at,
   updatedAt: row.updated_at,
   deletedAt: row.deleted_at,
@@ -85,6 +128,8 @@ const toEntrySyncData = (entry: Entry): EntrySyncData => ({
   title: entry.title,
   bodyMd: entry.bodyMd,
   coverAssetId: entry.coverAssetId,
+  index: entry.index,
+  date: entry.date,
   createdAt: entry.createdAt,
   updatedAt: entry.updatedAt,
   deletedAt: entry.deletedAt,
@@ -95,6 +140,8 @@ const entrySyncDataSchema: z.ZodType<EntrySyncData> = z.object({
   title: z.string(),
   bodyMd: z.string(),
   coverAssetId: z.string().nullable(),
+  index: z.number(),
+  date: z.number(),
   createdAt: z.number(),
   updatedAt: z.number(),
   deletedAt: z.number().nullable(),
@@ -121,6 +168,8 @@ export class EntriesRepository implements SyncedRepository<EntrySyncData, Execut
         title TEXT NOT NULL,
         body_md TEXT NOT NULL DEFAULT '',
         cover_asset_id TEXT,
+        entry_index INTEGER NOT NULL,
+        entry_date INTEGER NOT NULL,
         created_at INTEGER NOT NULL,
         updated_at INTEGER NOT NULL,
         deleted_at INTEGER,
@@ -139,6 +188,11 @@ export class EntriesRepository implements SyncedRepository<EntrySyncData, Execut
     `.execute(this.db);
 
     await sql`
+      CREATE INDEX IF NOT EXISTS entries_notebook_id_entry_index_id_idx
+      ON entries (notebook_id, entry_index, id)
+    `.execute(this.db);
+
+    await sql`
       CREATE INDEX IF NOT EXISTS entries_deleted_at_idx
       ON entries (deleted_at)
     `.execute(this.db);
@@ -152,11 +206,66 @@ export class EntriesRepository implements SyncedRepository<EntrySyncData, Execut
       .selectAll()
       .where('notebook_id', '=', notebookId)
       .where('deleted_at', 'is', null)
-      .orderBy('updated_at', 'desc')
-      .orderBy('created_at', 'desc')
+      .orderBy('entry_index', 'desc')
+      .orderBy('id', 'desc')
       .execute();
 
     return rows.map(toEntry);
+  }
+
+  async listEntrySummariesByNotebookId(
+    input: ListEntrySummariesByNotebookIdInput
+  ): Promise<CursorPageResult<EntrySummary, EntryListCursor>> {
+    const pageSize = Math.max(1, Math.min(input.limit ?? 30, 100));
+    const cursorWhere = buildSingleFieldCursorWhere(input.cursor, 'index', 'desc');
+
+    let query = this.db
+      .selectFrom('entries')
+      .select([
+        'id',
+        'notebook_id',
+        'title',
+        'cover_asset_id',
+        'entry_index',
+        'entry_date',
+        'created_at',
+        'updated_at',
+        'deleted_at',
+      ])
+      .where('notebook_id', '=', input.notebookId)
+      .where('deleted_at', 'is', null)
+      .orderBy('entry_index', 'desc')
+      .orderBy('id', 'desc');
+
+    if (cursorWhere) {
+      const cursorIndexValue = cursorWhere.fieldValue as number;
+
+      query = query.where(eb =>
+        eb.or([
+          eb('entry_index', cursorWhere.fieldOperator, cursorIndexValue),
+          eb.and([
+            eb('entry_index', '=', cursorIndexValue),
+            eb('id', cursorWhere.idOperator, cursorWhere.id),
+          ]),
+        ])
+      );
+    }
+
+    const rows = await query.limit(pageSize + 1).execute();
+    const hasNextPage = rows.length > pageSize;
+    const pageRows = hasNextPage ? rows.slice(0, pageSize) : rows;
+    const lastRow = pageRows.at(-1);
+
+    return {
+      items: pageRows.map(toEntrySummary),
+      nextCursor:
+        hasNextPage && lastRow
+          ? {
+              index: lastRow.entry_index,
+              id: lastRow.id,
+            }
+          : null,
+    };
   }
 
   async readEntryById(id: string): Promise<Entry | null> {
@@ -171,12 +280,20 @@ export class EntriesRepository implements SyncedRepository<EntrySyncData, Execut
   }
 
   async createEntry(executor: Executor, input: CreateEntryInput): Promise<Entry> {
+    const indexRow = await executor
+      .selectFrom('entries')
+      .select(sql<number>`coalesce(max(entry_index), -1)`.as('maxEntryIndex'))
+      .where('notebook_id', '=', input.notebookId)
+      .executeTakeFirstOrThrow();
+
     const entry: Entry = {
       id: input.id,
       notebookId: input.notebookId,
       title: input.title,
       bodyMd: input.bodyMd,
       coverAssetId: input.coverAssetId,
+      index: indexRow.maxEntryIndex + 1,
+      date: input.date,
       createdAt: input.createdAt,
       updatedAt: input.updatedAt,
       deletedAt: null,
@@ -190,6 +307,8 @@ export class EntriesRepository implements SyncedRepository<EntrySyncData, Execut
         title: entry.title,
         body_md: entry.bodyMd,
         cover_asset_id: entry.coverAssetId,
+        entry_index: entry.index,
+        entry_date: entry.date,
         created_at: entry.createdAt,
         updated_at: entry.updatedAt,
         deleted_at: entry.deletedAt,
@@ -277,6 +396,8 @@ export class EntriesRepository implements SyncedRepository<EntrySyncData, Execut
           title: data.title,
           body_md: data.bodyMd,
           cover_asset_id: data.coverAssetId,
+          entry_index: data.index,
+          entry_date: data.date,
           created_at: data.createdAt,
           updated_at: data.updatedAt,
           deleted_at: data.deletedAt,
@@ -287,6 +408,8 @@ export class EntriesRepository implements SyncedRepository<EntrySyncData, Execut
             title: data.title,
             body_md: data.bodyMd,
             cover_asset_id: data.coverAssetId,
+            entry_index: data.index,
+            entry_date: data.date,
             created_at: data.createdAt,
             updated_at: data.updatedAt,
             deleted_at: data.deletedAt,

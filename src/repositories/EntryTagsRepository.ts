@@ -155,6 +155,23 @@ export class EntryTagsRepository
     return rows.map(toEntryTag);
   }
 
+  async listEntryTagsByEntryIds(entryIds: string[]): Promise<EntryTag[]> {
+    if (entryIds.length === 0) {
+      return [];
+    }
+
+    const rows = await this.db
+      .selectFrom('entry_tags')
+      .selectAll()
+      .where('entry_id', 'in', entryIds)
+      .where('deleted_at', 'is', null)
+      .orderBy('entry_id', 'asc')
+      .orderBy('created_at', 'asc')
+      .execute();
+
+    return rows.map(toEntryTag);
+  }
+
   async upsertEntryTag(executor: Executor, input: UpsertEntryTagInput): Promise<EntryTag> {
     const entryTag: EntryTag = {
       entryId: input.entryId,

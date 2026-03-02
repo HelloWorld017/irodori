@@ -155,6 +155,22 @@ export class StickersRepository implements SyncedRepository<StickerSyncData, Exe
     return rows.map(toSticker);
   }
 
+  async listStickersByIds(ids: string[]): Promise<Sticker[]> {
+    if (ids.length === 0) {
+      return [];
+    }
+
+    const rows = await this.db
+      .selectFrom('stickers')
+      .selectAll()
+      .where('id', 'in', ids)
+      .where('deleted_at', 'is', null)
+      .orderBy('created_at', 'asc')
+      .execute();
+
+    return rows.map(toSticker);
+  }
+
   async readStickerById(id: string): Promise<Sticker | null> {
     const row = await this.db
       .selectFrom('stickers')
