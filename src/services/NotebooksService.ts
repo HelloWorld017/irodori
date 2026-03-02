@@ -5,12 +5,14 @@ import type { Notebook } from '@/repositories/NotebooksRepository';
 type CreateNotebookInput = {
   title: string;
   description?: string;
+  color: string;
 };
 
 type UpdateNotebookInput = {
   id: string;
   title: string;
   description?: string;
+  color: string;
 };
 
 type RemoveNotebookInput = {
@@ -58,12 +60,14 @@ export class NotebooksService {
     const id = crypto.randomUUID();
     const title = normalizeNotebookTitle(input.title);
     const description = normalizeNotebookDescription(input.description);
+    const color = input.color;
 
     return this.repositories.withTransaction(async trx => {
       const notebook = await this.repositories.notebooks.createNotebook(trx, {
         id,
         title,
         description,
+        color,
         createdAt: now,
         updatedAt: now,
       });
@@ -77,6 +81,7 @@ export class NotebooksService {
     const now = Date.now();
     const title = normalizeNotebookTitle(input.title);
     const description = normalizeNotebookDescription(input.description);
+    const color = input.color;
 
     return this.repositories.withTransaction(async trx => {
       const notebook = assertNotebookExists(
@@ -84,6 +89,7 @@ export class NotebooksService {
           id: input.id,
           title,
           description,
+          color,
           updatedAt: now,
         }),
         input.id

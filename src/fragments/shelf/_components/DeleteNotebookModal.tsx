@@ -18,10 +18,10 @@ export const DeleteNotebookModal = ({
       className="w-full max-w-sm rounded-2xl bg-base-background p-5 shadow-elevated ring-1
         ring-line"
     >
-      <h2 className="text-lg font-semibold text-primary">노트북을 삭제할까요?</h2>
+      <h2 className="text-lg font-semibold text-primary">일기장을 삭제할까요?</h2>
       <p className="mt-2 text-sm leading-relaxed text-secondary">
-        <span className="font-medium text-primary">{notebook.title}</span> 노트북은 목록에서
-        사라지며, 나중에 동기화에도 삭제로 반영돼요.
+        <span className="font-medium text-primary">{notebook.title}</span> 일기장은 목록에서
+        사라지며, 되돌릴 수 없어요.
       </p>
 
       <div className="mt-5 flex justify-end gap-2">

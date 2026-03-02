@@ -5,10 +5,10 @@ import { useServices } from '@/fragments/_providers/DatabaseProvider';
 import { useShowToast } from '@/fragments/_providers/ToastProvider';
 import { buildRoute } from '@/utils/route';
 import { DeleteNotebookModal } from './_components/DeleteNotebookModal';
-import { EmptyShelf } from './_components/EmptyShelf';
 import { NotebookFormModal } from './_components/NotebookFormModal';
 import { NotebookGrid } from './_components/NotebookGrid';
 import { ShelfHeader } from './_components/ShelfHeader';
+import { NOTEBOOK_COLORS } from './_constants/notebook';
 import {
   ShelfProvider,
   useCloseShelfModal,
@@ -55,7 +55,7 @@ const ShelfView = () => {
   const invalidateNotebooks = () => queryClient.invalidateQueries({ queryKey: notebooksQueryKey });
 
   const createNotebookMutation = useMutation({
-    mutationFn: (input: { title: string; description: string }) => {
+    mutationFn: (input: { title: string; description: string; color: string }) => {
       if (!services) {
         throw new Error('Database is not initialized.');
       }
@@ -65,18 +65,19 @@ const ShelfView = () => {
     onSuccess: async () => {
       await invalidateNotebooks();
       closeModal();
-      showToast({ kind: 'success', message: '노트북을 만들었어요.' });
+      showToast({ kind: 'success', message: '일기장을 만들었어요.' });
     },
-    onError: () => {
+    onError: error => {
+      console.error('Failed to create a notebook', error);
       showToast({
         kind: 'error',
-        message: '노트북 생성에 실패했어요. 잠시 후 다시 시도해 주세요.',
+        message: '일기장 생성에 실패했어요. 잠시 후 다시 시도해 주세요.',
       });
     },
   });
 
   const updateNotebookMutation = useMutation({
-    mutationFn: (input: { id: string; title: string; description: string }) => {
+    mutationFn: (input: { id: string; title: string; description: string; color: string }) => {
       if (!services) {
         throw new Error('Database is not initialized.');
       }
@@ -86,12 +87,13 @@ const ShelfView = () => {
     onSuccess: async () => {
       await invalidateNotebooks();
       closeModal();
-      showToast({ kind: 'success', message: '노트북 정보를 수정했어요.' });
+      showToast({ kind: 'success', message: '일기장 정보를 수정했어요.' });
     },
-    onError: () => {
+    onError: error => {
+      console.error('Failed to update a notebook', error);
       showToast({
         kind: 'error',
-        message: '노트북 수정에 실패했어요. 잠시 후 다시 시도해 주세요.',
+        message: '일기장 수정에 실패했어요. 잠시 후 다시 시도해 주세요.',
       });
     },
   });
@@ -107,12 +109,12 @@ const ShelfView = () => {
     onSuccess: async () => {
       await invalidateNotebooks();
       closeModal();
-      showToast({ kind: 'success', message: '노트북을 삭제했어요.' });
+      showToast({ kind: 'success', message: '일기장을 삭제했어요.' });
     },
     onError: () => {
       showToast({
         kind: 'error',
-        message: '노트북 삭제에 실패했어요. 잠시 후 다시 시도해 주세요.',
+        message: '일기장 삭제에 실패했어요. 잠시 후 다시 시도해 주세요.',
       });
     },
   });
@@ -163,10 +165,6 @@ const ShelfView = () => {
         </section>
       ) : null}
 
-      {notebooksQuery.isSuccess && notebooks.length === 0 ? (
-        <EmptyShelf onCreate={openCreateModal} />
-      ) : null}
-
       {notebooksQuery.isSuccess && notebooks.length > 0 ? (
         <NotebookGrid
           notebooks={notebooks}
@@ -179,11 +177,11 @@ const ShelfView = () => {
       {modalKind === 'create' ? (
         <NotebookFormModal
           mode="create"
-          initialValue={{ title: '', description: '' }}
+          initialValue={{ title: '', description: '', color: NOTEBOOK_COLORS[0] }}
           pending={createNotebookMutation.isPending}
           onClose={handleCloseModal}
-          onSubmit={({ title, description }) => {
-            createNotebookMutation.mutate({ title, description });
+          onSubmit={({ title, description, color }) => {
+            createNotebookMutation.mutate({ title, description, color });
           }}
         />
       ) : null}
@@ -194,11 +192,12 @@ const ShelfView = () => {
           initialValue={{
             title: selectedNotebook.title,
             description: selectedNotebook.description,
+            color: selectedNotebook.color,
           }}
           pending={updateNotebookMutation.isPending}
           onClose={handleCloseModal}
-          onSubmit={({ title, description }) => {
-            updateNotebookMutation.mutate({ id: selectedNotebook.id, title, description });
+          onSubmit={({ title, description, color }) => {
+            updateNotebookMutation.mutate({ id: selectedNotebook.id, title, description, color });
           }}
         />
       ) : null}

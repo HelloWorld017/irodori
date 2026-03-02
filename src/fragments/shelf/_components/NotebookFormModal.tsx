@@ -1,8 +1,10 @@
 import { useState } from 'react';
+import { ColorPicker } from './ColorPicker';
 
 type NotebookFormValue = {
   title: string;
   description: string;
+  color: string;
 };
 
 type NotebookFormModalProps = {
@@ -22,6 +24,7 @@ export const NotebookFormModal = ({
 }: NotebookFormModalProps) => {
   const [title, setTitle] = useState(initialValue.title);
   const [description, setDescription] = useState(initialValue.description);
+  const [color, setColor] = useState(initialValue.color);
 
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-primary/45 px-4 py-8">
@@ -50,7 +53,7 @@ export const NotebookFormModal = ({
           className="space-y-4"
           onSubmit={event => {
             event.preventDefault();
-            onSubmit({ title, description });
+            onSubmit({ title, description, color });
           }}
         >
           <label className="block space-y-2">
@@ -64,6 +67,8 @@ export const NotebookFormModal = ({
                 text-sm text-primary transition outline-none focus:border-highlight"
             />
           </label>
+
+          <ColorPicker value={color} onChange={setColor} />
 
           <label className="block space-y-2">
             <span className="text-sm font-medium text-primary">설명</span>

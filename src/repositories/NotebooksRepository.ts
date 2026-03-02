@@ -12,6 +12,7 @@ export type NotebooksTable = {
   id: string;
   title: string;
   description: string;
+  color: string;
   shelf_order: number;
   created_at: number;
   updated_at: number;
@@ -26,6 +27,7 @@ export type Notebook = {
   id: string;
   title: string;
   description: string;
+  color: string;
   shelfOrder: number;
   createdAt: number;
   updatedAt: number;
@@ -35,6 +37,7 @@ export type Notebook = {
 export type NotebookSyncData = {
   title: string;
   description: string;
+  color: string;
   shelfOrder: number;
   createdAt: number;
   updatedAt: number;
@@ -45,6 +48,7 @@ export type CreateNotebookInput = {
   id: string;
   title: string;
   description: string;
+  color: string;
   createdAt: number;
   updatedAt: number;
 };
@@ -53,6 +57,7 @@ export type UpdateNotebookInput = {
   id: string;
   title: string;
   description: string;
+  color: string;
   updatedAt: number;
 };
 
@@ -65,6 +70,7 @@ const toNotebook = (row: Selectable<NotebooksTable>): Notebook => ({
   id: row.id,
   title: row.title,
   description: row.description,
+  color: row.color,
   shelfOrder: row.shelf_order,
   createdAt: row.created_at,
   updatedAt: row.updated_at,
@@ -74,6 +80,7 @@ const toNotebook = (row: Selectable<NotebooksTable>): Notebook => ({
 const toNotebookSyncData = (notebook: Notebook): NotebookSyncData => ({
   title: notebook.title,
   description: notebook.description,
+  color: notebook.color,
   shelfOrder: notebook.shelfOrder,
   createdAt: notebook.createdAt,
   updatedAt: notebook.updatedAt,
@@ -89,6 +96,7 @@ const isNotebookSyncData = (value: unknown): value is NotebookSyncData => {
   return (
     typeof candidate.title === 'string' &&
     typeof candidate.description === 'string' &&
+    typeof candidate.color === 'string' &&
     typeof candidate.shelfOrder === 'number' &&
     typeof candidate.createdAt === 'number' &&
     typeof candidate.updatedAt === 'number' &&
@@ -122,6 +130,7 @@ export class NotebooksRepository
         id TEXT NOT NULL,
         title TEXT NOT NULL,
         description TEXT NOT NULL DEFAULT '',
+        color TEXT NOT NULL,
         shelf_order INTEGER NOT NULL,
         created_at INTEGER NOT NULL,
         updated_at INTEGER NOT NULL,
@@ -176,6 +185,7 @@ export class NotebooksRepository
       id: input.id,
       title: input.title,
       description: input.description,
+      color: input.color,
       shelfOrder: shelfOrderRow.maxShelfOrder + 1,
       createdAt: input.createdAt,
       updatedAt: input.updatedAt,
@@ -188,6 +198,7 @@ export class NotebooksRepository
         id: notebook.id,
         title: notebook.title,
         description: notebook.description,
+        color: notebook.color,
         shelf_order: notebook.shelfOrder,
         created_at: notebook.createdAt,
         updated_at: notebook.updatedAt,
@@ -215,6 +226,7 @@ export class NotebooksRepository
       .set({
         title: input.title,
         description: input.description,
+        color: input.color,
         updated_at: input.updatedAt,
       })
       .where('id', '=', input.id)
@@ -225,6 +237,7 @@ export class NotebooksRepository
       ...toNotebook(currentRow),
       title: input.title,
       description: input.description,
+      color: input.color,
       updatedAt: input.updatedAt,
     };
   }
@@ -275,6 +288,7 @@ export class NotebooksRepository
           id: doc.id,
           title: data.title,
           description: data.description,
+          color: data.color,
           shelf_order: data.shelfOrder,
           created_at: data.createdAt,
           updated_at: data.updatedAt,
@@ -284,6 +298,7 @@ export class NotebooksRepository
           conflict.column('id').doUpdateSet({
             title: data.title,
             description: data.description,
+            color: data.color,
             shelf_order: data.shelfOrder,
             created_at: data.createdAt,
             updated_at: data.updatedAt,
