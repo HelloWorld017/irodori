@@ -2,8 +2,9 @@ import { useCallback, useEffect, useState } from 'react';
 import { match } from 'ts-pattern';
 import { useLocation } from 'wouter';
 import ImageLogo from '@/assets/images/logo.svg';
+import { useInitializeDatabase, useRepositories } from '@/fragments/_providers/DatabaseProvider';
+import { useShowToast } from '@/fragments/_providers/ToastProvider';
 import { buildRoute } from '@/utils/route';
-import { useInitializeDatabase, useRepositories } from '../_providers/DatabaseProvider';
 
 type OnboardingStatus = 'idle' | 'starting' | 'ready' | 'error';
 
@@ -28,7 +29,7 @@ const OnboardingView = ({ buttonLabel, disabled, onStart }: OnboardingViewProps)
     <section
       className="w-full max-w-[26rem] rounded-[2rem] bg-elevated-background
         bg-[radial-gradient(circle_at_65%_0,_rgba(253,187,45,0.8)_0%,_transparent_55%)] p-5
-        shadow-elevated ring-1 ring-border-subtle"
+        shadow-elevated ring-1 ring-line"
     >
       <div className="mb-7 flex h-40 items-center justify-center sm:h-44">
         <img
@@ -40,13 +41,10 @@ const OnboardingView = ({ buttonLabel, disabled, onStart }: OnboardingViewProps)
 
       <div className="space-y-7 px-1 pb-1">
         <div className="space-y-2 text-center">
-          <h1
-            className="text-[1.45rem] leading-tight font-semibold text-base-foreground
-              sm:text-[1.6rem]"
-          >
+          <h1 className="text-[1.45rem] leading-tight font-semibold text-primary sm:text-[1.6rem]">
             하루를 채우는 작은 기록
           </h1>
-          <p className="text-[0.94rem] leading-relaxed text-muted-foreground sm:text-[0.98rem]">
+          <p className="text-[0.94rem] leading-relaxed text-secondary sm:text-[0.98rem]">
             오늘의 감정과 순간을 담아내며,
             <br />
             나만의 책장을 차곡차곡 만들어 보세요.
@@ -71,6 +69,7 @@ const OnboardingView = ({ buttonLabel, disabled, onStart }: OnboardingViewProps)
 export const OnboardingFragment = () => {
   const [status, setStatus] = useState<OnboardingStatus>('idle');
   const initialize = useInitializeDatabase();
+  const showToast = useShowToast();
 
   const handleStart = useCallback(async () => {
     if (status === 'starting' || status === 'ready') {
@@ -82,10 +81,15 @@ export const OnboardingFragment = () => {
     try {
       const success = await initialize();
       setStatus(success ? 'ready' : 'idle');
-    } catch {
+    } catch (e) {
+      console.error('Failed to initialize database', e);
       setStatus('error');
+      showToast({
+        kind: 'error',
+        message: '초기화 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요.',
+      });
     }
-  }, [initialize, status]);
+  }, [initialize, showToast, status]);
 
   const repositories = useRepositories();
   const [, navigate] = useLocation();

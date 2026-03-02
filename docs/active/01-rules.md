@@ -46,7 +46,9 @@ Related Drafts:
 - Avoid ambiguous naming.
   - Prefer `kind` over `type` for domain-level discriminators.
   - Prefer `doc` over `document` for sync/document payload naming.
-- Route definitions should live under `@/utils/routes`.
+- Use ts-match when applicable.
+- Find the list of available utils before editing.
+  - For example, route definitions should live under `@/utils/routes`, and class composition should use `@/utils/classes`.
 
 ## 5. State Management Rules
 
@@ -65,6 +67,8 @@ Related Drafts:
   - Examples: `--color-highlight`, `--color-highlight-foreground`
 - Avoid direct default colors (for example `zinc`, `slate`) in component code when possible.
   - If needed, alias them in `@/styles/index.css` as semantic tokens.
+- Do not add component-specific, or scope-specific colors to the `@/styles/index.css`
+  - Treat adding colors to `@/styles/index.css` as a last resort.
 
 ## 7. Sync and Repository Rules
 

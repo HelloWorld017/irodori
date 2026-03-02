@@ -2,8 +2,7 @@
 @import 'pretendard-jp/dist/web/static/pretendard-jp.css';
 
 @theme {
-  --font-sans: 'Avenir Next', 'SUIT Variable', 'Pretendard JP', 'Noto Sans KR', sans-serif;
-
+  /* Default Palette */
   --color-default-900: #211a13;
   --color-default-800: #3a2f24;
   --color-default-700: #534434;
@@ -15,17 +14,35 @@
   --color-default-100: #f2ece3;
   --color-default-50: #fbf8f2;
 
+  /* Base Colors */
+  --color-primary: var(--color-default-900);
+  --color-secondary: var(--color-default-600);
+  --color-line: var(--color-default-200);
   --color-base-background: var(--color-default-50);
   --color-elevated-background: var(--color-default-100);
-  --color-base-foreground: var(--color-default-900);
-  --color-muted-foreground: var(--color-default-600);
-  --color-border-subtle: var(--color-default-200);
 
+  /* Semantic Colors */
+  --color-error-foreground: var(--color-rose-200);
+  --color-error: var(--color-rose-500);
+  --color-success-foreground: var(--color-emerald-200);
+  --color-success: var(--color-emerald-500);
+  --color-info-foreground: var(--color-blue-200);
+  --color-info: var(--color-blue-500);
+
+  /* Highlight Colors */
   --color-highlight: #eba000;
-  --color-highlight-hover: color-mix(in oklab, var(--color-highlight), var(--color-default-50) 20%);
-  --color-highlight-disabled: color-mix(in oklab, var(--color-highlight), var(--color-default-50) 70%);
   --color-highlight-foreground: var(--color-default-50);
+  --color-highlight-hover: color-mix(in oklab, var(--color-highlight), var(--color-default-50) 20%);
+  --color-highlight-disabled: color-mix(
+    in oklab,
+    var(--color-highlight),
+    var(--color-default-50) 70%
+  );
 
+  /* Fonts */
+  --font-sans: 'Avenir Next', 'SUIT Variable', 'Pretendard JP', 'Noto Sans KR', sans-serif;
+
+  /* Shadows */
   --shadow-elevated: 0 24px 60px -36px rgba(58, 47, 36, 0.45);
 }
 
