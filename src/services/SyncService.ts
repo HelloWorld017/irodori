@@ -97,59 +97,63 @@ export class SyncService {
   }
 
   async stageUpdatedDocuments(
+    trx: Executor,
     repository: AnySyncedRepository,
     documents: SyncUpsertPayload<unknown>[]
   ): Promise<void> {
     const now = Date.now();
-    return this.repositories.withTransaction(trx =>
-      this.repositories.syncDocuments.stageDocuments(
-        trx,
-        documents.map(({ id, data }) => ({
-          at: now,
-          id: toSyncDocumentId(repository.syncNamespace, id),
-          del: false,
-          data: data as Record<string, unknown>,
-        }))
-      )
+
+    await this.repositories.syncDocuments.stageDocuments(
+      trx,
+      documents.map(({ id, data }) => ({
+        at: now,
+        id: toSyncDocumentId(repository.syncNamespace, id),
+        del: false,
+        data: data as Record<string, unknown>,
+      }))
     );
   }
 
   async stageDeletedDocuments(
+    trx: Executor,
     repository: AnySyncedRepository,
     documents: SyncDeletePayload[]
   ): Promise<void> {
     const now = Date.now();
-    return this.repositories.withTransaction(trx =>
-      this.repositories.syncDocuments.stageDocuments(
-        trx,
-        documents.map(({ id }) => ({
-          at: now,
-          id: toSyncDocumentId(repository.syncNamespace, id),
-          del: true,
-        }))
-      )
+
+    await this.repositories.syncDocuments.stageDocuments(
+      trx,
+      documents.map(({ id }) => ({
+        at: now,
+        id: toSyncDocumentId(repository.syncNamespace, id),
+        del: true,
+      }))
     );
   }
 
   async upsertBySync(documents: ShardDocument[]): Promise<void> {
-    await this.repositories.withTransaction(trx =>
-      Promise.all(
+    await this.repositories.withTransaction(async trx => {
+      await Promise.all(
         groupByRepository(this.syncRepositoryMap, documents).map(
           ([repository, documentsByRepository]) =>
             repository.upsertBySync(trx, documentsByRepository)
         )
-      )
-    );
+      );
+
+      await this.repositories.syncDocuments.upsertDocuments(trx, documents);
+    });
   }
 
   async deleteBySync(documents: ShardDocument[]): Promise<void> {
-    await this.repositories.withTransaction(trx =>
-      Promise.all(
+    await this.repositories.withTransaction(async trx => {
+      await Promise.all(
         groupByRepository(this.syncRepositoryMap, documents).map(
           ([repository, documentsByRepository]) =>
             repository.deleteBySync(trx, documentsByRepository)
         )
-      )
-    );
+      );
+
+      await this.repositories.syncDocuments.deleteDocuments(trx, documents);
+    });
   }
 }

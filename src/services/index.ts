@@ -1,3 +1,4 @@
+import { NotebooksService } from './NotebooksService';
 import { SyncService } from './SyncService';
 
 export type Services = {
@@ -5,5 +6,6 @@ export type Services = {
 };
 
 export const ServiceClasses = {
+  notebooks: NotebooksService,
   sync: SyncService,
 };
