@@ -87,9 +87,7 @@ Use a dedicated table that mirrors ClxDB document shape per entity row.
 - `seq` (integer nullable)
 - `del` (integer boolean)
 - `data` (text/json payload)
-- `entity_type` (text)
-- `entity_id` (text)
-- indexes on `(seq)`, `(entity_type, entity_id)`
+- indexes on `(seq)`
 
 Why this shape:
 
@@ -104,11 +102,11 @@ Why this shape:
 - `entries`
   - id, notebook_id, title, body_md, cover_asset_id, created_at, updated_at, deleted_at
 - `tag_categories`
-  - id, key, label, sort_order, min_select, max_select, required
+  - id, notebook_id, label, sort_order, min_select, max_select, required
 - `tags`
   - id, category_id, key, label, color, icon, sort_order, archived_at
 - `entry_tags`
-  - entry_id, category_id, tag_id, created_at
+  - entry_id, tag_id, created_at
 - `stickers`
   - id, kind (`emoji` or `custom`), emoji, label, asset_id, created_at, updated_at
 - `entry_stickers`

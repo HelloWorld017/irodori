@@ -1,4 +1,6 @@
 import { sql } from 'kysely';
+import { z } from 'zod';
+import { parseSyncDataOrThrow } from './_utils/parseSyncData';
 import type { Database, Executor } from '.';
 import type {
   Repository,
@@ -87,30 +89,18 @@ const toNotebookSyncData = (notebook: Notebook): NotebookSyncData => ({
   deletedAt: notebook.deletedAt,
 });
 
-const isNotebookSyncData = (value: unknown): value is NotebookSyncData => {
-  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
-    return false;
-  }
+const notebookSyncDataSchema: z.ZodType<NotebookSyncData> = z.object({
+  title: z.string(),
+  description: z.string(),
+  color: z.string(),
+  shelfOrder: z.number(),
+  createdAt: z.number(),
+  updatedAt: z.number(),
+  deletedAt: z.number().nullable(),
+});
 
-  const candidate = value as Partial<NotebookSyncData>;
-  return (
-    typeof candidate.title === 'string' &&
-    typeof candidate.description === 'string' &&
-    typeof candidate.color === 'string' &&
-    typeof candidate.shelfOrder === 'number' &&
-    typeof candidate.createdAt === 'number' &&
-    typeof candidate.updatedAt === 'number' &&
-    (typeof candidate.deletedAt === 'number' || candidate.deletedAt === null)
-  );
-};
-
-const parseNotebookSyncData = (id: string, data: unknown): NotebookSyncData => {
-  if (!isNotebookSyncData(data)) {
-    throw new Error(`Invalid notebook sync data: id=${id}`);
-  }
-
-  return data;
-};
+const parseNotebookSyncData = (id: string, data: unknown): NotebookSyncData =>
+  parseSyncDataOrThrow(notebookSyncDataSchema, 'notebook', id, data);
 
 export class NotebooksRepository
   implements SyncedRepository<NotebookSyncData, Executor>, Repository
