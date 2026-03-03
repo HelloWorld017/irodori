@@ -10,8 +10,8 @@ export const RouteMap = {
   onboarding: '/',
   shelf: '/shelf',
   entries: '/diary/:notebookId',
-  entriesEdit: '/diary/:notebookId/edit',
   entriesDetail: '/diary/:notebookId/:entryId',
+  entriesEdit: '/diary/:notebookId/:entryId/edit',
 } as const;
 
 export type RouteParams = Simplify<{

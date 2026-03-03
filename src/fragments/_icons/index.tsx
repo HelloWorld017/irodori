@@ -1,4 +1,13 @@
-import { BookPlus, Pencil, Search, SquarePlus, Trash, X } from 'lucide-react';
+import {
+  BookPlus,
+  Calendar,
+  ChevronLeft,
+  Pencil,
+  Search,
+  SquarePlus,
+  Trash,
+  X,
+} from 'lucide-react';
 import type { ComponentProps, ComponentType } from 'react';
 
 const wrapLucideComponent = <T extends ComponentType>(LucideIcon: T) => {
@@ -13,6 +22,8 @@ const wrapLucideComponent = <T extends ComponentType>(LucideIcon: T) => {
 };
 
 export const IconBookPlus = wrapLucideComponent(BookPlus);
+export const IconCalendar = wrapLucideComponent(Calendar);
+export const IconChevronLeft = wrapLucideComponent(ChevronLeft);
 export const IconPencil = wrapLucideComponent(Pencil);
 export const IconSearch = wrapLucideComponent(Search);
 export const IconSquarePlus = wrapLucideComponent(SquarePlus);
