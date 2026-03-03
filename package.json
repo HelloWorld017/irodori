@@ -45,6 +45,7 @@
   },
   "dependencies": {
     "@tanstack/react-query": "5.90.21",
+    "@tanstack/react-virtual": "^3.13.19",
     "clxdb": "0.12.0",
     "ink-mde": "0.34.0",
     "kysely": "0.28.11",

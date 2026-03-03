@@ -71,6 +71,7 @@ const config = defineConfig(
       'prettier/prettier': 'error',
       'react/no-unknown-property': 'off',
       'react/react-in-jsx-scope': 'off',
+      'react-hooks/incompatible-library': 'off',
       'arrow-body-style': ['error', 'as-needed'],
       'eqeqeq': ['error', 'always'],
       'camelcase': ['error', { properties: 'never' }],

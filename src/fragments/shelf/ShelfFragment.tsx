@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { useServices } from '@/fragments/_providers/DatabaseProvider';
 import { useShowToast } from '@/fragments/_providers/ToastProvider';
+import { useEnsureDatabase } from '@/hooks/useEnsureDatabase';
 import { buildRoute } from '@/utils/route';
 import { DeleteNotebookModal } from './_components/DeleteNotebookModal';
 import { NotebookFormModal } from './_components/NotebookFormModal';
@@ -27,6 +28,7 @@ const ShelfView = () => {
   const showToast = useShowToast();
   const queryClient = useQueryClient();
   const [, navigate] = useLocation();
+  useEnsureDatabase();
 
   const modalKind = useShelfModalKind();
   const selectedNotebook = useSelectedNotebook();
@@ -35,34 +37,17 @@ const ShelfView = () => {
   const openDeleteModal = useOpenDeleteModal();
   const closeModal = useCloseShelfModal();
 
-  useEffect(() => {
-    if (!services) {
-      navigate(buildRoute('onboarding'), { replace: true });
-    }
-  }, [navigate, services]);
-
   const notebooksQuery = useQuery({
     queryKey: notebooksQueryKey,
     enabled: services !== null,
-    queryFn: () => {
-      if (!services) {
-        throw new Error('Database is not initialized.');
-      }
-
-      return services.notebooks.list();
-    },
+    queryFn: () => services!.notebooks.list(),
   });
 
   const invalidateNotebooks = () => queryClient.invalidateQueries({ queryKey: notebooksQueryKey });
 
   const createNotebookMutation = useMutation({
-    mutationFn: (input: { title: string; description: string; color: string }) => {
-      if (!services) {
-        throw new Error('Database is not initialized.');
-      }
-
-      return services.notebooks.create(input);
-    },
+    mutationFn: (input: { title: string; description: string; color: string }) =>
+      services!.notebooks.create(input),
     onSuccess: async () => {
       await invalidateNotebooks();
       closeModal();
@@ -78,13 +63,8 @@ const ShelfView = () => {
   });
 
   const updateNotebookMutation = useMutation({
-    mutationFn: (input: { id: string; title: string; description: string; color: string }) => {
-      if (!services) {
-        throw new Error('Database is not initialized.');
-      }
-
-      return services.notebooks.update(input);
-    },
+    mutationFn: (input: { id: string; title: string; description: string; color: string }) =>
+      services!.notebooks.update(input),
     onSuccess: async () => {
       await invalidateNotebooks();
       closeModal();
@@ -100,13 +80,7 @@ const ShelfView = () => {
   });
 
   const removeNotebookMutation = useMutation({
-    mutationFn: (input: { id: string }) => {
-      if (!services) {
-        throw new Error('Database is not initialized.');
-      }
-
-      return services.notebooks.remove(input);
-    },
+    mutationFn: (input: { id: string }) => services!.notebooks.remove(input),
     onSuccess: async () => {
       await invalidateNotebooks();
       closeModal();
@@ -166,7 +140,7 @@ const ShelfView = () => {
         </section>
       ) : null}
 
-      {notebooksQuery.isSuccess && notebooks.length > 0 ? (
+      {notebooksQuery.isSuccess ? (
         <NotebookList
           notebooks={notebooks}
           onCreateNotebook={openCreateModal}
