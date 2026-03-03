@@ -229,6 +229,17 @@ export class EntriesRepository implements SyncedRepository<EntrySyncData, Execut
     return rows.map(toEntry);
   }
 
+  async countEntriesByNotebookId(notebookId: string): Promise<number> {
+    const row = await this.db
+      .selectFrom('entries')
+      .select(sql<number>`count(*)`.as('entryCount'))
+      .where('notebook_id', '=', notebookId)
+      .where('deleted_at', 'is', null)
+      .executeTakeFirst();
+
+    return Number(row?.entryCount ?? 0);
+  }
+
   async listEntrySummaries(
     input: ListEntrySummariesInput
   ): Promise<CursorPageResult<EntrySummary, EntryListCursor>> {

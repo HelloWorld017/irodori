@@ -69,6 +69,7 @@ Related Drafts:
   - If needed, alias them in `@/styles/index.css` as semantic tokens.
 - Do not add component-specific, or scope-specific colors to the `@/styles/index.css`
   - Treat adding colors to `@/styles/index.css` as a last resort.
+- Use `@/fragments/_icons/index.ts` to add icons.
 
 ## 7. Sync and Repository Rules
 

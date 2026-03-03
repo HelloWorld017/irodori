@@ -21,7 +21,7 @@ import {
   useShelfModalKind,
 } from './_providers/ShelfProvider';
 
-const notebooksQueryKey = ['notebooks'];
+const notebooksQueryKey = ['shelf', 'notebooks'];
 
 const ShelfView = () => {
   const services = useServices();
@@ -107,10 +107,6 @@ const ShelfView = () => {
     closeModal();
   };
 
-  const handleOpenNotebook = (notebookId: string) => {
-    navigate(buildRoute('entries', { id: notebookId }));
-  };
-
   const notebooks = notebooksQuery.data ?? [];
 
   return (
@@ -144,7 +140,6 @@ const ShelfView = () => {
         <NotebookList
           notebooks={notebooks}
           onCreateNotebook={openCreateModal}
-          onOpenNotebook={handleOpenNotebook}
           onEditNotebook={openEditModal}
           onDeleteNotebook={openDeleteModal}
         />

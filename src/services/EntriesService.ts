@@ -86,6 +86,10 @@ export class EntriesService {
     };
   }
 
+  countByNotebookId(notebookId: string): Promise<number> {
+    return this.repositories.entries.countEntriesByNotebookId(notebookId);
+  }
+
   getById(id: string): Promise<Entry | null> {
     return this.repositories.entries.readEntryById(id);
   }

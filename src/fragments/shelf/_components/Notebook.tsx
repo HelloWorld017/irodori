@@ -1,19 +1,19 @@
+import { Link } from 'wouter';
 import { IconPencil, IconTrash } from '@/fragments/_icons';
 import { formatDate } from '@/utils/date';
+import { buildRoute } from '@/utils/route';
 import type { Notebook as NotebookModel } from '@/repositories/NotebooksRepository';
 
 type NotebookProps = {
   notebook: NotebookModel;
-  onOpen: (notebookId: string) => void;
   onEdit: (notebook: NotebookModel) => void;
   onDelete: (notebook: NotebookModel) => void;
 };
 
-export const Notebook = ({ notebook, onOpen, onEdit, onDelete }: NotebookProps) => (
+export const Notebook = ({ notebook, onEdit, onDelete }: NotebookProps) => (
   <div className="flex gap-6">
-    <button
-      type="button"
-      onClick={() => onOpen(notebook.id)}
+    <Link
+      href={buildRoute('entries', { notebookId: notebook.id })}
       className="relative flex aspect-[3/4] w-28 flex-col overflow-hidden rounded-xl text-left
         md:w-36"
       style={{ backgroundColor: `oklch(from ${notebook.color} calc(l * 0.8) calc(c * 0.3) h)` }}
@@ -42,7 +42,7 @@ export const Notebook = ({ notebook, onOpen, onEdit, onDelete }: NotebookProps) 
         </div>
         <div className="mt-4 h-1 w-6 bg-white" />
       </div>
-    </button>
+    </Link>
 
     <div className="flex flex-1 flex-col items-start justify-between gap-2 py-3">
       <div className="flex-1">

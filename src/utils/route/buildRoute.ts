@@ -9,7 +9,9 @@ type ExtractParams<Path extends string> = Path extends `${infer SegmentA}/${infe
 export const RouteMap = {
   onboarding: '/',
   shelf: '/shelf',
-  entries: '/diary/:id',
+  entries: '/diary/:notebookId',
+  entriesEdit: '/diary/:notebookId/edit',
+  entriesDetail: '/diary/:notebookId/:entryId',
 } as const;
 
 export type RouteParams = Simplify<{
@@ -18,7 +20,9 @@ export type RouteParams = Simplify<{
 
 export type RouteKind = keyof typeof RouteMap;
 
-export const getRoute = (kind: RouteKind): string => RouteMap[kind];
+export const getRoute = (kind: RouteKind, nest = false): string =>
+  `${RouteMap[kind]}${nest ? '/*?' : ''}`;
+
 export const buildRoute = <TKind extends RouteKind>(
   kind: TKind,
   ...[params]: IsNever<keyof RouteParams[TKind]> extends true ? [] : [RouteParams[TKind]]

@@ -1,6 +1,6 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { useParams } from 'wouter';
 import { useServices } from '@/fragments/_providers/DatabaseProvider';
+import { useEntriesNotebookId } from '../_providers/EntriesProvider';
 import { EntriesList } from './EntriesList';
 import type { EntryListCursor } from '@/repositories/EntriesRepository';
 
@@ -8,10 +8,10 @@ const ENTRY_PAGE_SIZE = 30;
 
 export const EntriesFinder = () => {
   const services = useServices();
-  const { id: notebookId } = useParams<{ id: string }>();
+  const notebookId = useEntriesNotebookId();
 
   const entriesQuery = useInfiniteQuery({
-    queryKey: ['entries', notebookId],
+    queryKey: ['entries', 'list', notebookId],
     enabled: services !== null && Boolean(notebookId),
     initialPageParam: undefined as EntryListCursor | undefined,
     queryFn: ({ pageParam }) =>
@@ -23,20 +23,8 @@ export const EntriesFinder = () => {
     getNextPageParam: lastPage => lastPage.nextCursor ?? undefined,
   });
 
-  if (!notebookId) {
-    return (
-      <section className="rounded-2xl bg-elevated-background p-6 ring-1 ring-line">
-        <p className="text-sm text-secondary">일기장 정보를 찾을 수 없어요.</p>
-      </section>
-    );
-  }
-
   if (entriesQuery.isPending) {
-    return (
-      <section className="rounded-2xl bg-elevated-background p-6 ring-1 ring-line">
-        <p className="text-sm font-medium text-secondary">일기를 불러오는 중이에요...</p>
-      </section>
-    );
+    return <p className="text-sm font-medium text-secondary">일기를 불러오는 중이에요...</p>;
   }
 
   if (entriesQuery.isError) {
@@ -58,7 +46,7 @@ export const EntriesFinder = () => {
   const entries = entriesQuery.data.pages.flatMap(page => page.items);
 
   return (
-    <div className="mx-auto flex w-full max-w-4xl flex-col gap-4 px-5 py-8 sm:px-8 sm:py-10">
+    <div className="flex w-full flex-col gap-4 px-5 py-8 sm:px-8 sm:py-10">
       <EntriesList entries={entries} className="h-[70vh]" />
 
       {entriesQuery.hasNextPage ? (

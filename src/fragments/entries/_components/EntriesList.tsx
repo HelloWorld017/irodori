@@ -9,7 +9,6 @@ type EntriesListProps = {
   selectedEntryId?: string | null;
   onSelectEntry?: (entryId: string) => void;
   className?: string;
-  emptyMessage?: string;
 };
 
 export const EntriesList = ({
@@ -17,7 +16,6 @@ export const EntriesList = ({
   selectedEntryId = null,
   onSelectEntry,
   className,
-  emptyMessage = '표시할 일기가 없어요.',
 }: EntriesListProps) => {
   const scrollElementRef = useRef<HTMLDivElement>(null);
 
@@ -31,14 +29,8 @@ export const EntriesList = ({
 
   if (entries.length === 0) {
     return (
-      <section
-        className={classes(
-          'rounded-2xl border border-line bg-elevated-background px-4 py-8 text-center',
-          'text-sm text-secondary',
-          className
-        )}
-      >
-        {emptyMessage}
+      <section className={classes('px-4 py-8 text-center text-sm text-secondary', className)}>
+        표시할 일기가 없어요.
       </section>
     );
   }

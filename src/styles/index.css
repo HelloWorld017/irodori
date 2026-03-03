@@ -52,4 +52,8 @@
   html {
     background: var(--color-base-background);
   }
+
+  button:where(:not([disabled])) {
+    cursor: pointer;
+  }
 }
