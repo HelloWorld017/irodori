@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { IconSearch, IconSquarePlus } from '@/fragments/_icons';
 import { useServices } from '@/fragments/_providers/DatabaseProvider';
 import { classes } from '@/utils/classes';
+import { queryKey } from '@/utils/queryKey';
 import { useEntriesNotebook, useEntriesNotebookId } from '../_providers/EntriesProvider';
 import { EntriesFinder } from './EntriesFinder';
 
@@ -11,7 +12,7 @@ const SidebarHeader = () => {
   const notebookId = useEntriesNotebookId();
   const { data: entriesCount } = useQuery({
     enabled: !!services,
-    queryKey: ['entries', 'count', notebookId],
+    queryKey: queryKey('entries', 'count', notebookId),
     queryFn: () => services!.entries.countByNotebookId(notebookId),
   });
 

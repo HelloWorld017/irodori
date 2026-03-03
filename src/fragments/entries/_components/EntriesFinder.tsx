@@ -1,5 +1,6 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useServices } from '@/fragments/_providers/DatabaseProvider';
+import { queryKey } from '@/utils/queryKey';
 import { useEntriesNotebookId } from '../_providers/EntriesProvider';
 import { EntriesList } from './EntriesList';
 import type { EntryListCursor } from '@/repositories/EntriesRepository';
@@ -11,7 +12,7 @@ export const EntriesFinder = () => {
   const notebookId = useEntriesNotebookId();
 
   const entriesQuery = useInfiniteQuery({
-    queryKey: ['entries', 'list', notebookId],
+    queryKey: queryKey('entries', 'list', notebookId),
     enabled: services !== null && Boolean(notebookId),
     initialPageParam: undefined as EntryListCursor | undefined,
     queryFn: ({ pageParam }) =>

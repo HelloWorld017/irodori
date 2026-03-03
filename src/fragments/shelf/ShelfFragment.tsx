@@ -1,11 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence } from 'motion/react';
-import { useEffect } from 'react';
-import { useLocation } from 'wouter';
 import { useServices } from '@/fragments/_providers/DatabaseProvider';
 import { useShowToast } from '@/fragments/_providers/ToastProvider';
 import { useEnsureDatabase } from '@/hooks/useEnsureDatabase';
-import { buildRoute } from '@/utils/route';
+import { queryKey } from '@/utils/queryKey';
 import { DeleteNotebookModal } from './_components/DeleteNotebookModal';
 import { NotebookFormModal } from './_components/NotebookFormModal';
 import { NotebookList } from './_components/NotebookList';
@@ -21,13 +19,10 @@ import {
   useShelfModalKind,
 } from './_providers/ShelfProvider';
 
-const notebooksQueryKey = ['shelf', 'notebooks'];
-
 const ShelfView = () => {
   const services = useServices();
   const showToast = useShowToast();
   const queryClient = useQueryClient();
-  const [, navigate] = useLocation();
   useEnsureDatabase();
 
   const modalKind = useShelfModalKind();
@@ -37,6 +32,7 @@ const ShelfView = () => {
   const openDeleteModal = useOpenDeleteModal();
   const closeModal = useCloseShelfModal();
 
+  const notebooksQueryKey = queryKey('shelf', 'notebooks');
   const notebooksQuery = useQuery({
     queryKey: notebooksQueryKey,
     enabled: services !== null,

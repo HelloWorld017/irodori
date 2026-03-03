@@ -55,6 +55,7 @@ Related Drafts:
 - Complex shared state must be managed via providers built with `@/utils/context` (including `buildContext`).
 - Fragment state should be scoped by feature (for example `bookshelf`, `diary`).
 - Expose focused selector hooks per state slice to reduce unnecessary re-renders.
+- Use `@tanstack/react-query` for service state management. For queryKey, you should use `@/utils/queryKey`.
 
 ## 6. Styling Rules
 

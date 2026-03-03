@@ -2,13 +2,14 @@ import { useQuery } from '@tanstack/react-query';
 import { useParams } from 'wouter';
 import { useServices } from '@/fragments/_providers/DatabaseProvider';
 import { buildContext } from '@/utils/context';
+import { queryKey } from '@/utils/queryKey';
 
 const [EntriesProvider, useEntries] = buildContext(() => {
   const services = useServices();
   const { notebookId } = useParams<{ notebookId: string }>();
   const { data: notebook } = useQuery({
     enabled: !!services,
-    queryKey: ['entries', 'notebook', notebookId],
+    queryKey: queryKey('entries', 'notebook', notebookId),
     queryFn: () => services!.notebooks.getById(notebookId),
   });
 
