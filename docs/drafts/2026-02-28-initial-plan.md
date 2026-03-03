@@ -100,7 +100,7 @@ Why this shape:
 - `notebooks`
   - id, title, description, shelf_order, created_at, updated_at, deleted_at
 - `entries`
-  - id, notebook_id, title, body_md, cover_asset_id, created_at, updated_at, deleted_at
+  - id, notebook_id, title, body, cover_asset_id, created_at, updated_at, deleted_at
 - `tag_categories`
   - id, notebook_id, label, sort_order, min_select, max_select, required
 - `tags`

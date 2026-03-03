@@ -14,7 +14,7 @@ type ListEntriesInput = CursorPageInput<EntryListCursor> & {
 type CreateEntryInput = {
   notebookId: string;
   title: string;
-  bodyMd?: string;
+  body?: string;
   coverAssetId?: string | null;
   date?: number;
 };
@@ -22,7 +22,7 @@ type CreateEntryInput = {
 type UpdateEntryInput = {
   id: string;
   title: string;
-  bodyMd: string;
+  body: string;
   coverAssetId: string | null;
 };
 
@@ -94,7 +94,7 @@ export class EntriesService {
     const now = Date.now();
     const id = crypto.randomUUID();
     const title = normalizeEntryTitle(input.title);
-    const bodyMd = input.bodyMd ?? '';
+    const body = input.body ?? '';
     const coverAssetId = input.coverAssetId ?? null;
     const date = input.date ?? now;
 
@@ -103,7 +103,7 @@ export class EntriesService {
         id,
         notebookId: input.notebookId,
         title,
-        bodyMd,
+        body,
         coverAssetId,
         date,
         createdAt: now,
@@ -124,7 +124,7 @@ export class EntriesService {
         await this.repositories.entries.updateEntry(trx, {
           id: input.id,
           title,
-          bodyMd: input.bodyMd,
+          body: input.body,
           coverAssetId: input.coverAssetId,
           updatedAt: now,
         }),

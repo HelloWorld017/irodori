@@ -16,7 +16,7 @@ export type EntriesTable = {
   id: string;
   notebook_id: string;
   title: string;
-  body_md: string;
+  body: string;
   cover_asset_id: string | null;
   entry_index: number;
   entry_date: number;
@@ -33,7 +33,7 @@ export type Entry = {
   id: string;
   notebookId: string;
   title: string;
-  bodyMd: string;
+  body: string;
   coverAssetId: string | null;
   index: number;
   date: number;
@@ -42,7 +42,7 @@ export type Entry = {
   deletedAt: number | null;
 };
 
-export type EntrySummary = Omit<Entry, 'bodyMd'>;
+export type EntrySummary = Omit<Entry, 'body'>;
 export type EntryListCursor = SingleFieldCursor<'entry_index', number>;
 
 export type ListEntrySummariesInput = CursorPageInput<EntryListCursor> & {
@@ -54,7 +54,7 @@ export type ListEntrySummariesInput = CursorPageInput<EntryListCursor> & {
 export type EntrySyncData = {
   notebookId: string;
   title: string;
-  bodyMd: string;
+  body: string;
   coverAssetId: string | null;
   index: number;
   date: number;
@@ -67,7 +67,7 @@ export type CreateEntryInput = {
   id: string;
   notebookId: string;
   title: string;
-  bodyMd: string;
+  body: string;
   coverAssetId: string | null;
   date: number;
   createdAt: number;
@@ -77,7 +77,7 @@ export type CreateEntryInput = {
 export type UpdateEntryInput = {
   id: string;
   title: string;
-  bodyMd: string;
+  body: string;
   coverAssetId: string | null;
   updatedAt: number;
 };
@@ -91,7 +91,7 @@ const toEntry = (row: Selectable<EntriesTable>): Entry => ({
   id: row.id,
   notebookId: row.notebook_id,
   title: row.title,
-  bodyMd: row.body_md,
+  body: row.body,
   coverAssetId: row.cover_asset_id,
   index: row.entry_index,
   date: row.entry_date,
@@ -128,7 +128,7 @@ const toEntrySummary = (
 const toEntrySyncData = (entry: Entry): EntrySyncData => ({
   notebookId: entry.notebookId,
   title: entry.title,
-  bodyMd: entry.bodyMd,
+  body: entry.body,
   coverAssetId: entry.coverAssetId,
   index: entry.index,
   date: entry.date,
@@ -140,7 +140,7 @@ const toEntrySyncData = (entry: Entry): EntrySyncData => ({
 const entrySyncDataSchema: z.ZodType<EntrySyncData> = z.object({
   notebookId: z.string(),
   title: z.string(),
-  bodyMd: z.string(),
+  body: z.string(),
   coverAssetId: z.string().nullable(),
   index: z.number(),
   date: z.number(),
@@ -182,7 +182,7 @@ export class EntriesRepository implements SyncedRepository<EntrySyncData, Execut
         id TEXT NOT NULL,
         notebook_id TEXT NOT NULL,
         title TEXT NOT NULL,
-        body_md TEXT NOT NULL DEFAULT '',
+        body TEXT NOT NULL DEFAULT '',
         cover_asset_id TEXT,
         entry_index INTEGER NOT NULL,
         entry_date INTEGER NOT NULL,
@@ -259,7 +259,7 @@ export class EntriesRepository implements SyncedRepository<EntrySyncData, Execut
       const searchPattern = `%${searchText}%`;
 
       query = query.where(eb =>
-        eb.or([eb('title', 'like', searchPattern), eb('body_md', 'like', searchPattern)])
+        eb.or([eb('title', 'like', searchPattern), eb('body', 'like', searchPattern)])
       );
     }
 
@@ -319,7 +319,7 @@ export class EntriesRepository implements SyncedRepository<EntrySyncData, Execut
       id: input.id,
       notebookId: input.notebookId,
       title: input.title,
-      bodyMd: input.bodyMd,
+      body: input.body,
       coverAssetId: input.coverAssetId,
       index: indexRow.maxEntryIndex + 1,
       date: input.date,
@@ -334,7 +334,7 @@ export class EntriesRepository implements SyncedRepository<EntrySyncData, Execut
         id: entry.id,
         notebook_id: entry.notebookId,
         title: entry.title,
-        body_md: entry.bodyMd,
+        body: entry.body,
         cover_asset_id: entry.coverAssetId,
         entry_index: entry.index,
         entry_date: entry.date,
@@ -363,7 +363,7 @@ export class EntriesRepository implements SyncedRepository<EntrySyncData, Execut
       .updateTable('entries')
       .set({
         title: input.title,
-        body_md: input.bodyMd,
+        body: input.body,
         cover_asset_id: input.coverAssetId,
         updated_at: input.updatedAt,
       })
@@ -374,7 +374,7 @@ export class EntriesRepository implements SyncedRepository<EntrySyncData, Execut
     return {
       ...toEntry(currentRow),
       title: input.title,
-      bodyMd: input.bodyMd,
+      body: input.body,
       coverAssetId: input.coverAssetId,
       updatedAt: input.updatedAt,
     };
@@ -423,7 +423,7 @@ export class EntriesRepository implements SyncedRepository<EntrySyncData, Execut
           id: doc.id,
           notebook_id: data.notebookId,
           title: data.title,
-          body_md: data.bodyMd,
+          body: data.body,
           cover_asset_id: data.coverAssetId,
           entry_index: data.index,
           entry_date: data.date,
@@ -435,7 +435,7 @@ export class EntriesRepository implements SyncedRepository<EntrySyncData, Execut
           conflict.column('id').doUpdateSet({
             notebook_id: data.notebookId,
             title: data.title,
-            body_md: data.bodyMd,
+            body: data.body,
             cover_asset_id: data.coverAssetId,
             entry_index: data.index,
             entry_date: data.date,
