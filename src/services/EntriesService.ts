@@ -5,8 +5,10 @@ import type { Sticker } from '@/repositories/StickersRepository';
 import type { Tag } from '@/repositories/TagsRepository';
 import type { CursorPageInput, CursorPageResult } from '@/types/Cursor';
 
-type ListByNotebookIdInput = CursorPageInput<EntryListCursor> & {
+type ListEntriesInput = CursorPageInput<EntryListCursor> & {
   notebookId: string;
+  searchText?: string;
+  tagIds?: string[];
 };
 
 type CreateEntryInput = {
@@ -67,11 +69,9 @@ export class EntriesService {
     this.services = services;
   }
 
-  async listByNotebookId(
-    input: ListByNotebookIdInput
-  ): Promise<CursorPageResult<EntryListItem, EntryListCursor>> {
+  async list(input: ListEntriesInput): Promise<CursorPageResult<EntryListItem, EntryListCursor>> {
     const { items: entrySummaries, nextCursor } =
-      await this.repositories.entries.listEntrySummariesByNotebookId(input);
+      await this.repositories.entries.listEntrySummaries(input);
 
     if (entrySummaries.length === 0) {
       return {
@@ -80,53 +80,8 @@ export class EntriesService {
       };
     }
 
-    const entryIds = entrySummaries.map(entry => entry.id);
-    const [entryTags, entryStickers] = await Promise.all([
-      this.repositories.entryTags.listEntryTagsByEntryIds(entryIds),
-      this.repositories.entryStickers.listEntryStickersByEntryIds(entryIds),
-    ]);
-
-    const tagIds = toUniqueValues(entryTags.map(entryTag => entryTag.tagId));
-    const stickerIds = toUniqueValues(entryStickers.map(entrySticker => entrySticker.stickerId));
-
-    const [tags, stickers] = await Promise.all([
-      this.repositories.tags.listTagsByIds(tagIds),
-      this.repositories.stickers.listStickersByIds(stickerIds),
-    ]);
-
-    const tagsById = new Map(tags.map(tag => [tag.id, tag]));
-    const stickersById = new Map(stickers.map(sticker => [sticker.id, sticker]));
-
-    const entryTagsByEntryId = new Map<string, Tag[]>();
-    entryTags.forEach(entryTag => {
-      const tag = tagsById.get(entryTag.tagId);
-      if (!tag) {
-        return;
-      }
-
-      const currentTags = entryTagsByEntryId.get(entryTag.entryId) ?? [];
-      currentTags.push(tag);
-      entryTagsByEntryId.set(entryTag.entryId, currentTags);
-    });
-
-    const entryStickersByEntryId = new Map<string, EntryListSticker[]>();
-    entryStickers.forEach(entrySticker => {
-      const sticker = stickersById.get(entrySticker.stickerId);
-      if (!sticker) {
-        return;
-      }
-
-      const currentStickers = entryStickersByEntryId.get(entrySticker.entryId) ?? [];
-      currentStickers.push({ slot: entrySticker.slot, sticker });
-      entryStickersByEntryId.set(entrySticker.entryId, currentStickers);
-    });
-
     return {
-      items: entrySummaries.map(summary => ({
-        ...summary,
-        tags: entryTagsByEntryId.get(summary.id) ?? [],
-        stickers: entryStickersByEntryId.get(summary.id) ?? [],
-      })),
+      items: await this.toEntryListItems(entrySummaries),
       nextCursor,
     };
   }
@@ -195,6 +150,59 @@ export class EntriesService {
 
       await this.stageEntry(trx, entry);
     });
+  }
+
+  private async toEntryListItems(entrySummaries: EntrySummary[]): Promise<EntryListItem[]> {
+    if (entrySummaries.length === 0) {
+      return [];
+    }
+
+    const entryIds = entrySummaries.map(entry => entry.id);
+    const [entryTags, entryStickers] = await Promise.all([
+      this.repositories.entryTags.listEntryTagsByEntryIds(entryIds),
+      this.repositories.entryStickers.listEntryStickersByEntryIds(entryIds),
+    ]);
+
+    const tagIds = toUniqueValues(entryTags.map(entryTag => entryTag.tagId));
+    const stickerIds = toUniqueValues(entryStickers.map(entrySticker => entrySticker.stickerId));
+
+    const [tags, stickers] = await Promise.all([
+      this.repositories.tags.listTagsByIds(tagIds),
+      this.repositories.stickers.listStickersByIds(stickerIds),
+    ]);
+
+    const tagsById = new Map(tags.map(tag => [tag.id, tag]));
+    const stickersById = new Map(stickers.map(sticker => [sticker.id, sticker]));
+
+    const entryTagsByEntryId = new Map<string, Tag[]>();
+    entryTags.forEach(entryTag => {
+      const tag = tagsById.get(entryTag.tagId);
+      if (!tag) {
+        return;
+      }
+
+      const currentTags = entryTagsByEntryId.get(entryTag.entryId) ?? [];
+      currentTags.push(tag);
+      entryTagsByEntryId.set(entryTag.entryId, currentTags);
+    });
+
+    const entryStickersByEntryId = new Map<string, EntryListSticker[]>();
+    entryStickers.forEach(entrySticker => {
+      const sticker = stickersById.get(entrySticker.stickerId);
+      if (!sticker) {
+        return;
+      }
+
+      const currentStickers = entryStickersByEntryId.get(entrySticker.entryId) ?? [];
+      currentStickers.push({ slot: entrySticker.slot, sticker });
+      entryStickersByEntryId.set(entrySticker.entryId, currentStickers);
+    });
+
+    return entrySummaries.map(summary => ({
+      ...summary,
+      tags: entryTagsByEntryId.get(summary.id) ?? [],
+      stickers: entryStickersByEntryId.get(summary.id) ?? [],
+    }));
   }
 
   private stageEntry(trx: Executor, entry: Entry): Promise<void> {

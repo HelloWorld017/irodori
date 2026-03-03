@@ -43,10 +43,12 @@ export type Entry = {
 };
 
 export type EntrySummary = Omit<Entry, 'bodyMd'>;
-export type EntryListCursor = SingleFieldCursor<'index', number>;
+export type EntryListCursor = SingleFieldCursor<'entry_index', number>;
 
-export type ListEntrySummariesByNotebookIdInput = CursorPageInput<EntryListCursor> & {
+export type ListEntrySummariesInput = CursorPageInput<EntryListCursor> & {
   notebookId: string;
+  searchText?: string;
+  tagIds?: string[];
 };
 
 export type EntrySyncData = {
@@ -150,6 +152,20 @@ const entrySyncDataSchema: z.ZodType<EntrySyncData> = z.object({
 const parseEntrySyncData = (id: string, data: unknown): EntrySyncData =>
   parseSyncDataOrThrow(entrySyncDataSchema, 'entry', id, data);
 
+const normalizeSearchText = (value: string | undefined): string | null => {
+  const searchText = value?.trim();
+
+  return searchText ? searchText : null;
+};
+
+const normalizeTagIds = (tagIds: string[] | undefined): string[] => {
+  if (!tagIds) {
+    return [];
+  }
+
+  return [...new Set(tagIds.map(tagId => tagId.trim()).filter(tagId => tagId.length > 0))];
+};
+
 export class EntriesRepository implements SyncedRepository<EntrySyncData, Executor>, Repository {
   readonly syncNamespace = 'entry';
   private schemaInitialized = false;
@@ -213,11 +229,13 @@ export class EntriesRepository implements SyncedRepository<EntrySyncData, Execut
     return rows.map(toEntry);
   }
 
-  async listEntrySummariesByNotebookId(
-    input: ListEntrySummariesByNotebookIdInput
+  async listEntrySummaries(
+    input: ListEntrySummariesInput
   ): Promise<CursorPageResult<EntrySummary, EntryListCursor>> {
     const pageSize = Math.max(1, Math.min(input.limit ?? 30, 100));
-    const cursorWhere = buildSingleFieldCursorWhere(input.cursor, 'index', 'desc');
+    const cursorWhere = buildSingleFieldCursorWhere(input.cursor, 'entry_index', 'desc');
+    const searchText = normalizeSearchText(input.searchText);
+    const tagIds = normalizeTagIds(input.tagIds);
 
     let query = this.db
       .selectFrom('entries')
@@ -237,18 +255,29 @@ export class EntriesRepository implements SyncedRepository<EntrySyncData, Execut
       .orderBy('entry_index', 'desc')
       .orderBy('id', 'desc');
 
-    if (cursorWhere) {
-      const cursorIndexValue = cursorWhere.fieldValue as number;
+    if (searchText) {
+      const searchPattern = `%${searchText}%`;
 
       query = query.where(eb =>
-        eb.or([
-          eb('entry_index', cursorWhere.fieldOperator, cursorIndexValue),
-          eb.and([
-            eb('entry_index', '=', cursorIndexValue),
-            eb('id', cursorWhere.idOperator, cursorWhere.id),
-          ]),
-        ])
+        eb.or([eb('title', 'like', searchPattern), eb('body_md', 'like', searchPattern)])
       );
+    }
+
+    for (const tagId of tagIds) {
+      query = query.where(eb =>
+        eb.exists(
+          eb
+            .selectFrom('entry_tags')
+            .select('entry_tags.entry_id')
+            .whereRef('entry_tags.entry_id', '=', 'entries.id')
+            .where('entry_tags.tag_id', '=', tagId)
+            .where('entry_tags.deleted_at', 'is', null)
+        )
+      );
+    }
+
+    if (cursorWhere) {
+      query = query.where(cursorWhere);
     }
 
     const rows = await query.limit(pageSize + 1).execute();
@@ -261,7 +290,7 @@ export class EntriesRepository implements SyncedRepository<EntrySyncData, Execut
       nextCursor:
         hasNextPage && lastRow
           ? {
-              index: lastRow.entry_index,
+              entry_index: lastRow.entry_index,
               id: lastRow.id,
             }
           : null,
