@@ -5,15 +5,12 @@ import type { SearchTagsInput, Tag, TagWithColor } from '@/repositories/TagsRepo
 type CreateTagInput = {
   categoryId: string;
   label: string;
-  icon?: string | null;
   archivedAt?: number | null;
 };
 
 type UpdateTagInput = {
   id: string;
   label: string;
-  icon: string | null;
-  sortOrder: number;
   archivedAt: number | null;
 };
 
@@ -74,7 +71,6 @@ export class TagsService {
         id,
         categoryId: input.categoryId,
         label,
-        icon: input.icon ?? null,
         archivedAt: input.archivedAt ?? null,
         createdAt: now,
         updatedAt: now,
@@ -97,8 +93,6 @@ export class TagsService {
         await this.repositories.tags.updateTag(trx, {
           id: input.id,
           label,
-          icon: input.icon,
-          sortOrder: input.sortOrder,
           archivedAt: input.archivedAt,
           updatedAt: now,
         }),

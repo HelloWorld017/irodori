@@ -98,13 +98,13 @@ Why this shape:
 ### 4.3 Domain Tables (initial)
 
 - `notebooks`
-  - id, title, description, shelf_order, created_at, updated_at, deleted_at
+  - id, title, description, sort_order, created_at, updated_at, deleted_at
 - `entries`
   - id, notebook_id, title, body, cover_asset_id, created_at, updated_at, deleted_at
 - `tag_categories`
-  - id, notebook_id, label, sort_order, min_select, max_select, required
+  - id, notebook_id, label, color, sort_order, min_select, max_select, required
 - `tags`
-  - id, category_id, key, label, color, icon, sort_order, archived_at
+  - id, category_id, label, archived_at
 - `entry_tags`
   - entry_id, tag_id, created_at
 - `stickers`
@@ -114,7 +114,7 @@ Why this shape:
 - `assets`
   - id, blob_digest, mime, size, width, height, status, created_at, updated_at
 - `entry_assets`
-  - entry_id, asset_id, usage (`cover` or `inline`), sort_order, created_at
+  - entry_id, asset_id, usage (`cover` or `inline`), created_at
 
 ## 5) Validation and Constraint Strategy
 
@@ -237,7 +237,7 @@ src/fragments/
 
 - Render notebook cards on shelf layout.
 - Notebook create/update/delete controls.
-- Drag reorder and persist `shelf_order`.
+- Drag reorder and persist `sort_order`.
 
 ### 8.2 Diary fragment
 

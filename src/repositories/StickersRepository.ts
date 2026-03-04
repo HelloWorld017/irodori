@@ -149,7 +149,7 @@ export class StickersRepository implements SyncedRepository<StickerSyncData, Exe
       .selectFrom('stickers')
       .selectAll()
       .where('deleted_at', 'is', null)
-      .orderBy('created_at', 'asc')
+      .orderBy('created_at', 'desc')
       .execute();
 
     return rows.map(toSticker);
@@ -165,7 +165,7 @@ export class StickersRepository implements SyncedRepository<StickerSyncData, Exe
       .selectAll()
       .where('id', 'in', ids)
       .where('deleted_at', 'is', null)
-      .orderBy('created_at', 'asc')
+      .orderBy('created_at', 'desc')
       .execute();
 
     return rows.map(toSticker);

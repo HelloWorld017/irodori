@@ -15,7 +15,7 @@ export type NotebooksTable = {
   title: string;
   description: string;
   color: string;
-  shelf_order: number;
+  sort_order: number;
   created_at: number;
   updated_at: number;
   deleted_at: number | null;
@@ -30,7 +30,7 @@ export type Notebook = {
   title: string;
   description: string;
   color: string;
-  shelfOrder: number;
+  sortOrder: number;
   createdAt: number;
   updatedAt: number;
   deletedAt: number | null;
@@ -40,7 +40,7 @@ export type NotebookSyncData = {
   title: string;
   description: string;
   color: string;
-  shelfOrder: number;
+  sortOrder: number;
   createdAt: number;
   updatedAt: number;
   deletedAt: number | null;
@@ -73,7 +73,7 @@ const toNotebook = (row: Selectable<NotebooksTable>): Notebook => ({
   title: row.title,
   description: row.description,
   color: row.color,
-  shelfOrder: row.shelf_order,
+  sortOrder: row.sort_order,
   createdAt: row.created_at,
   updatedAt: row.updated_at,
   deletedAt: row.deleted_at,
@@ -83,7 +83,7 @@ const toNotebookSyncData = (notebook: Notebook): NotebookSyncData => ({
   title: notebook.title,
   description: notebook.description,
   color: notebook.color,
-  shelfOrder: notebook.shelfOrder,
+  sortOrder: notebook.sortOrder,
   createdAt: notebook.createdAt,
   updatedAt: notebook.updatedAt,
   deletedAt: notebook.deletedAt,
@@ -93,7 +93,7 @@ const notebookSyncDataSchema: z.ZodType<NotebookSyncData> = z.object({
   title: z.string(),
   description: z.string(),
   color: z.string(),
-  shelfOrder: z.number(),
+  sortOrder: z.number(),
   createdAt: z.number(),
   updatedAt: z.number(),
   deletedAt: z.number().nullable(),
@@ -121,7 +121,7 @@ export class NotebooksRepository
         title TEXT NOT NULL,
         description TEXT NOT NULL DEFAULT '',
         color TEXT NOT NULL,
-        shelf_order INTEGER NOT NULL,
+        sort_order INTEGER NOT NULL,
         created_at INTEGER NOT NULL,
         updated_at INTEGER NOT NULL,
         deleted_at INTEGER,
@@ -130,8 +130,8 @@ export class NotebooksRepository
     `.execute(this.db);
 
     await sql`
-      CREATE INDEX IF NOT EXISTS notebooks_shelf_order_idx
-      ON notebooks (shelf_order)
+      CREATE INDEX IF NOT EXISTS notebooks_sort_order_idx
+      ON notebooks (sort_order)
     `.execute(this.db);
 
     await sql`
@@ -147,8 +147,8 @@ export class NotebooksRepository
       .selectFrom('notebooks')
       .selectAll()
       .where('deleted_at', 'is', null)
-      .orderBy('shelf_order', 'asc')
-      .orderBy('created_at', 'asc')
+      .orderBy('sort_order', 'asc')
+      .orderBy('created_at', 'desc')
       .execute();
 
     return rows.map(toNotebook);
@@ -166,9 +166,9 @@ export class NotebooksRepository
   }
 
   async createNotebook(executor: Executor, input: CreateNotebookInput): Promise<Notebook> {
-    const shelfOrderRow = await executor
+    const sortOrderRow = await executor
       .selectFrom('notebooks')
-      .select(sql<number>`coalesce(max(shelf_order), -1)`.as('maxShelfOrder'))
+      .select(sql<number>`coalesce(max(sort_order), -1)`.as('maxSortOrder'))
       .executeTakeFirstOrThrow();
 
     const notebook: Notebook = {
@@ -176,7 +176,7 @@ export class NotebooksRepository
       title: input.title,
       description: input.description,
       color: input.color,
-      shelfOrder: shelfOrderRow.maxShelfOrder + 1,
+      sortOrder: sortOrderRow.maxSortOrder + 1,
       createdAt: input.createdAt,
       updatedAt: input.updatedAt,
       deletedAt: null,
@@ -189,7 +189,7 @@ export class NotebooksRepository
         title: notebook.title,
         description: notebook.description,
         color: notebook.color,
-        shelf_order: notebook.shelfOrder,
+        sort_order: notebook.sortOrder,
         created_at: notebook.createdAt,
         updated_at: notebook.updatedAt,
         deleted_at: notebook.deletedAt,
@@ -279,7 +279,7 @@ export class NotebooksRepository
           title: data.title,
           description: data.description,
           color: data.color,
-          shelf_order: data.shelfOrder,
+          sort_order: data.sortOrder,
           created_at: data.createdAt,
           updated_at: data.updatedAt,
           deleted_at: data.deletedAt,
@@ -289,7 +289,7 @@ export class NotebooksRepository
             title: data.title,
             description: data.description,
             color: data.color,
-            shelf_order: data.shelfOrder,
+            sort_order: data.sortOrder,
             created_at: data.createdAt,
             updated_at: data.updatedAt,
             deleted_at: data.deletedAt,

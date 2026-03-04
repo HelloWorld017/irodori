@@ -149,7 +149,7 @@ export class EntryTagsRepository
       .selectAll()
       .where('entry_id', '=', entryId)
       .where('deleted_at', 'is', null)
-      .orderBy('created_at', 'asc')
+      .orderBy('created_at', 'desc')
       .execute();
 
     return rows.map(toEntryTag);
@@ -166,7 +166,7 @@ export class EntryTagsRepository
       .where('entry_id', 'in', entryIds)
       .where('deleted_at', 'is', null)
       .orderBy('entry_id', 'asc')
-      .orderBy('created_at', 'asc')
+      .orderBy('created_at', 'desc')
       .execute();
 
     return rows.map(toEntryTag);

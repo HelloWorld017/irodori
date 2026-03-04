@@ -181,7 +181,7 @@ export class TagCategoriesRepository
       .where('notebook_id', '=', notebookId)
       .where('deleted_at', 'is', null)
       .orderBy('sort_order', 'asc')
-      .orderBy('created_at', 'asc')
+      .orderBy('created_at', 'desc')
       .execute();
 
     return rows.map(toTagCategory);

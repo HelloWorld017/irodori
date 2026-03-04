@@ -52,7 +52,6 @@ export type EntryAssetsTable = {
   entry_id: string;
   asset_id: string;
   usage: EntryAssetUsage;
-  sort_order: number;
   created_at: number;
   updated_at: number;
   deleted_at: number | null;
@@ -66,7 +65,6 @@ export type EntryAsset = {
   entryId: string;
   assetId: string;
   usage: EntryAssetUsage;
-  sortOrder: number;
   createdAt: number;
   updatedAt: number;
   deletedAt: number | null;
@@ -76,7 +74,6 @@ export type EntryAssetSyncData = {
   entryId: string;
   assetId: string;
   usage: EntryAssetUsage;
-  sortOrder: number;
   createdAt: number;
   updatedAt: number;
   deletedAt: number | null;
@@ -86,7 +83,6 @@ export type UpsertEntryAssetInput = {
   entryId: string;
   assetId: string;
   usage: EntryAssetUsage;
-  sortOrder: number;
   createdAt: number;
   updatedAt: number;
 };
@@ -102,7 +98,6 @@ const toEntryAsset = (row: Selectable<EntryAssetsTable>): EntryAsset => ({
   entryId: row.entry_id,
   assetId: row.asset_id,
   usage: row.usage,
-  sortOrder: row.sort_order,
   createdAt: row.created_at,
   updatedAt: row.updated_at,
   deletedAt: row.deleted_at,
@@ -112,7 +107,6 @@ const toEntryAssetSyncData = (entryAsset: EntryAsset): EntryAssetSyncData => ({
   entryId: entryAsset.entryId,
   assetId: entryAsset.assetId,
   usage: entryAsset.usage,
-  sortOrder: entryAsset.sortOrder,
   createdAt: entryAsset.createdAt,
   updatedAt: entryAsset.updatedAt,
   deletedAt: entryAsset.deletedAt,
@@ -122,7 +116,6 @@ const entryAssetSyncDataSchema: z.ZodType<EntryAssetSyncData> = z.object({
   entryId: z.string(),
   assetId: z.string(),
   usage: z.enum(['cover', 'inline']),
-  sortOrder: z.number(),
   createdAt: z.number(),
   updatedAt: z.number(),
   deletedAt: z.number().nullable(),
@@ -149,7 +142,6 @@ export class EntryAssetsRepository
         entry_id TEXT NOT NULL,
         asset_id TEXT NOT NULL,
         usage TEXT NOT NULL,
-        sort_order INTEGER NOT NULL,
         created_at INTEGER NOT NULL,
         updated_at INTEGER NOT NULL,
         deleted_at INTEGER,
@@ -163,8 +155,8 @@ export class EntryAssetsRepository
     `.execute(this.db);
 
     await sql`
-      CREATE INDEX IF NOT EXISTS entry_assets_usage_sort_order_idx
-      ON entry_assets (usage, sort_order)
+      CREATE INDEX IF NOT EXISTS entry_assets_usage_idx
+      ON entry_assets (usage)
     `.execute(this.db);
 
     await sql`
@@ -189,7 +181,7 @@ export class EntryAssetsRepository
       query = query.where('usage', '=', options.usage);
     }
 
-    const rows = await query.orderBy('usage', 'asc').orderBy('sort_order', 'asc').execute();
+    const rows = await query.orderBy('usage', 'asc').orderBy('created_at', 'desc').execute();
     return rows.map(toEntryAsset);
   }
 
@@ -198,7 +190,6 @@ export class EntryAssetsRepository
       entryId: input.entryId,
       assetId: input.assetId,
       usage: input.usage,
-      sortOrder: input.sortOrder,
       createdAt: input.createdAt,
       updatedAt: input.updatedAt,
       deletedAt: null,
@@ -210,14 +201,12 @@ export class EntryAssetsRepository
         entry_id: entryAsset.entryId,
         asset_id: entryAsset.assetId,
         usage: entryAsset.usage,
-        sort_order: entryAsset.sortOrder,
         created_at: entryAsset.createdAt,
         updated_at: entryAsset.updatedAt,
         deleted_at: entryAsset.deletedAt,
       })
       .onConflict(conflict =>
         conflict.columns(['entry_id', 'asset_id', 'usage']).doUpdateSet({
-          sort_order: entryAsset.sortOrder,
           created_at: entryAsset.createdAt,
           updated_at: entryAsset.updatedAt,
           deleted_at: null,
@@ -281,14 +270,12 @@ export class EntryAssetsRepository
           entry_id: data.entryId,
           asset_id: data.assetId,
           usage: data.usage,
-          sort_order: data.sortOrder,
           created_at: data.createdAt,
           updated_at: data.updatedAt,
           deleted_at: data.deletedAt,
         })
         .onConflict(conflict =>
           conflict.columns(['entry_id', 'asset_id', 'usage']).doUpdateSet({
-            sort_order: data.sortOrder,
             created_at: data.createdAt,
             updated_at: data.updatedAt,
             deleted_at: data.deletedAt,

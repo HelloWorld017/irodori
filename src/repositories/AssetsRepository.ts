@@ -169,7 +169,7 @@ export class AssetsRepository implements SyncedRepository<AssetSyncData, Executo
       query = query.where('status', '=', options.status);
     }
 
-    const rows = await query.orderBy('created_at', 'asc').execute();
+    const rows = await query.orderBy('created_at', 'desc').execute();
     return rows.map(toAsset);
   }
 
