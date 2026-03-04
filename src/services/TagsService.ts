@@ -1,11 +1,10 @@
 import type { Services } from '.';
 import type { Executor, Repositories } from '@/repositories';
-import type { Tag } from '@/repositories/TagsRepository';
+import type { SearchTagsInput, Tag, TagWithColor } from '@/repositories/TagsRepository';
 
 type CreateTagInput = {
   categoryId: string;
   label: string;
-  color: string;
   icon?: string | null;
   archivedAt?: number | null;
 };
@@ -13,7 +12,6 @@ type CreateTagInput = {
 type UpdateTagInput = {
   id: string;
   label: string;
-  color: string;
   icon: string | null;
   sortOrder: number;
   archivedAt: number | null;
@@ -33,19 +31,17 @@ const normalizeLabel = (value: string): string => {
   return label;
 };
 
-const normalizeColor = (value: string): string => {
-  const color = value.trim();
-
-  if (!color) {
-    throw new Error('Tag color is required.');
-  }
-
-  return color;
-};
-
 const assertTagExists = (tag: Tag | null, id: string): Tag => {
   if (!tag) {
     throw new Error(`Tag not found: id=${id}`);
+  }
+
+  return tag;
+};
+
+const assertTagWithColorExists = (tag: TagWithColor | null, id: string): TagWithColor => {
+  if (!tag) {
+    throw new Error(`Tag with color not found: id=${id}`);
   }
 
   return tag;
@@ -60,22 +56,24 @@ export class TagsService {
     this.services = services;
   }
 
-  listByCategoryId(categoryId: string): Promise<Tag[]> {
+  listByCategoryId(categoryId: string): Promise<TagWithColor[]> {
     return this.repositories.tags.listTagsByCategoryId(categoryId);
   }
 
-  async create(input: CreateTagInput): Promise<Tag> {
+  search(input: SearchTagsInput): Promise<TagWithColor[]> {
+    return this.repositories.tags.searchTags(input);
+  }
+
+  async create(input: CreateTagInput): Promise<TagWithColor> {
     const now = Date.now();
     const id = crypto.randomUUID();
     const label = normalizeLabel(input.label);
-    const color = normalizeColor(input.color);
 
     return this.repositories.withTransaction(async trx => {
       const tag = await this.repositories.tags.createTag(trx, {
         id,
         categoryId: input.categoryId,
         label,
-        color,
         icon: input.icon ?? null,
         archivedAt: input.archivedAt ?? null,
         createdAt: now,
@@ -83,21 +81,22 @@ export class TagsService {
       });
 
       await this.stageTag(trx, tag);
-      return tag;
+      return assertTagWithColorExists(
+        await this.repositories.tags.readTagById(tag.id, trx),
+        tag.id
+      );
     });
   }
 
-  async update(input: UpdateTagInput): Promise<Tag> {
+  async update(input: UpdateTagInput): Promise<TagWithColor> {
     const now = Date.now();
     const label = normalizeLabel(input.label);
-    const color = normalizeColor(input.color);
 
     return this.repositories.withTransaction(async trx => {
       const tag = assertTagExists(
         await this.repositories.tags.updateTag(trx, {
           id: input.id,
           label,
-          color,
           icon: input.icon,
           sortOrder: input.sortOrder,
           archivedAt: input.archivedAt,
@@ -107,7 +106,10 @@ export class TagsService {
       );
 
       await this.stageTag(trx, tag);
-      return tag;
+      return assertTagWithColorExists(
+        await this.repositories.tags.readTagById(tag.id, trx),
+        tag.id
+      );
     });
   }
 

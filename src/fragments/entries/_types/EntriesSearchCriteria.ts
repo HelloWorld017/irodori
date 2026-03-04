@@ -1,8 +1,8 @@
-import type { Tag } from '@/repositories/TagsRepository';
+import type { TagWithColor } from '@/repositories/TagsRepository';
 
 export type EntriesSearchCriteria = {
   draft: string;
-  tags: Tag[];
+  tags: TagWithColor[];
   dateBefore: number | null;
 };
 

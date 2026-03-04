@@ -1,19 +1,21 @@
-import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { Tag } from '@/fragments/_components/Tag';
 import { IconSquarePlus } from '@/fragments/_icons';
 import { useServices } from '@/fragments/_providers/DatabaseProvider';
 import { useShowToast } from '@/fragments/_providers/ToastProvider';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { classes } from '@/utils/classes';
 import { queryKey } from '@/utils/queryKey';
 import type { EntriesSearchCriteria } from '../_types';
-import type { Tag as TagModel } from '@/repositories/TagsRepository';
+import type { TagWithColor as TagModel } from '@/repositories/TagsRepository';
 
 type TagsPickerValue = Pick<EntriesSearchCriteria, 'draft' | 'tags'>;
 
 type TagsPickerProps = {
   notebookId: string;
   tagsCategoryId?: string;
+  searchLimit?: number;
   value: TagsPickerValue;
   allowDraft?: boolean;
   allowCreateTag?: boolean;
@@ -22,8 +24,6 @@ type TagsPickerProps = {
   onChange: (value: TagsPickerValue) => void;
   onSubmit?: (value: TagsPickerValue) => void;
 };
-
-const DEFAULT_NEW_TAG_COLOR = '#00a6f4';
 
 const toUniqueTags = (tags: TagModel[]): TagModel[] => {
   const tagsById = new Map<string, TagModel>();
@@ -36,6 +36,7 @@ const toUniqueTags = (tags: TagModel[]): TagModel[] => {
 export const TagsPicker = ({
   notebookId,
   tagsCategoryId,
+  searchLimit = 5,
   value,
   allowDraft = true,
   allowCreateTag = false,
@@ -54,22 +55,6 @@ export const TagsPicker = ({
     queryFn: () => services!.tagCategories.listByNotebookId(notebookId),
   });
 
-  const categoryIds = useMemo(() => {
-    if (tagsCategoryId) {
-      return [tagsCategoryId];
-    }
-
-    return (tagCategoriesQuery.data ?? []).map(category => category.id);
-  }, [tagCategoriesQuery.data, tagsCategoryId]);
-
-  const tagsQueries = useQueries({
-    queries: categoryIds.map(categoryId => ({
-      enabled: services !== null,
-      queryKey: queryKey('entries', 'search-tags', { notebookId, categoryId }),
-      queryFn: () => services!.tags.listByCategoryId(categoryId),
-    })),
-  });
-
   const selectedCategory = useMemo(() => {
     if (!tagsCategoryId) {
       return null;
@@ -78,45 +63,47 @@ export const TagsPicker = ({
     return (tagCategoriesQuery.data ?? []).find(category => category.id === tagsCategoryId) ?? null;
   }, [tagCategoriesQuery.data, tagsCategoryId]);
 
-  const availableTags = useMemo(() => {
-    const tagsById = new Map<string, TagModel>();
-    tagsQueries.forEach(tagsQuery => {
-      (tagsQuery.data ?? []).forEach(tag => {
-        tagsById.set(tag.id, tag);
-      });
-    });
-
-    return [...tagsById.values()];
-  }, [tagsQueries]);
-
   const selectedTagIds = useMemo(() => new Set(value.tags.map(tag => tag.id)), [value.tags]);
   const normalizedDraft = value.draft.trim().toLowerCase();
+  const debouncedDraft = useDebouncedValue(normalizedDraft, { delay: 200 });
+
+  const tagsQuery = useQuery({
+    enabled: services !== null && debouncedDraft !== '',
+    queryKey: queryKey('entries', 'search-tags', {
+      notebookId,
+      categoryId: tagsCategoryId ?? null,
+      query: debouncedDraft,
+      limit: searchLimit,
+    }),
+    queryFn: () =>
+      services!.tags.search({
+        notebookId,
+        categoryId: tagsCategoryId,
+        query: debouncedDraft,
+        limit: searchLimit,
+      }),
+  });
+
   const maxSelect = tagsCategoryId ? (selectedCategory?.maxSelect ?? null) : null;
   const maxSelectionReached = maxSelect !== null && value.tags.length >= maxSelect;
   const hasTagQueryError =
-    tagCategoriesQuery.isError || tagsQueries.some(tagsQuery => tagsQuery.isError);
+    tagCategoriesQuery.isError || (normalizedDraft !== '' && tagsQuery.isError);
 
   const suggestions = useMemo(
-    () =>
-      availableTags.filter(tag => {
-        if (selectedTagIds.has(tag.id)) {
-          return false;
-        }
+    () => (tagsQuery.data ?? []).filter(tag => !selectedTagIds.has(tag.id)),
+    [selectedTagIds, tagsQuery.data]
+  );
 
-        if (normalizedDraft === '') {
-          return true;
-        }
-
-        return tag.label.toLowerCase().includes(normalizedDraft);
-      }),
-    [availableTags, normalizedDraft, selectedTagIds]
+  const hasMatchedLabel = (tagsQuery.data ?? []).some(
+    tag => tag.label.toLowerCase() === normalizedDraft
   );
 
   const canCreateTagCandidate =
     allowCreateTag &&
     Boolean(tagsCategoryId) &&
     normalizedDraft !== '' &&
-    !availableTags.some(tag => tag.label.toLowerCase() === normalizedDraft);
+    !hasMatchedLabel &&
+    !tagsQuery.isFetching;
 
   const createTagMutation = useMutation({
     mutationFn: async (label: string) => {
@@ -131,7 +118,6 @@ export const TagsPicker = ({
       return services.tags.create({
         categoryId: tagsCategoryId,
         label: label.trim(),
-        color: DEFAULT_NEW_TAG_COLOR,
       });
     },
     onSuccess: async createdTag => {

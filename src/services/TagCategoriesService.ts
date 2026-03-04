@@ -5,6 +5,7 @@ import type { TagCategory } from '@/repositories/TagCategoriesRepository';
 type CreateTagCategoryInput = {
   notebookId: string;
   label: string;
+  color: string;
   minSelect: number;
   maxSelect: number | null;
   required: boolean;
@@ -13,6 +14,7 @@ type CreateTagCategoryInput = {
 type UpdateTagCategoryInput = {
   id: string;
   label: string;
+  color: string;
   sortOrder: number;
   minSelect: number;
   maxSelect: number | null;
@@ -31,6 +33,16 @@ const normalizeLabel = (value: string): string => {
   }
 
   return label;
+};
+
+const normalizeColor = (value: string): string => {
+  const color = value.trim();
+
+  if (!color) {
+    throw new Error('Tag category color is required.');
+  }
+
+  return color;
 };
 
 const assertTagCategoryExists = (tagCategory: TagCategory | null, id: string): TagCategory => {
@@ -58,12 +70,14 @@ export class TagCategoriesService {
     const now = Date.now();
     const id = crypto.randomUUID();
     const label = normalizeLabel(input.label);
+    const color = normalizeColor(input.color);
 
     return this.repositories.withTransaction(async trx => {
       const tagCategory = await this.repositories.tagCategories.createTagCategory(trx, {
         id,
         notebookId: input.notebookId,
         label,
+        color,
         minSelect: input.minSelect,
         maxSelect: input.maxSelect,
         required: input.required,
@@ -79,12 +93,14 @@ export class TagCategoriesService {
   async update(input: UpdateTagCategoryInput): Promise<TagCategory> {
     const now = Date.now();
     const label = normalizeLabel(input.label);
+    const color = normalizeColor(input.color);
 
     return this.repositories.withTransaction(async trx => {
       const tagCategory = assertTagCategoryExists(
         await this.repositories.tagCategories.updateTagCategory(trx, {
           id: input.id,
           label,
+          color,
           sortOrder: input.sortOrder,
           minSelect: input.minSelect,
           maxSelect: input.maxSelect,
