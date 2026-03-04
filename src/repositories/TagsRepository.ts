@@ -13,7 +13,6 @@ import type { Kysely, Selectable } from 'kysely';
 export type TagsTable = {
   id: string;
   category_id: string;
-  tag_key: string;
   label: string;
   color: string;
   icon: string | null;
@@ -31,7 +30,6 @@ export type TagsDatabase = {
 export type Tag = {
   id: string;
   categoryId: string;
-  key: string;
   label: string;
   color: string;
   icon: string | null;
@@ -44,7 +42,6 @@ export type Tag = {
 
 export type TagSyncData = {
   categoryId: string;
-  key: string;
   label: string;
   color: string;
   icon: string | null;
@@ -58,7 +55,6 @@ export type TagSyncData = {
 export type CreateTagInput = {
   id: string;
   categoryId: string;
-  key: string;
   label: string;
   color: string;
   icon: string | null;
@@ -69,7 +65,6 @@ export type CreateTagInput = {
 
 export type UpdateTagInput = {
   id: string;
-  key: string;
   label: string;
   color: string;
   icon: string | null;
@@ -86,7 +81,6 @@ export type DeleteTagInput = {
 const toTag = (row: Selectable<TagsTable>): Tag => ({
   id: row.id,
   categoryId: row.category_id,
-  key: row.tag_key,
   label: row.label,
   color: row.color,
   icon: row.icon,
@@ -99,7 +93,6 @@ const toTag = (row: Selectable<TagsTable>): Tag => ({
 
 const toTagSyncData = (tag: Tag): TagSyncData => ({
   categoryId: tag.categoryId,
-  key: tag.key,
   label: tag.label,
   color: tag.color,
   icon: tag.icon,
@@ -112,7 +105,6 @@ const toTagSyncData = (tag: Tag): TagSyncData => ({
 
 const tagSyncDataSchema: z.ZodType<TagSyncData> = z.object({
   categoryId: z.string(),
-  key: z.string(),
   label: z.string(),
   color: z.string(),
   icon: z.string().nullable(),
@@ -141,7 +133,6 @@ export class TagsRepository implements SyncedRepository<TagSyncData, Executor>, 
       CREATE TABLE IF NOT EXISTS tags (
         id TEXT NOT NULL,
         category_id TEXT NOT NULL,
-        tag_key TEXT NOT NULL,
         label TEXT NOT NULL,
         color TEXT NOT NULL,
         icon TEXT,
@@ -234,7 +225,6 @@ export class TagsRepository implements SyncedRepository<TagSyncData, Executor>, 
     const tag: Tag = {
       id: input.id,
       categoryId: input.categoryId,
-      key: input.key,
       label: input.label,
       color: input.color,
       icon: input.icon,
@@ -250,7 +240,6 @@ export class TagsRepository implements SyncedRepository<TagSyncData, Executor>, 
       .values({
         id: tag.id,
         category_id: tag.categoryId,
-        tag_key: tag.key,
         label: tag.label,
         color: tag.color,
         icon: tag.icon,
@@ -280,7 +269,6 @@ export class TagsRepository implements SyncedRepository<TagSyncData, Executor>, 
     await executor
       .updateTable('tags')
       .set({
-        tag_key: input.key,
         label: input.label,
         color: input.color,
         icon: input.icon,
@@ -294,7 +282,6 @@ export class TagsRepository implements SyncedRepository<TagSyncData, Executor>, 
 
     return {
       ...toTag(currentRow),
-      key: input.key,
       label: input.label,
       color: input.color,
       icon: input.icon,
@@ -346,7 +333,6 @@ export class TagsRepository implements SyncedRepository<TagSyncData, Executor>, 
         .values({
           id: doc.id,
           category_id: data.categoryId,
-          tag_key: data.key,
           label: data.label,
           color: data.color,
           icon: data.icon,
@@ -359,7 +345,6 @@ export class TagsRepository implements SyncedRepository<TagSyncData, Executor>, 
         .onConflict(conflict =>
           conflict.column('id').doUpdateSet({
             category_id: data.categoryId,
-            tag_key: data.key,
             label: data.label,
             color: data.color,
             icon: data.icon,

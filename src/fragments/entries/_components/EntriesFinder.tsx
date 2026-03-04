@@ -1,6 +1,7 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { useServices } from '@/fragments/_providers/DatabaseProvider';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { queryKey } from '@/utils/queryKey';
 import { useEntriesNotebookId } from '../_providers/EntriesProvider';
 import { DEFAULT_ENTRIES_SEARCH_CRITERIA } from '../_types';
@@ -19,7 +20,11 @@ type EntriesFinderProps = {
 export const EntriesFinder = ({ searchOpened = false, onCloseSearch }: EntriesFinderProps) => {
   const services = useServices();
   const notebookId = useEntriesNotebookId();
-  const [criteria, setCriteria] = useState<EntriesSearchCriteria>(DEFAULT_ENTRIES_SEARCH_CRITERIA);
+  const [latestCriteria, setCriteria] = useState<EntriesSearchCriteria>(
+    DEFAULT_ENTRIES_SEARCH_CRITERIA
+  );
+
+  const criteria = useDebouncedValue(latestCriteria, { delay: 1000 });
 
   const searchText = criteria.draft.trim();
   const selectedTagIds = useMemo(() => criteria.tags.map(tag => tag.id), [criteria.tags]);

@@ -33,20 +33,6 @@ const toUniqueTags = (tags: TagModel[]): TagModel[] => {
   return [...tagsById.values()];
 };
 
-const toTagKey = (value: string): string => {
-  const normalized = value
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, '-')
-    .replace(/[^a-z0-9-_]/g, '');
-
-  if (normalized !== '') {
-    return normalized;
-  }
-
-  return `tag-${Date.now()}`;
-};
-
 export const TagsPicker = ({
   notebookId,
   tagsCategoryId,
@@ -121,10 +107,7 @@ export const TagsPicker = ({
           return true;
         }
 
-        return (
-          tag.label.toLowerCase().includes(normalizedDraft) ||
-          tag.key.toLowerCase().includes(normalizedDraft)
-        );
+        return tag.label.toLowerCase().includes(normalizedDraft);
       }),
     [availableTags, normalizedDraft, selectedTagIds]
   );
@@ -133,10 +116,7 @@ export const TagsPicker = ({
     allowCreateTag &&
     Boolean(tagsCategoryId) &&
     normalizedDraft !== '' &&
-    !availableTags.some(
-      tag =>
-        tag.label.toLowerCase() === normalizedDraft || tag.key.toLowerCase() === normalizedDraft
-    );
+    !availableTags.some(tag => tag.label.toLowerCase() === normalizedDraft);
 
   const createTagMutation = useMutation({
     mutationFn: async (label: string) => {
@@ -150,7 +130,6 @@ export const TagsPicker = ({
 
       return services.tags.create({
         categoryId: tagsCategoryId,
-        key: toTagKey(label),
         label: label.trim(),
         color: DEFAULT_NEW_TAG_COLOR,
       });

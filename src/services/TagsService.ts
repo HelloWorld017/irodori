@@ -4,7 +4,6 @@ import type { Tag } from '@/repositories/TagsRepository';
 
 type CreateTagInput = {
   categoryId: string;
-  key: string;
   label: string;
   color: string;
   icon?: string | null;
@@ -13,7 +12,6 @@ type CreateTagInput = {
 
 type UpdateTagInput = {
   id: string;
-  key: string;
   label: string;
   color: string;
   icon: string | null;
@@ -23,16 +21,6 @@ type UpdateTagInput = {
 
 type RemoveTagInput = {
   id: string;
-};
-
-const normalizeKey = (value: string): string => {
-  const key = value.trim();
-
-  if (!key) {
-    throw new Error('Tag key is required.');
-  }
-
-  return key;
 };
 
 const normalizeLabel = (value: string): string => {
@@ -79,7 +67,6 @@ export class TagsService {
   async create(input: CreateTagInput): Promise<Tag> {
     const now = Date.now();
     const id = crypto.randomUUID();
-    const key = normalizeKey(input.key);
     const label = normalizeLabel(input.label);
     const color = normalizeColor(input.color);
 
@@ -87,7 +74,6 @@ export class TagsService {
       const tag = await this.repositories.tags.createTag(trx, {
         id,
         categoryId: input.categoryId,
-        key,
         label,
         color,
         icon: input.icon ?? null,
@@ -103,7 +89,6 @@ export class TagsService {
 
   async update(input: UpdateTagInput): Promise<Tag> {
     const now = Date.now();
-    const key = normalizeKey(input.key);
     const label = normalizeLabel(input.label);
     const color = normalizeColor(input.color);
 
@@ -111,7 +96,6 @@ export class TagsService {
       const tag = assertTagExists(
         await this.repositories.tags.updateTag(trx, {
           id: input.id,
-          key,
           label,
           color,
           icon: input.icon,

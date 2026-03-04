@@ -1,14 +1,5 @@
-import { Link, useLocation } from 'wouter';
-import { buildRoute } from '@/utils/route';
-import { useEntriesNotebookId } from '../_providers/EntriesProvider';
-
-export const EntriesDefaultFragment = () => {
-  const [location] = useLocation();
-  const notebookId = useEntriesNotebookId();
-  return (
-    <div>
-      {location}
-      <Link href={buildRoute('entriesEdit', { notebookId })}>Navigate</Link>
-    </div>
-  );
-};
+export const EntriesDefaultFragment = () => (
+  <div className="flex h-full items-center justify-center text-sm text-secondary">
+    새 일기를 추가하거나, 이전의 일기를 확인해보세요.
+  </div>
+);
