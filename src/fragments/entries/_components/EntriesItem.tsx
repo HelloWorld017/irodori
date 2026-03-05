@@ -1,12 +1,13 @@
 import { Link } from 'wouter';
+import { Tag } from '@/fragments/_components/Tag';
 import { classes } from '@/utils/classes';
 import { formatDateShort } from '@/utils/date';
 import { buildRoute } from '@/utils/route';
 import { useEntriesNotebookId } from '../_providers/EntriesProvider';
-import type { EntrySummary } from '@/repositories/EntriesRepository';
+import type { EntryListItem } from '@/services/EntriesService';
 
 type EntriesItemProps = {
-  entry: EntrySummary;
+  entry: EntryListItem;
 };
 
 export const EntriesItem = ({ entry }: EntriesItemProps) => {
@@ -30,7 +31,16 @@ export const EntriesItem = ({ entry }: EntriesItemProps) => {
         <time dateTime={new Date(entry.date).toISOString()}>{formatDateShort(entry.date)}</time>
         <span>#{entry.index}</span>
       </div>
+
       <h3 className="line-clamp-1 text-lg font-medium text-primary">{entry.title}</h3>
+
+      {!!entry.tags.length && (
+        <div className="mt-4 flex flex-wrap gap-2">
+          {entry.tags.map(tag => (
+            <Tag key={tag.id} {...tag} />
+          ))}
+        </div>
+      )}
     </Link>
   );
 };

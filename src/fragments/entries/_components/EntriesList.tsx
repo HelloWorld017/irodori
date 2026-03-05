@@ -2,11 +2,11 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import { useRef } from 'react';
 import { classes } from '@/utils/classes';
 import { EntriesItem } from './EntriesItem';
-import type { EntrySummary } from '@/repositories/EntriesRepository';
+import type { EntryListItem } from '@/services/EntriesService';
 import type { ReactNode } from 'react';
 
 type EntriesListProps = {
-  entries: EntrySummary[];
+  entries: EntryListItem[];
   className?: string;
   children?: { header: ReactNode; footer: ReactNode };
 };
