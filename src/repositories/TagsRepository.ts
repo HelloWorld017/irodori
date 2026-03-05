@@ -14,6 +14,8 @@ export type TagsTable = {
   id: string;
   category_id: string;
   label: string;
+  icon: string | null;
+  color: string | null;
   archived_at: number | null;
   created_at: number;
   updated_at: number;
@@ -28,19 +30,25 @@ export type Tag = {
   id: string;
   categoryId: string;
   label: string;
+  icon: string | null;
+  color: string | null;
   archivedAt: number | null;
   createdAt: number;
   updatedAt: number;
   deletedAt: number | null;
 };
 
-export type TagWithColor = Tag & {
+export type TagViewItem = Omit<Tag, 'icon' | 'color'> & {
+  displayed: boolean;
+  icon: string | null;
   color: string;
 };
 
 export type TagSyncData = {
   categoryId: string;
   label: string;
+  icon: string | null;
+  color: string | null;
   archivedAt: number | null;
   createdAt: number;
   updatedAt: number;
@@ -51,6 +59,8 @@ export type CreateTagInput = {
   id: string;
   categoryId: string;
   label: string;
+  icon: string | null;
+  color: string | null;
   archivedAt: number | null;
   createdAt: number;
   updatedAt: number;
@@ -59,6 +69,8 @@ export type CreateTagInput = {
 export type UpdateTagInput = {
   id: string;
   label: string;
+  icon: string | null;
+  color: string | null;
   archivedAt: number | null;
   updatedAt: number;
 };
@@ -80,28 +92,42 @@ const toTag = (row: Selectable<TagsTable>): Tag => ({
   id: row.id,
   categoryId: row.category_id,
   label: row.label,
+  icon: row.icon,
+  color: row.color,
   archivedAt: row.archived_at,
   createdAt: row.created_at,
   updatedAt: row.updated_at,
   deletedAt: row.deleted_at,
 });
 
-const toTagWithColor = (
-  row: Selectable<TagsTable> & { categoryColor: string | number | null }
-): TagWithColor => {
+const toTagViewItem = (
+  row: Selectable<TagsTable> & {
+    categoryDisplayed: number | boolean | null;
+    categoryIcon: string | null;
+    categoryColor: string | number | null;
+  }
+): TagViewItem => {
   if (typeof row.categoryColor !== 'string') {
     throw new Error(`Invalid tag category color: tagId=${row.id}`);
   }
 
+  if (typeof row.categoryDisplayed !== 'number' && typeof row.categoryDisplayed !== 'boolean') {
+    throw new Error(`Invalid tag category displayed: tagId=${row.id}`);
+  }
+
   return {
     ...toTag(row),
-    color: row.categoryColor,
+    displayed: row.categoryDisplayed !== 0,
+    icon: row.icon ?? row.categoryIcon,
+    color: row.color ?? row.categoryColor,
   };
 };
 
 const toTagSyncData = (tag: Tag): TagSyncData => ({
   categoryId: tag.categoryId,
   label: tag.label,
+  icon: tag.icon,
+  color: tag.color,
   archivedAt: tag.archivedAt,
   createdAt: tag.createdAt,
   updatedAt: tag.updatedAt,
@@ -111,6 +137,8 @@ const toTagSyncData = (tag: Tag): TagSyncData => ({
 const tagSyncDataSchema: z.ZodType<TagSyncData> = z.object({
   categoryId: z.string(),
   label: z.string(),
+  icon: z.string().nullable(),
+  color: z.string().nullable(),
   archivedAt: z.number().nullable(),
   createdAt: z.number(),
   updatedAt: z.number(),
@@ -150,6 +178,8 @@ export class TagsRepository implements SyncedRepository<TagSyncData, Executor>, 
         id TEXT NOT NULL,
         category_id TEXT NOT NULL,
         label TEXT NOT NULL,
+        icon TEXT,
+        color TEXT,
         archived_at INTEGER,
         created_at INTEGER NOT NULL,
         updated_at INTEGER NOT NULL,
@@ -179,11 +209,13 @@ export class TagsRepository implements SyncedRepository<TagSyncData, Executor>, 
   async listTagsByCategoryId(
     categoryId: string,
     options?: { includeArchived?: boolean }
-  ): Promise<TagWithColor[]> {
+  ): Promise<TagViewItem[]> {
     let query = this.db
       .selectFrom('tags')
       .innerJoin('tag_categories', 'tag_categories.id', 'tags.category_id')
       .selectAll('tags')
+      .select(sql<number>`tag_categories.displayed`.as('categoryDisplayed'))
+      .select(sql<string | null>`tag_categories.icon`.as('categoryIcon'))
       .select(sql<string>`tag_categories.color`.as('categoryColor'))
       .where('tags.category_id', '=', categoryId)
       .where('tags.deleted_at', 'is', null)
@@ -195,10 +227,10 @@ export class TagsRepository implements SyncedRepository<TagSyncData, Executor>, 
 
     const rows = await query.orderBy('tags.created_at', 'desc').execute();
 
-    return rows.map(toTagWithColor);
+    return rows.map(toTagViewItem);
   }
 
-  async listTagsByIds(ids: string[]): Promise<Tag[]> {
+  async listTagsByIds(ids: string[]): Promise<TagViewItem[]> {
     if (ids.length === 0) {
       return [];
     }
@@ -207,16 +239,19 @@ export class TagsRepository implements SyncedRepository<TagSyncData, Executor>, 
       .selectFrom('tags')
       .innerJoin('tag_categories', 'tag_categories.id', 'tags.category_id')
       .selectAll('tags')
+      .select(sql<number>`tag_categories.displayed`.as('categoryDisplayed'))
+      .select(sql<string | null>`tag_categories.icon`.as('categoryIcon'))
+      .select(sql<string>`tag_categories.color`.as('categoryColor'))
       .where('tags.id', 'in', ids)
       .where('tags.deleted_at', 'is', null)
       .where('tag_categories.deleted_at', 'is', null)
       .orderBy('tags.created_at', 'desc')
       .execute();
 
-    return rows.map(toTag);
+    return rows.map(toTagViewItem);
   }
 
-  async searchTags(input: SearchTagsInput): Promise<TagWithColor[]> {
+  async searchTags(input: SearchTagsInput): Promise<TagViewItem[]> {
     const searchQuery = normalizeSearchQuery(input.query);
     const limit = normalizeSearchLimit(input.limit);
 
@@ -224,6 +259,8 @@ export class TagsRepository implements SyncedRepository<TagSyncData, Executor>, 
       .selectFrom('tags')
       .innerJoin('tag_categories', 'tag_categories.id', 'tags.category_id')
       .selectAll('tags')
+      .select(sql<number>`tag_categories.displayed`.as('categoryDisplayed'))
+      .select(sql<string | null>`tag_categories.icon`.as('categoryIcon'))
       .select(sql<string>`tag_categories.color`.as('categoryColor'))
       .where('tag_categories.notebook_id', '=', input.notebookId)
       .where('tags.deleted_at', 'is', null)
@@ -244,22 +281,24 @@ export class TagsRepository implements SyncedRepository<TagSyncData, Executor>, 
     }
 
     const rows = await query.limit(limit).execute();
-    return rows.map(toTagWithColor);
+    return rows.map(toTagViewItem);
   }
 
-  async readTagById(id: string, executor?: Executor): Promise<TagWithColor | null> {
+  async readTagById(id: string, executor?: Executor): Promise<TagViewItem | null> {
     const db = executor ?? this.db;
     const row = await db
       .selectFrom('tags')
       .innerJoin('tag_categories', 'tag_categories.id', 'tags.category_id')
       .selectAll('tags')
+      .select(sql<number>`tag_categories.displayed`.as('categoryDisplayed'))
+      .select(sql<string | null>`tag_categories.icon`.as('categoryIcon'))
       .select(sql<string>`tag_categories.color`.as('categoryColor'))
       .where('tags.id', '=', id)
       .where('tags.deleted_at', 'is', null)
       .where('tag_categories.deleted_at', 'is', null)
       .executeTakeFirst();
 
-    return row ? toTagWithColor(row) : null;
+    return row ? toTagViewItem(row) : null;
   }
 
   async createTag(executor: Executor, input: CreateTagInput): Promise<Tag> {
@@ -267,6 +306,8 @@ export class TagsRepository implements SyncedRepository<TagSyncData, Executor>, 
       id: input.id,
       categoryId: input.categoryId,
       label: input.label,
+      icon: input.icon,
+      color: input.color,
       archivedAt: input.archivedAt,
       createdAt: input.createdAt,
       updatedAt: input.updatedAt,
@@ -279,6 +320,8 @@ export class TagsRepository implements SyncedRepository<TagSyncData, Executor>, 
         id: tag.id,
         category_id: tag.categoryId,
         label: tag.label,
+        icon: tag.icon,
+        color: tag.color,
         archived_at: tag.archivedAt,
         created_at: tag.createdAt,
         updated_at: tag.updatedAt,
@@ -305,6 +348,8 @@ export class TagsRepository implements SyncedRepository<TagSyncData, Executor>, 
       .updateTable('tags')
       .set({
         label: input.label,
+        icon: input.icon,
+        color: input.color,
         archived_at: input.archivedAt,
         updated_at: input.updatedAt,
       })
@@ -315,6 +360,8 @@ export class TagsRepository implements SyncedRepository<TagSyncData, Executor>, 
     return {
       ...toTag(currentRow),
       label: input.label,
+      icon: input.icon,
+      color: input.color,
       archivedAt: input.archivedAt,
       updatedAt: input.updatedAt,
     };
@@ -363,6 +410,8 @@ export class TagsRepository implements SyncedRepository<TagSyncData, Executor>, 
           id: doc.id,
           category_id: data.categoryId,
           label: data.label,
+          icon: data.icon,
+          color: data.color,
           archived_at: data.archivedAt,
           created_at: data.createdAt,
           updated_at: data.updatedAt,
@@ -372,6 +421,8 @@ export class TagsRepository implements SyncedRepository<TagSyncData, Executor>, 
           conflict.column('id').doUpdateSet({
             category_id: data.categoryId,
             label: data.label,
+            icon: data.icon,
+            color: data.color,
             archived_at: data.archivedAt,
             created_at: data.createdAt,
             updated_at: data.updatedAt,

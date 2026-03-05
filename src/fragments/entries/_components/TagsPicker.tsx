@@ -8,7 +8,7 @@ import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { classes } from '@/utils/classes';
 import { queryKey } from '@/utils/queryKey';
 import type { EntriesSearchCriteria } from '../_types/EntriesSearchCriteria';
-import type { TagWithColor as TagModel } from '@/repositories/TagsRepository';
+import type { TagViewItem as TagModel } from '@/repositories/TagsRepository';
 import type { ReactNode } from 'react';
 
 type TagsPickerValue = Pick<EntriesSearchCriteria, 'draft' | 'tags'>;

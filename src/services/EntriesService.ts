@@ -2,7 +2,7 @@ import type { Services } from '.';
 import type { Executor, Repositories } from '@/repositories';
 import type { Entry, EntryListCursor, EntrySummary } from '@/repositories/EntriesRepository';
 import type { Sticker } from '@/repositories/StickersRepository';
-import type { Tag } from '@/repositories/TagsRepository';
+import type { TagViewItem } from '@/repositories/TagsRepository';
 import type { CursorPageInput, CursorPageResult } from '@/types/Cursor';
 
 type ListEntriesInput = CursorPageInput<EntryListCursor> & {
@@ -30,14 +30,14 @@ type RemoveEntryInput = {
   id: string;
 };
 
-export type EntryListSticker = {
+export type EntryViewSticker = {
   slot: number;
   sticker: Sticker;
 };
 
-export type EntryListItem = EntrySummary & {
-  tags: Tag[];
-  stickers: EntryListSticker[];
+export type EntryViewItem = EntrySummary & {
+  tags: TagViewItem[];
+  stickers: EntryViewSticker[];
 };
 
 const normalizeEntryTitle = (value: string): string => {
@@ -69,7 +69,7 @@ export class EntriesService {
     this.services = services;
   }
 
-  async list(input: ListEntriesInput): Promise<CursorPageResult<EntryListItem, EntryListCursor>> {
+  async list(input: ListEntriesInput): Promise<CursorPageResult<EntryViewItem, EntryListCursor>> {
     const { items: entrySummaries, nextCursor } =
       await this.repositories.entries.listEntrySummaries(input);
 
@@ -81,7 +81,7 @@ export class EntriesService {
     }
 
     return {
-      items: await this.toEntryListItems(entrySummaries),
+      items: await this.toEntryViewItems(entrySummaries),
       nextCursor,
     };
   }
@@ -156,7 +156,7 @@ export class EntriesService {
     });
   }
 
-  private async toEntryListItems(entrySummaries: EntrySummary[]): Promise<EntryListItem[]> {
+  private async toEntryViewItems(entrySummaries: EntrySummary[]): Promise<EntryViewItem[]> {
     if (entrySummaries.length === 0) {
       return [];
     }
@@ -178,10 +178,10 @@ export class EntriesService {
     const tagsById = new Map(tags.map(tag => [tag.id, tag]));
     const stickersById = new Map(stickers.map(sticker => [sticker.id, sticker]));
 
-    const entryTagsByEntryId = new Map<string, Tag[]>();
+    const entryTagsByEntryId = new Map<string, TagViewItem[]>();
     entryTags.forEach(entryTag => {
       const tag = tagsById.get(entryTag.tagId);
-      if (!tag) {
+      if (!tag || !tag.displayed) {
         return;
       }
 
@@ -190,7 +190,7 @@ export class EntriesService {
       entryTagsByEntryId.set(entryTag.entryId, currentTags);
     });
 
-    const entryStickersByEntryId = new Map<string, EntryListSticker[]>();
+    const entryStickersByEntryId = new Map<string, EntryViewSticker[]>();
     entryStickers.forEach(entrySticker => {
       const sticker = stickersById.get(entrySticker.stickerId);
       if (!sticker) {

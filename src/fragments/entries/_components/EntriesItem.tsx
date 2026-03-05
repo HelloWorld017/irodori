@@ -4,10 +4,10 @@ import { classes } from '@/utils/classes';
 import { formatDateShort } from '@/utils/date';
 import { buildRoute } from '@/utils/route';
 import { useEntriesNotebookId } from '../_providers/EntriesProvider';
-import type { EntryListItem } from '@/services/EntriesService';
+import type { EntryViewItem } from '@/services/EntriesService';
 
 type EntriesItemProps = {
-  entry: EntryListItem;
+  entry: EntryViewItem;
 };
 
 export const EntriesItem = ({ entry }: EntriesItemProps) => {

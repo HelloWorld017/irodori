@@ -5,7 +5,9 @@ import type { TagCategory } from '@/repositories/TagCategoriesRepository';
 type CreateTagCategoryInput = {
   notebookId: string;
   label: string;
+  icon?: string | null;
   color: string;
+  displayed?: boolean;
   minSelect: number;
   maxSelect: number | null;
   required: boolean;
@@ -14,7 +16,9 @@ type CreateTagCategoryInput = {
 type UpdateTagCategoryInput = {
   id: string;
   label: string;
+  icon: string | null;
   color: string;
+  displayed: boolean;
   sortOrder: number;
   minSelect: number;
   maxSelect: number | null;
@@ -45,6 +49,11 @@ const normalizeColor = (value: string): string => {
   return color;
 };
 
+const normalizeIcon = (value: string | null | undefined): string | null => {
+  const icon = value?.trim();
+  return icon ? icon : null;
+};
+
 const assertTagCategoryExists = (tagCategory: TagCategory | null, id: string): TagCategory => {
   if (!tagCategory) {
     throw new Error(`Tag category not found: id=${id}`);
@@ -70,14 +79,18 @@ export class TagCategoriesService {
     const now = Date.now();
     const id = crypto.randomUUID();
     const label = normalizeLabel(input.label);
+    const icon = normalizeIcon(input.icon);
     const color = normalizeColor(input.color);
+    const displayed = input.displayed ?? true;
 
     return this.repositories.withTransaction(async trx => {
       const tagCategory = await this.repositories.tagCategories.createTagCategory(trx, {
         id,
         notebookId: input.notebookId,
         label,
+        icon,
         color,
+        displayed,
         minSelect: input.minSelect,
         maxSelect: input.maxSelect,
         required: input.required,
@@ -93,6 +106,7 @@ export class TagCategoriesService {
   async update(input: UpdateTagCategoryInput): Promise<TagCategory> {
     const now = Date.now();
     const label = normalizeLabel(input.label);
+    const icon = normalizeIcon(input.icon);
     const color = normalizeColor(input.color);
 
     return this.repositories.withTransaction(async trx => {
@@ -100,7 +114,9 @@ export class TagCategoriesService {
         await this.repositories.tagCategories.updateTagCategory(trx, {
           id: input.id,
           label,
+          icon,
           color,
+          displayed: input.displayed,
           sortOrder: input.sortOrder,
           minSelect: input.minSelect,
           maxSelect: input.maxSelect,

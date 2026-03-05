@@ -14,7 +14,9 @@ export type TagCategoriesTable = {
   id: string;
   notebook_id: string;
   label: string;
+  icon: string | null;
   color: string;
+  displayed: number;
   sort_order: number;
   min_select: number;
   max_select: number | null;
@@ -32,7 +34,9 @@ export type TagCategory = {
   id: string;
   notebookId: string;
   label: string;
+  icon: string | null;
   color: string;
+  displayed: boolean;
   sortOrder: number;
   minSelect: number;
   maxSelect: number | null;
@@ -45,7 +49,9 @@ export type TagCategory = {
 export type TagCategorySyncData = {
   notebookId: string;
   label: string;
+  icon: string | null;
   color: string;
+  displayed: boolean;
   sortOrder: number;
   minSelect: number;
   maxSelect: number | null;
@@ -59,7 +65,9 @@ export type CreateTagCategoryInput = {
   id: string;
   notebookId: string;
   label: string;
+  icon: string | null;
   color: string;
+  displayed: boolean;
   minSelect: number;
   maxSelect: number | null;
   required: boolean;
@@ -70,7 +78,9 @@ export type CreateTagCategoryInput = {
 export type UpdateTagCategoryInput = {
   id: string;
   label: string;
+  icon: string | null;
   color: string;
+  displayed: boolean;
   sortOrder: number;
   minSelect: number;
   maxSelect: number | null;
@@ -87,7 +97,9 @@ const toTagCategory = (row: Selectable<TagCategoriesTable>): TagCategory => ({
   id: row.id,
   notebookId: row.notebook_id,
   label: row.label,
+  icon: row.icon,
   color: row.color,
+  displayed: row.displayed !== 0,
   sortOrder: row.sort_order,
   minSelect: row.min_select,
   maxSelect: row.max_select,
@@ -100,7 +112,9 @@ const toTagCategory = (row: Selectable<TagCategoriesTable>): TagCategory => ({
 const toTagCategorySyncData = (category: TagCategory): TagCategorySyncData => ({
   notebookId: category.notebookId,
   label: category.label,
+  icon: category.icon,
   color: category.color,
+  displayed: category.displayed,
   sortOrder: category.sortOrder,
   minSelect: category.minSelect,
   maxSelect: category.maxSelect,
@@ -113,7 +127,9 @@ const toTagCategorySyncData = (category: TagCategory): TagCategorySyncData => ({
 const tagCategorySyncDataSchema: z.ZodType<TagCategorySyncData> = z.object({
   notebookId: z.string(),
   label: z.string(),
+  icon: z.string().nullable(),
   color: z.string(),
+  displayed: z.boolean(),
   sortOrder: z.number(),
   minSelect: z.number(),
   maxSelect: z.number().nullable(),
@@ -144,7 +160,9 @@ export class TagCategoriesRepository
         id TEXT NOT NULL,
         notebook_id TEXT NOT NULL,
         label TEXT NOT NULL,
+        icon TEXT,
         color TEXT NOT NULL,
+        displayed INTEGER NOT NULL DEFAULT 1,
         sort_order INTEGER NOT NULL,
         min_select INTEGER NOT NULL DEFAULT 0,
         max_select INTEGER,
@@ -210,7 +228,9 @@ export class TagCategoriesRepository
       id: input.id,
       notebookId: input.notebookId,
       label: input.label,
+      icon: input.icon,
       color: input.color,
+      displayed: input.displayed,
       sortOrder: sortOrderRow.maxSortOrder + 1,
       minSelect: input.minSelect,
       maxSelect: input.maxSelect,
@@ -226,7 +246,9 @@ export class TagCategoriesRepository
         id: category.id,
         notebook_id: category.notebookId,
         label: category.label,
+        icon: category.icon,
         color: category.color,
+        displayed: category.displayed ? 1 : 0,
         sort_order: category.sortOrder,
         min_select: category.minSelect,
         max_select: category.maxSelect,
@@ -259,7 +281,9 @@ export class TagCategoriesRepository
       .updateTable('tag_categories')
       .set({
         label: input.label,
+        icon: input.icon,
         color: input.color,
+        displayed: input.displayed ? 1 : 0,
         sort_order: input.sortOrder,
         min_select: input.minSelect,
         max_select: input.maxSelect,
@@ -273,7 +297,9 @@ export class TagCategoriesRepository
     return {
       ...toTagCategory(currentRow),
       label: input.label,
+      icon: input.icon,
       color: input.color,
+      displayed: input.displayed,
       sortOrder: input.sortOrder,
       minSelect: input.minSelect,
       maxSelect: input.maxSelect,
@@ -331,7 +357,9 @@ export class TagCategoriesRepository
           id: doc.id,
           notebook_id: data.notebookId,
           label: data.label,
+          icon: data.icon,
           color: data.color,
+          displayed: data.displayed ? 1 : 0,
           sort_order: data.sortOrder,
           min_select: data.minSelect,
           max_select: data.maxSelect,
@@ -344,7 +372,9 @@ export class TagCategoriesRepository
           conflict.column('id').doUpdateSet({
             notebook_id: data.notebookId,
             label: data.label,
+            icon: data.icon,
             color: data.color,
+            displayed: data.displayed ? 1 : 0,
             sort_order: data.sortOrder,
             min_select: data.minSelect,
             max_select: data.maxSelect,

@@ -5,7 +5,7 @@ import type { Executor, Repositories } from '@/repositories';
 import type { EntrySticker } from '@/repositories/EntryStickersRepository';
 import type { EntryTag } from '@/repositories/EntryTagsRepository';
 import type { Sticker } from '@/repositories/StickersRepository';
-import type { Tag } from '@/repositories/TagsRepository';
+import type { TagViewItem } from '@/repositories/TagsRepository';
 
 type ReplaceTagsInput = {
   entryId: string;
@@ -29,7 +29,7 @@ export type EntryMetadataSticker = {
 };
 
 export type EntryMetadata = {
-  tags: Tag[];
+  tags: TagViewItem[];
   stickers: EntryMetadataSticker[];
 };
 
