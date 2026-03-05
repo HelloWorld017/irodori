@@ -45,7 +45,7 @@
   --font-sans: 'Avenir Next', 'SUIT Variable', 'Pretendard JP', 'Noto Sans KR', sans-serif;
 
   /* Shadows */
-  --shadow-elevated: 0 24px 60px -36px rgba(58, 47, 36, 0.45);
+  --shadow-elevated: 0 24px 60px -20px oklch(from var(--color-default-800) l c h / 0.45);
 }
 
 @layer base {

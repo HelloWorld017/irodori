@@ -21,6 +21,7 @@ type TagsPickerProps = {
   allowDraft?: boolean;
   allowCreateTag?: boolean;
   className?: string;
+  inputClassName?: string;
   placeholder?: string;
   icon?: ReactNode;
   children?: ReactNode;
@@ -44,6 +45,7 @@ export const TagsPicker = ({
   allowDraft = true,
   allowCreateTag = false,
   className,
+  inputClassName,
   placeholder = '태그나 키워드를 입력하세요',
   icon,
   children,
@@ -168,10 +170,13 @@ export const TagsPicker = ({
   };
 
   return (
-    <section className={classes('relative w-full', className)}>
+    <div className={classes('relative w-full', className)}>
       <div
-        className="flex min-h-11 flex-wrap items-center gap-2 rounded-xl border border-line
-          bg-base-background px-3 py-2"
+        className={classes(
+          `flex min-h-11 flex-wrap items-center gap-2 rounded-xl border border-line
+          bg-base-background px-3 py-2`,
+          inputClassName
+        )}
       >
         {icon}
         {value.tags.map(tag => (
@@ -184,8 +189,8 @@ export const TagsPicker = ({
         ))}
 
         <input
-          className="min-w-20 flex-1 self-stretch text-sm text-primary outline-none
-            placeholder:text-tertiary"
+          className={`min-w-20 flex-1 self-stretch text-sm text-primary outline-none
+            placeholder:text-tertiary`}
           value={value.draft}
           onChange={event => {
             onChange({
@@ -274,6 +279,6 @@ export const TagsPicker = ({
           ) : null}
         </ul>
       ) : null}
-    </section>
+    </div>
   );
 };

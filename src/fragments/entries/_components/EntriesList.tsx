@@ -3,12 +3,14 @@ import { useRef } from 'react';
 import { classes } from '@/utils/classes';
 import { EntriesItem } from './EntriesItem';
 import type { EntrySummary } from '@/repositories/EntriesRepository';
+import type { ReactNode } from 'react';
 
 type EntriesListProps = {
   entries: EntrySummary[];
   selectedEntryId?: string | null;
   onSelectEntry?: (entryId: string) => void;
   className?: string;
+  children?: { header: ReactNode; footer: ReactNode };
 };
 
 export const EntriesList = ({
@@ -16,6 +18,7 @@ export const EntriesList = ({
   selectedEntryId = null,
   onSelectEntry,
   className,
+  children,
 }: EntriesListProps) => {
   const scrollElementRef = useRef<HTMLDivElement>(null);
 
@@ -29,16 +32,19 @@ export const EntriesList = ({
 
   if (entries.length === 0) {
     return (
-      <section className={classes('px-4 py-8 text-center text-sm text-secondary', className)}>
+      <section className={classes('text-center text-sm text-secondary', className)}>
+        {children?.header}
         표시할 일기가 없어요.
+        {children?.footer}
       </section>
     );
   }
 
   return (
     <div ref={scrollElementRef} className={classes('h-full overflow-y-auto', className)}>
+      {children?.header}
       <div className="relative w-full" style={{ height: `${virtualizer.getTotalSize()}px` }}>
-        <ul className="relative m-0 list-none p-0">
+        <ul className="relative m-0 list-none">
           {virtualizer.getVirtualItems().map(virtualItem => {
             const entry = entries[virtualItem.index];
 
@@ -51,7 +57,7 @@ export const EntriesList = ({
                 key={entry.id}
                 ref={virtualizer.measureElement}
                 data-index={virtualItem.index}
-                className="absolute top-0 left-0 w-full px-1 py-1"
+                className="absolute top-0 left-0 w-full py-1"
                 style={{ transform: `translateY(${virtualItem.start}px)` }}
               >
                 <EntriesItem
@@ -64,6 +70,7 @@ export const EntriesList = ({
           })}
         </ul>
       </div>
+      {children?.footer}
     </div>
   );
 };

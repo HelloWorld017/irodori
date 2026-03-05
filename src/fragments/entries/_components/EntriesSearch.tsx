@@ -34,7 +34,8 @@ export const EntriesSearch = ({
       value={{ draft: criteriaWithFallback.draft, tags: criteriaWithFallback.tags }}
       allowDraft
       placeholder="텍스트 또는 태그로 검색"
-      className="flex-1"
+      className={className}
+      inputClassName={classes('bg-base-background/80 shadow-elevated backdrop-blur-xl')}
       onChange={({ draft, tags }) => {
         onCriteriaChange({
           ...criteriaWithFallback,

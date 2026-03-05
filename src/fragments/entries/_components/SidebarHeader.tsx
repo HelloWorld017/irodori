@@ -6,15 +6,9 @@ import { useShowToast } from '@/fragments/_providers/ToastProvider';
 import { queryKey } from '@/utils/queryKey';
 import { buildRoute } from '@/utils/route';
 import { useEntriesNotebook, useEntriesNotebookId } from '../_providers/EntriesProvider';
-import { EntriesSearch } from './EntriesSearch';
 import type { EntriesSearchCriteria } from '../_types/EntriesSearchCriteria';
 
-type SidebarHeaderProps = {
-  criteria: EntriesSearchCriteria | null;
-  onCriteriaChange: (criteria: EntriesSearchCriteria | null) => void;
-};
-
-export const SidebarHeader = ({ criteria, onCriteriaChange }: SidebarHeaderProps) => {
+export const SidebarHeader = () => {
   const services = useServices();
   const showToast = useShowToast();
   const queryClient = useQueryClient();
@@ -67,7 +61,7 @@ export const SidebarHeader = ({ criteria, onCriteriaChange }: SidebarHeaderProps
   }
 
   return (
-    <header className="flex flex-col px-8 pb-5 sm:px-10 sm:pb-6">
+    <header className="flex flex-col px-8 sm:px-10">
       <div className="flex items-center justify-between gap-6">
         <div className="flex items-center gap-4">
           <button
@@ -100,11 +94,6 @@ export const SidebarHeader = ({ criteria, onCriteriaChange }: SidebarHeaderProps
           </button>
         </div>
       </div>
-      <EntriesSearch
-        notebookId={notebookId}
-        criteria={criteria}
-        onCriteriaChange={onCriteriaChange}
-      />
     </header>
   );
 };
