@@ -3,6 +3,7 @@ import {
   Calendar,
   ChevronLeft,
   Pencil,
+  Plus,
   Search,
   SquarePlus,
   Trash,
@@ -25,6 +26,7 @@ export const IconBookPlus = wrapLucideComponent(BookPlus);
 export const IconCalendar = wrapLucideComponent(Calendar);
 export const IconChevronLeft = wrapLucideComponent(ChevronLeft);
 export const IconPencil = wrapLucideComponent(Pencil);
+export const IconPlus = wrapLucideComponent(Plus);
 export const IconSearch = wrapLucideComponent(Search);
 export const IconSquarePlus = wrapLucideComponent(SquarePlus);
 export const IconTrash = wrapLucideComponent(Trash);

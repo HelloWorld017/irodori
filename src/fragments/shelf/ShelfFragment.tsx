@@ -6,7 +6,7 @@ import { useShowToast } from '@/fragments/_providers/ToastProvider';
 import { useEnsureDatabase } from '@/hooks/useEnsureDatabase';
 import { queryKey } from '@/utils/queryKey';
 import { DeleteNotebookModal } from './_components/DeleteNotebookModal';
-import { NotebookFormModal } from './_components/NotebookFormModal';
+import { NotebookEdit } from './_components/NotebookEdit';
 import { NotebookList } from './_components/NotebookList';
 import { ShelfHeader } from './_components/ShelfHeader';
 import {
@@ -143,7 +143,7 @@ const ShelfView = () => {
 
       <AnimatePresence>
         {modalKind === 'create' ? (
-          <NotebookFormModal
+          <NotebookEdit
             mode="create"
             initialValue={{ title: '', description: '', color: COLORS_PRESET[0] }}
             pending={createNotebookMutation.isPending}
@@ -157,8 +157,9 @@ const ShelfView = () => {
 
       <AnimatePresence>
         {modalKind === 'edit' && selectedNotebook ? (
-          <NotebookFormModal
+          <NotebookEdit
             mode="edit"
+            notebookId={selectedNotebook.id}
             initialValue={{
               title: selectedNotebook.title,
               description: selectedNotebook.description,

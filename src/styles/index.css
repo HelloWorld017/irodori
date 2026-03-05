@@ -12,7 +12,7 @@
   --color-default-300: #cbb9a1;
   --color-default-200: #e1d5c5;
   --color-default-100: #f2ece3;
-  --color-default-50: #fbf8f2;
+  --color-default-50: #fffefa;
 
   /* Base Colors */
   --color-primary: var(--color-default-900);

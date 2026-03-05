@@ -1,0 +1,409 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
+import { ColorPicker } from '@/fragments/_components/ColorPicker';
+import { IconPicker } from '@/fragments/_components/IconPicker';
+import { Tag } from '@/fragments/_components/Tag';
+import { Toggle } from '@/fragments/_components/Toggle';
+import { IconPencil, IconTrash } from '@/fragments/_icons';
+import { useServices } from '@/fragments/_providers/DatabaseProvider';
+import { useShowToast } from '@/fragments/_providers/ToastProvider';
+import { queryKey } from '@/utils/queryKey';
+import type { TagCategory } from '@/repositories/TagCategoriesRepository';
+
+type NotebookEditCategoryItemProps = {
+  notebookId: string;
+  category: TagCategory;
+  categoriesQueryKey: readonly unknown[];
+};
+
+type CategoryUpdateDraft = {
+  label: string;
+  icon: string | null;
+  color: string;
+  displayed: boolean;
+  minSelect: number;
+  maxSelect: number | null;
+};
+
+const buildCategoryTagsQueryKey = (notebookId: string, categoryId: string) =>
+  queryKey('shelf', 'notebook-edit-category-tags', { notebookId, categoryId });
+
+export const NotebookEditCategoryItem = ({
+  notebookId,
+  category,
+  categoriesQueryKey,
+}: NotebookEditCategoryItemProps) => {
+  const services = useServices();
+  const showToast = useShowToast();
+  const queryClient = useQueryClient();
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [displayedOverride, setDisplayedOverride] = useState<boolean | null>(null);
+  const [draftLabel, setDraftLabel] = useState(category.label);
+  const [draftIcon, setDraftIcon] = useState<string | null>(category.icon);
+  const [draftColor, setDraftColor] = useState(category.color);
+  const [draftMinSelect, setDraftMinSelect] = useState(String(category.minSelect));
+  const [draftMaxSelect, setDraftMaxSelect] = useState(
+    category.maxSelect === null ? '' : String(category.maxSelect)
+  );
+
+  const displayed = displayedOverride ?? category.displayed;
+
+  const categoryTagsQueryKey = buildCategoryTagsQueryKey(notebookId, category.id);
+
+  const categoryTagsQuery = useQuery({
+    enabled: services !== null,
+    queryKey: categoryTagsQueryKey,
+    queryFn: () => services!.tags.listByCategoryId(category.id),
+  });
+
+  const invalidateQueries = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: categoriesQueryKey }),
+      queryClient.invalidateQueries({ queryKey: categoryTagsQueryKey }),
+      queryClient.invalidateQueries({
+        queryKey: queryKey('entries', 'search-tag-categories', notebookId),
+      }),
+      queryClient.invalidateQueries({ queryKey: ['entries', 'search-tags'] }),
+    ]);
+  };
+
+  const updateCategoryMutation = useMutation({
+    mutationFn: async (input: CategoryUpdateDraft) => {
+      if (!services) {
+        throw new Error('Services are not initialized.');
+      }
+
+      return services.tagCategories.update({
+        id: category.id,
+        label: input.label,
+        icon: input.icon,
+        color: input.color,
+        displayed: input.displayed,
+        sortOrder: category.sortOrder,
+        minSelect: input.minSelect,
+        maxSelect: input.maxSelect,
+        required: category.required,
+      });
+    },
+  });
+
+  const removeCategoryMutation = useMutation({
+    mutationFn: async () => {
+      if (!services) {
+        throw new Error('Services are not initialized.');
+      }
+
+      await services.tagCategories.remove({ id: category.id });
+    },
+  });
+
+  const isPending = updateCategoryMutation.isPending || removeCategoryMutation.isPending;
+
+  const resetDraft = () => {
+    setDraftLabel(category.label);
+    setDraftIcon(category.icon);
+    setDraftColor(category.color);
+    setDraftMinSelect(String(category.minSelect));
+    setDraftMaxSelect(category.maxSelect === null ? '' : String(category.maxSelect));
+  };
+
+  const updateCategory = (
+    input: CategoryUpdateDraft,
+    successMessage: string,
+    callbacks?: { onSuccess?: () => void; onError?: () => void }
+  ) => {
+    updateCategoryMutation.mutate(input, {
+      onSuccess: async () => {
+        await invalidateQueries();
+        showToast({ kind: 'success', message: successMessage });
+        callbacks?.onSuccess?.();
+      },
+      onError: error => {
+        callbacks?.onError?.();
+        console.error('Failed to update tag category', error);
+        showToast({
+          kind: 'error',
+          message: '태그 카테고리를 수정하지 못했어요. 잠시 후 다시 시도해 주세요.',
+        });
+      },
+    });
+  };
+
+  const handleDisplayedToggle = (nextDisplayed: boolean) => {
+    if (isPending) {
+      return;
+    }
+
+    const previousDisplayed = displayed;
+    setDisplayedOverride(nextDisplayed);
+
+    updateCategory(
+      {
+        label: category.label,
+        icon: category.icon,
+        color: category.color,
+        displayed: nextDisplayed,
+        minSelect: category.minSelect,
+        maxSelect: category.maxSelect,
+      },
+      '목록 표시 여부를 변경했어요.',
+      {
+        onSuccess: () => {
+          setDisplayedOverride(null);
+        },
+        onError: () => {
+          setDisplayedOverride(previousDisplayed);
+        },
+      }
+    );
+  };
+
+  const handleSaveEdit = () => {
+    const label = draftLabel.trim();
+    const color = draftColor.trim();
+    const icon = draftIcon?.trim() ? draftIcon.trim() : null;
+    const minSelect = Number.parseInt(draftMinSelect.trim(), 10);
+    const maxSelectDraft = draftMaxSelect.trim();
+
+    if (!label) {
+      showToast({ kind: 'error', message: '카테고리 제목을 입력해 주세요.' });
+      return;
+    }
+
+    if (!color) {
+      showToast({ kind: 'error', message: '카테고리 색상을 선택해 주세요.' });
+      return;
+    }
+
+    if (!Number.isInteger(minSelect) || minSelect < 0) {
+      showToast({ kind: 'error', message: '최소 선택 수는 0 이상의 숫자여야 해요.' });
+      return;
+    }
+
+    let maxSelect: number | null = null;
+    if (maxSelectDraft) {
+      const parsedMaxSelect = Number.parseInt(maxSelectDraft, 10);
+      if (!Number.isInteger(parsedMaxSelect) || parsedMaxSelect < minSelect) {
+        showToast({ kind: 'error', message: '최대 선택 수는 최소 선택 수보다 작을 수 없어요.' });
+        return;
+      }
+
+      maxSelect = parsedMaxSelect;
+    }
+
+    updateCategory(
+      {
+        label,
+        icon,
+        color,
+        displayed,
+        minSelect,
+        maxSelect,
+      },
+      '태그 카테고리를 수정했어요.',
+      {
+        onSuccess: () => {
+          setIsEditing(false);
+        },
+      }
+    );
+  };
+
+  const handleRemove = () => {
+    if (isPending) {
+      return;
+    }
+
+    if (!window.confirm(`"${category.label}" 카테고리를 삭제할까요?`)) {
+      return;
+    }
+
+    removeCategoryMutation.mutate(undefined, {
+      onSuccess: async () => {
+        await invalidateQueries();
+        showToast({ kind: 'success', message: '태그 카테고리를 삭제했어요.' });
+      },
+      onError: error => {
+        console.error('Failed to remove tag category', error);
+        showToast({
+          kind: 'error',
+          message: '태그 카테고리를 삭제하지 못했어요. 잠시 후 다시 시도해 주세요.',
+        });
+      },
+    });
+  };
+
+  return (
+    <article className="rounded-2xl border border-line bg-base-background p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            {category.icon ? (
+              <span
+                className="inline-flex h-7 w-7 items-center justify-center rounded-lg
+                  bg-elevated-background text-sm"
+              >
+                {category.icon}
+              </span>
+            ) : null}
+            <h3 className="text-base font-semibold text-primary">{category.label}</h3>
+            <span
+              className="h-3 w-3 rounded-full ring-1 ring-black/10"
+              style={{ backgroundColor: category.color }}
+            />
+          </div>
+          <p className="text-xs text-secondary">
+            최소 {category.minSelect}개 · 최대 {category.maxSelect ?? '제한 없음'}개 선택
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2 text-xs text-secondary">
+          <label htmlFor={`notebook-edit-category-displayed-${category.id}`}>목록 표시</label>
+          <Toggle
+            id={`notebook-edit-category-displayed-${category.id}`}
+            checked={displayed}
+            disabled={isPending}
+            onChange={event => handleDisplayedToggle(event.target.checked)}
+            className="h-7 w-12"
+          />
+        </div>
+      </div>
+
+      {isEditing ? (
+        <div className="mt-4 space-y-4 rounded-xl bg-elevated-background p-3">
+          <label className="block space-y-2">
+            <span className="text-sm font-medium text-primary">제목</span>
+            <input
+              value={draftLabel}
+              onChange={event => setDraftLabel(event.target.value)}
+              maxLength={60}
+              disabled={isPending}
+              className="w-full rounded-xl border border-line bg-base-background px-3 py-2 text-sm
+                text-primary transition outline-none focus:border-highlight
+                disabled:cursor-not-allowed"
+            />
+          </label>
+
+          <IconPicker value={draftIcon} onChange={setDraftIcon} disabled={isPending} />
+
+          <ColorPicker value={draftColor} onChange={setDraftColor} />
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <label className="block space-y-2">
+              <span className="text-sm font-medium text-primary">최소 선택 수</span>
+              <input
+                type="number"
+                min={0}
+                step={1}
+                value={draftMinSelect}
+                onChange={event => setDraftMinSelect(event.target.value)}
+                disabled={isPending}
+                className="w-full rounded-xl border border-line bg-base-background px-3 py-2 text-sm
+                  text-primary transition outline-none focus:border-highlight
+                  disabled:cursor-not-allowed"
+              />
+            </label>
+
+            <label className="block space-y-2">
+              <span className="text-sm font-medium text-primary">최대 선택 수</span>
+              <input
+                type="number"
+                min={0}
+                step={1}
+                value={draftMaxSelect}
+                onChange={event => setDraftMaxSelect(event.target.value)}
+                disabled={isPending}
+                placeholder="비워두면 제한 없음"
+                className="w-full rounded-xl border border-line bg-base-background px-3 py-2 text-sm
+                  text-primary transition outline-none focus:border-highlight
+                  disabled:cursor-not-allowed"
+              />
+            </label>
+          </div>
+
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                resetDraft();
+                setIsEditing(false);
+              }}
+              disabled={isPending}
+              className="rounded-lg border border-line bg-base-background px-3 py-1.5 text-xs
+                font-medium text-primary transition hover:bg-elevated-background
+                disabled:cursor-not-allowed"
+            >
+              취소
+            </button>
+            <button
+              type="button"
+              onClick={handleSaveEdit}
+              disabled={isPending}
+              className="rounded-lg bg-highlight px-3 py-1.5 text-xs font-semibold
+                text-highlight-foreground transition hover:bg-highlight-hover
+                disabled:cursor-not-allowed disabled:bg-highlight-disabled"
+            >
+              저장
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      <div className="mt-4 space-y-2">
+        <h4 className="text-xs font-medium text-secondary">태그 목록</h4>
+        {categoryTagsQuery.isPending ? (
+          <p className="text-xs text-tertiary">태그를 불러오는 중이에요...</p>
+        ) : null}
+        {categoryTagsQuery.isError ? (
+          <p className="text-xs text-tertiary">태그를 불러오지 못했어요.</p>
+        ) : null}
+        {categoryTagsQuery.isSuccess ? (
+          categoryTagsQuery.data.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {categoryTagsQuery.data.map(tag => (
+                <Tag key={tag.id} label={tag.label} color={tag.color} />
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs text-tertiary">아직 등록된 태그가 없어요.</p>
+          )
+        ) : null}
+      </div>
+
+      <div className="mt-4 flex justify-end gap-2">
+        <button
+          type="button"
+          onClick={() => {
+            if (isEditing) {
+              resetDraft();
+              setIsEditing(false);
+              return;
+            }
+
+            resetDraft();
+            setIsEditing(true);
+          }}
+          disabled={isPending}
+          className="flex items-center gap-1 rounded-lg border border-line bg-base-background px-3
+            py-1.5 text-xs font-medium text-primary transition hover:bg-elevated-background
+            disabled:cursor-not-allowed"
+        >
+          <IconPencil />
+          {isEditing ? '수정 취소' : '수정'}
+        </button>
+        <button
+          type="button"
+          onClick={handleRemove}
+          disabled={isPending}
+          className="flex items-center gap-1 rounded-lg border border-line bg-base-background px-3
+            py-1.5 text-xs font-medium text-primary transition hover:bg-elevated-background
+            disabled:cursor-not-allowed"
+        >
+          <IconTrash />
+          삭제
+        </button>
+      </div>
+    </article>
+  );
+};
