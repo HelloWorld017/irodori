@@ -7,8 +7,9 @@ import { useShowToast } from '@/fragments/_providers/ToastProvider';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { classes } from '@/utils/classes';
 import { queryKey } from '@/utils/queryKey';
-import type { EntriesSearchCriteria } from '../_types';
+import type { EntriesSearchCriteria } from '../_types/EntriesSearchCriteria';
 import type { TagWithColor as TagModel } from '@/repositories/TagsRepository';
+import type { ReactNode } from 'react';
 
 type TagsPickerValue = Pick<EntriesSearchCriteria, 'draft' | 'tags'>;
 
@@ -21,6 +22,8 @@ type TagsPickerProps = {
   allowCreateTag?: boolean;
   className?: string;
   placeholder?: string;
+  icon?: ReactNode;
+  children?: ReactNode;
   onChange: (value: TagsPickerValue) => void;
   onSubmit?: (value: TagsPickerValue) => void;
 };
@@ -42,6 +45,8 @@ export const TagsPicker = ({
   allowCreateTag = false,
   className,
   placeholder = '태그나 키워드를 입력하세요',
+  icon,
+  children,
   onChange,
   onSubmit,
 }: TagsPickerProps) => {
@@ -168,6 +173,7 @@ export const TagsPicker = ({
         className="flex min-h-11 flex-wrap items-center gap-2 rounded-xl border border-line
           bg-base-background px-3 py-2"
       >
+        {icon}
         {value.tags.map(tag => (
           <Tag
             key={tag.id}
@@ -178,6 +184,8 @@ export const TagsPicker = ({
         ))}
 
         <input
+          className="min-w-20 flex-1 self-stretch text-sm text-primary outline-none
+            placeholder:text-tertiary"
           value={value.draft}
           onChange={event => {
             onChange({
@@ -203,10 +211,9 @@ export const TagsPicker = ({
               handleSubmit();
             }
           }}
-          className="min-w-28 flex-1 bg-transparent text-sm text-primary outline-none
-            placeholder:text-tertiary"
           placeholder={placeholder}
         />
+        {children}
       </div>
 
       {maxSelectionReached ? (

@@ -1,17 +1,20 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
-import { IconChevronLeft, IconSearch, IconSquarePlus } from '@/fragments/_icons';
+import { IconChevronLeft, IconSquarePlus } from '@/fragments/_icons';
 import { useServices } from '@/fragments/_providers/DatabaseProvider';
 import { useShowToast } from '@/fragments/_providers/ToastProvider';
 import { queryKey } from '@/utils/queryKey';
 import { buildRoute } from '@/utils/route';
 import { useEntriesNotebook, useEntriesNotebookId } from '../_providers/EntriesProvider';
+import { EntriesSearch } from './EntriesSearch';
+import type { EntriesSearchCriteria } from '../_types/EntriesSearchCriteria';
 
 type SidebarHeaderProps = {
-  onToggleSearch: () => void;
+  criteria: EntriesSearchCriteria | null;
+  onCriteriaChange: (criteria: EntriesSearchCriteria | null) => void;
 };
 
-export const SidebarHeader = ({ onToggleSearch }: SidebarHeaderProps) => {
+export const SidebarHeader = ({ criteria, onCriteriaChange }: SidebarHeaderProps) => {
   const services = useServices();
   const showToast = useShowToast();
   const queryClient = useQueryClient();
@@ -64,50 +67,44 @@ export const SidebarHeader = ({ onToggleSearch }: SidebarHeaderProps) => {
   }
 
   return (
-    <header
-      className="flex items-center justify-between gap-6 border-b border-line px-6 pb-5 sm:px-8
-        sm:pb-6"
-    >
-      <div className="flex items-center gap-4">
-        <button
-          type="button"
-          onClick={() => window.history.back()}
-          className="-ml-2 rounded-full p-2 text-2xl text-secondary transition
-            hover:bg-elevated-background hover:text-primary"
-          aria-label="뒤로가기"
-        >
-          <IconChevronLeft />
-        </button>
+    <header className="flex flex-col px-8 pb-5 sm:px-10 sm:pb-6">
+      <div className="flex items-center justify-between gap-6">
+        <div className="flex items-center gap-4">
+          <button
+            type="button"
+            onClick={() => window.history.back()}
+            className="-ml-2 rounded-full p-2 text-2xl text-secondary transition
+              hover:bg-elevated-background hover:text-primary"
+            aria-label="뒤로가기"
+          >
+            <IconChevronLeft />
+          </button>
 
-        <div className="flex flex-col">
-          <h2 className="text-lg font-semibold">{notebook.title}</h2>
-          <div className="text-secondary">
-            {typeof entriesCount === 'number' ? `${entriesCount}개의 일기` : ''}
+          <div className="flex flex-col">
+            <h2 className="text-lg font-semibold">{notebook.title}</h2>
+            <div className="text-secondary">
+              {typeof entriesCount === 'number' ? `${entriesCount}개의 일기` : ''}
+            </div>
           </div>
         </div>
+        <div className="flex gap-4">
+          <button
+            type="button"
+            onClick={() => createEntryMutation.mutate()}
+            disabled={createEntryMutation.isPending}
+            className="rounded-lg p-2 text-secondary transition hover:bg-elevated-background
+              hover:text-primary disabled:cursor-not-allowed disabled:opacity-60"
+            aria-label="새 일기 추가"
+          >
+            <IconSquarePlus />
+          </button>
+        </div>
       </div>
-      <div className="flex gap-2">
-        <button
-          type="button"
-          onClick={onToggleSearch}
-          className="rounded-lg p-2 text-lg text-secondary transition hover:bg-elevated-background
-            hover:text-primary"
-          aria-label="일기 검색"
-        >
-          <IconSearch />
-        </button>
-
-        <button
-          type="button"
-          onClick={() => createEntryMutation.mutate()}
-          disabled={createEntryMutation.isPending}
-          className="rounded-lg p-2 text-secondary transition hover:bg-elevated-background
-            hover:text-primary disabled:cursor-not-allowed disabled:opacity-60"
-          aria-label="새 일기 추가"
-        >
-          <IconSquarePlus />
-        </button>
-      </div>
+      <EntriesSearch
+        notebookId={notebookId}
+        criteria={criteria}
+        onCriteriaChange={onCriteriaChange}
+      />
     </header>
   );
 };

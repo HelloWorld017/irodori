@@ -1,47 +1,33 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useServices } from '@/fragments/_providers/DatabaseProvider';
-import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { queryKey } from '@/utils/queryKey';
 import { useEntriesNotebookId } from '../_providers/EntriesProvider';
-import { DEFAULT_ENTRIES_SEARCH_CRITERIA } from '../_types';
 import { EntriesList } from './EntriesList';
-import { EntriesSearch } from './EntriesSearch';
-import type { EntriesSearchCriteria } from '../_types';
+import type { EntriesSearchCriteria } from '../_types/EntriesSearchCriteria';
 import type { EntryListCursor } from '@/repositories/EntriesRepository';
 
 const ENTRY_PAGE_SIZE = 30;
 
 type EntriesFinderProps = {
-  searchOpened?: boolean;
-  onCloseSearch?: () => void;
+  criteria: EntriesSearchCriteria | null;
 };
 
-export const EntriesFinder = ({ searchOpened = false, onCloseSearch }: EntriesFinderProps) => {
+export const EntriesFinder = ({ criteria }: EntriesFinderProps) => {
   const services = useServices();
   const notebookId = useEntriesNotebookId();
-  const [latestCriteria, setCriteria] = useState<EntriesSearchCriteria>(
-    DEFAULT_ENTRIES_SEARCH_CRITERIA
-  );
 
-  const criteria = useDebouncedValue(latestCriteria, { delay: 1000 });
-
-  const searchText = criteria.draft.trim();
-  const selectedTagIds = useMemo(() => criteria.tags.map(tag => tag.id), [criteria.tags]);
+  const searchText = criteria?.draft.trim();
+  const selectedTagIds = useMemo(() => criteria?.tags.map(tag => tag.id), [criteria]);
   const listQueryParams = useMemo(
     () => ({
       notebookId,
       searchText,
       tagIds: selectedTagIds,
-      dateBefore: criteria.dateBefore,
+      dateBefore: criteria?.dateBefore,
     }),
-    [criteria.dateBefore, notebookId, searchText, selectedTagIds]
+    [criteria, notebookId, searchText, selectedTagIds]
   );
-
-  const handleCloseSearch = () => {
-    setCriteria(DEFAULT_ENTRIES_SEARCH_CRITERIA);
-    onCloseSearch?.();
-  };
 
   const entriesQuery = useInfiniteQuery({
     queryKey: queryKey('entries', 'list', listQueryParams),
@@ -62,15 +48,6 @@ export const EntriesFinder = ({ searchOpened = false, onCloseSearch }: EntriesFi
 
   return (
     <div className="flex w-full flex-col gap-4 p-6 sm:p-8">
-      {searchOpened && (
-        <EntriesSearch
-          notebookId={notebookId}
-          criteria={criteria}
-          onCriteriaChange={setCriteria}
-          onClose={handleCloseSearch}
-        />
-      )}
-
       {entriesQuery.isPending && (
         <p className="text-sm font-medium text-secondary">일기를 불러오는 중이에요...</p>
       )}
