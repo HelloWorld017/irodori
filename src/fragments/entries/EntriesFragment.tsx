@@ -4,6 +4,7 @@ import { useEnsureDatabase } from '@/hooks/useEnsureDatabase';
 import { buildRoute } from '@/utils/route';
 import { Sidebar } from './_components/Sidebar';
 import { EntriesProvider, useEntriesNotebook } from './_providers/EntriesProvider';
+import { NotebookThemeProvider } from './_providers/NotebookThemeProvider';
 import type { ReactNode } from 'react';
 
 const EntriesView = ({ children }: { children: ReactNode }) => {
@@ -28,6 +29,8 @@ const EntriesView = ({ children }: { children: ReactNode }) => {
 
 export const EntriesFragment = ({ children }: { children: ReactNode }) => (
   <EntriesProvider>
-    <EntriesView>{children}</EntriesView>
+    <NotebookThemeProvider>
+      <EntriesView>{children}</EntriesView>
+    </NotebookThemeProvider>
   </EntriesProvider>
 );

@@ -61,7 +61,7 @@ export const EntriesFinder = ({ searchOpened = false, onCloseSearch }: EntriesFi
   const entries = entriesQuery.data?.pages.flatMap(page => page.items);
 
   return (
-    <div className="flex w-full flex-col gap-4 px-8 pt-6 sm:px-10 sm:pt-8">
+    <div className="flex w-full flex-col gap-4 p-6 sm:p-8">
       {searchOpened && (
         <EntriesSearch
           notebookId={notebookId}
