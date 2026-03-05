@@ -7,19 +7,11 @@ import type { ReactNode } from 'react';
 
 type EntriesListProps = {
   entries: EntrySummary[];
-  selectedEntryId?: string | null;
-  onSelectEntry?: (entryId: string) => void;
   className?: string;
   children?: { header: ReactNode; footer: ReactNode };
 };
 
-export const EntriesList = ({
-  entries,
-  selectedEntryId = null,
-  onSelectEntry,
-  className,
-  children,
-}: EntriesListProps) => {
+export const EntriesList = ({ entries, className, children }: EntriesListProps) => {
   const scrollElementRef = useRef<HTMLDivElement>(null);
 
   const virtualizer = useVirtualizer({
@@ -30,19 +22,15 @@ export const EntriesList = ({
     overscan: 6,
   });
 
-  if (entries.length === 0) {
-    return (
-      <section className={classes('text-center text-sm text-secondary', className)}>
-        {children?.header}
-        표시할 일기가 없어요.
-        {children?.footer}
-      </section>
-    );
-  }
-
   return (
     <div ref={scrollElementRef} className={classes('h-full overflow-y-auto', className)}>
       {children?.header}
+      {entries.length === 0 && (
+        <section className={classes('py-6 text-center text-sm text-tertiary', className)}>
+          표시할 일기가 없어요.
+        </section>
+      )}
+
       <div className="relative w-full" style={{ height: `${virtualizer.getTotalSize()}px` }}>
         <ul className="relative m-0 list-none">
           {virtualizer.getVirtualItems().map(virtualItem => {
@@ -60,11 +48,7 @@ export const EntriesList = ({
                 className="absolute top-0 left-0 w-full py-1"
                 style={{ transform: `translateY(${virtualItem.start}px)` }}
               >
-                <EntriesItem
-                  entry={entry}
-                  selected={selectedEntryId === entry.id}
-                  onSelect={onSelectEntry}
-                />
+                <EntriesItem entry={entry} />
               </li>
             );
           })}

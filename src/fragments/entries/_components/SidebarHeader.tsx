@@ -6,7 +6,6 @@ import { useShowToast } from '@/fragments/_providers/ToastProvider';
 import { queryKey } from '@/utils/queryKey';
 import { buildRoute } from '@/utils/route';
 import { useEntriesNotebook, useEntriesNotebookId } from '../_providers/EntriesProvider';
-import type { EntriesSearchCriteria } from '../_types/EntriesSearchCriteria';
 
 export const SidebarHeader = () => {
   const services = useServices();
@@ -68,7 +67,7 @@ export const SidebarHeader = () => {
             type="button"
             onClick={() => window.history.back()}
             className="-ml-2 rounded-full p-2 text-2xl text-secondary transition
-              hover:bg-elevated-background hover:text-primary"
+              hover:bg-elevated-background-hover hover:text-primary"
             aria-label="뒤로가기"
           >
             <IconChevronLeft />
@@ -86,7 +85,7 @@ export const SidebarHeader = () => {
             type="button"
             onClick={() => createEntryMutation.mutate()}
             disabled={createEntryMutation.isPending}
-            className="rounded-lg p-2 text-secondary transition hover:bg-elevated-background
+            className="rounded-lg p-2 text-secondary transition hover:bg-elevated-background-hover
               hover:text-primary disabled:cursor-not-allowed disabled:opacity-60"
             aria-label="새 일기 추가"
           >

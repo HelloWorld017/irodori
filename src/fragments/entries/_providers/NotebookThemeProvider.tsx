@@ -20,6 +20,7 @@ export const NotebookThemeProvider = ({ children }: { children: ReactNode }) => 
     '--color-default-800': 'oklch(from var(--notebook-primary) 0.279 calc(c * 0.89) h)',
     '--color-default-900': 'oklch(from var(--notebook-primary) 0.208 calc(c * 0.91) h)',
     '--color-default-950': 'oklch(from var(--notebook-primary) 0.129 calc(c * 0.91) h)',
+    '--color-highlight': 'var(--notebook-primary)',
   };
 
   const stylesheetContents = Object.entries(style)

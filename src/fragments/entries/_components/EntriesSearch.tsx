@@ -29,7 +29,7 @@ export const EntriesSearch = ({
 
   return (
     <TagsPicker
-      icon={<IconSearch />}
+      icon={<IconSearch className="text-highlight" />}
       notebookId={notebookId}
       value={{ draft: criteriaWithFallback.draft, tags: criteriaWithFallback.tags }}
       allowDraft

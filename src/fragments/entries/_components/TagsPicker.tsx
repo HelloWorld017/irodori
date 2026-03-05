@@ -173,7 +173,7 @@ export const TagsPicker = ({
     <div className={classes('relative w-full', className)}>
       <div
         className={classes(
-          `flex min-h-11 flex-wrap items-center gap-2 rounded-xl border border-line
+          `flex min-h-11 flex-wrap items-center gap-2 rounded-2xl border border-line
           bg-base-background px-3 py-2`,
           inputClassName
         )}
@@ -275,7 +275,7 @@ export const TagsPicker = ({
           ) : null}
 
           {suggestions.length === 0 && !canCreateTagCandidate ? (
-            <li className="px-3 py-2 text-sm text-secondary">일치하는 태그가 없어요.</li>
+            <li className="px-3 py-2 text-center text-sm text-tertiary">일치하는 태그가 없어요.</li>
           ) : null}
         </ul>
       ) : null}

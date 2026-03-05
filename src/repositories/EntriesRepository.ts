@@ -322,7 +322,7 @@ export class EntriesRepository implements SyncedRepository<EntrySyncData, Execut
   async createEntry(executor: Executor, input: CreateEntryInput): Promise<Entry> {
     const indexRow = await executor
       .selectFrom('entries')
-      .select(sql<number>`coalesce(max(entry_index), -1)`.as('maxEntryIndex'))
+      .select(sql<number>`coalesce(max(entry_index), 0)`.as('maxEntryIndex'))
       .where('notebook_id', '=', input.notebookId)
       .executeTakeFirstOrThrow();
 
