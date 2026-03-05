@@ -1,6 +1,6 @@
 import { motion } from 'motion/react';
 import { useState } from 'react';
-import { ColorPicker } from './ColorPicker';
+import { ColorPicker } from '@/fragments/_components/ColorPicker';
 
 type NotebookFormValue = {
   title: string;

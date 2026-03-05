@@ -1,4 +1,4 @@
-import { NOTEBOOK_COLORS } from '../_constants/notebook';
+import { COLORS_PRESET } from '@/constants/colors';
 
 type ColorPickerProps = {
   value: string;
@@ -9,7 +9,7 @@ export const ColorPicker = ({ value, onChange }: ColorPickerProps) => (
   <div className="space-y-2">
     <p className="text-sm font-medium text-primary">표지 색상</p>
     <ul className="flex flex-wrap gap-2">
-      {NOTEBOOK_COLORS.map(color => {
+      {COLORS_PRESET.map(color => {
         const selected = value === color;
 
         return (

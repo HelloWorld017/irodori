@@ -1,4 +1,4 @@
-export const NOTEBOOK_COLORS = [
+export const COLORS_PRESET = [
   '#fb2c36',
   '#ff8a4d',
   '#f59e0b',

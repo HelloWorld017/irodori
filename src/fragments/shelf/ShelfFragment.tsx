@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence } from 'motion/react';
+import { COLORS_PRESET } from '@/constants/colors';
 import { useServices } from '@/fragments/_providers/DatabaseProvider';
 import { useShowToast } from '@/fragments/_providers/ToastProvider';
 import { useEnsureDatabase } from '@/hooks/useEnsureDatabase';
@@ -8,7 +9,6 @@ import { DeleteNotebookModal } from './_components/DeleteNotebookModal';
 import { NotebookFormModal } from './_components/NotebookFormModal';
 import { NotebookList } from './_components/NotebookList';
 import { ShelfHeader } from './_components/ShelfHeader';
-import { NOTEBOOK_COLORS } from './_constants/notebook';
 import {
   ShelfProvider,
   useCloseShelfModal,
@@ -145,7 +145,7 @@ const ShelfView = () => {
         {modalKind === 'create' ? (
           <NotebookFormModal
             mode="create"
-            initialValue={{ title: '', description: '', color: NOTEBOOK_COLORS[0] }}
+            initialValue={{ title: '', description: '', color: COLORS_PRESET[0] }}
             pending={createNotebookMutation.isPending}
             onClose={handleCloseModal}
             onSubmit={({ title, description, color }) => {
