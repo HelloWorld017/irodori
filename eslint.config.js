@@ -73,6 +73,7 @@ const config = defineConfig(
       'react/no-unknown-property': 'off',
       'react/react-in-jsx-scope': 'off',
       'react-hooks/incompatible-library': 'off',
+      'react-hooks/set-state-in-effect': 'off',
       'arrow-body-style': ['error', 'as-needed'],
       'eqeqeq': ['error', 'always'],
       'camelcase': ['error', { properties: 'never' }],

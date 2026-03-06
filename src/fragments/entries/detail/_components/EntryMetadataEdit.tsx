@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { StickerPicker, type StickerPickerValue } from '@/fragments/_components/StickerPicker';
+import { DynamicIcon } from '@/fragments/_icons';
 import { TagsPicker } from '../../_components/TagsPicker';
 import { useEntriesNotebookId } from '../../_providers/EntriesProvider';
 import {
@@ -8,7 +9,10 @@ import {
   useSetEntriesDetailStickerValue,
   useSetEntriesDetailTags,
 } from '../_providers/EntriesDetailProvider';
+import { buildTagCategoryGroups } from '../_utils/buildTagCategoryGroups';
 import type { EntryDraftSticker } from '@/repositories/EntryDraftsRepository';
+import type { TagCategory } from '@/repositories/TagCategoriesRepository';
+import type { TagViewItem } from '@/repositories/TagsRepository';
 
 const toDateInputValue = (value: number): string => {
   const date = new Date(value);
@@ -38,13 +42,32 @@ const toStickerPickerValue = (sticker: EntryDraftSticker | null): StickerPickerV
   return { kind: 'sticker', stickerId: sticker.sticker.id };
 };
 
-export const EntryMetadataEdit = () => {
+const replaceCategoryTags = ({
+  currentTags,
+  categoryId,
+  nextTags,
+}: {
+  currentTags: TagViewItem[];
+  categoryId: string;
+  nextTags: TagViewItem[];
+}): TagViewItem[] => {
+  const otherTags = currentTags.filter(tag => tag.categoryId !== categoryId);
+  return [...otherTags, ...nextTags];
+};
+
+export const EntryMetadataEdit = ({ tagCategories }: { tagCategories: TagCategory[] | null }) => {
   const notebookId = useEntriesNotebookId();
   const draft = useEntriesDetailDraft();
   const setDate = useSetEntriesDetailDate();
   const setTags = useSetEntriesDetailTags();
   const setStickerValue = useSetEntriesDetailStickerValue();
-  const [tagsDraftInput, setTagsDraftInput] = useState('');
+  const [tagsDraftByCategory, setTagsDraftByCategory] = useState<Record<string, string>>({});
+
+  const tagCategoryGroups = useMemo(
+    () =>
+      tagCategories ? buildTagCategoryGroups({ categories: tagCategories, tags: draft.tags }) : [],
+    [draft.tags, tagCategories]
+  );
 
   return (
     <aside className="space-y-5 rounded-[1.75rem] p-6">
@@ -61,20 +84,59 @@ export const EntryMetadataEdit = () => {
 
       <section className="space-y-3">
         <p className="text-sm font-medium text-secondary">태그</p>
-        <TagsPicker
-          notebookId={notebookId}
-          value={{ draft: tagsDraftInput, tags: draft.tags }}
-          allowCreateTag={false}
-          placeholder="태그를 추가하세요"
-          onChange={({ draft: nextDraftInput, tags }) => {
-            setTagsDraftInput(nextDraftInput);
-            setTags(tags);
-          }}
-          onSubmit={({ draft: nextDraftInput, tags }) => {
-            setTagsDraftInput(nextDraftInput);
-            setTags(tags);
-          }}
-        />
+
+        {tagCategories === null ? (
+          <p className="text-sm text-tertiary">태그 카테고리를 불러오지 못했어요.</p>
+        ) : tagCategoryGroups.length > 0 ? (
+          <div className="space-y-4">
+            {tagCategoryGroups.map(category => (
+              <section key={category.id} className="space-y-2.5">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-sm font-medium text-primary">{category.label}</span>
+                </div>
+
+                <TagsPicker
+                  notebookId={notebookId}
+                  tagsCategoryId={category.id}
+                  value={{
+                    draft: tagsDraftByCategory[category.id] ?? '',
+                    tags: category.tags,
+                  }}
+                  allowCreateTag
+                  placeholder={`${category.label} 태그를 추가하세요`}
+                  onChange={({ draft: nextDraftInput, tags }) => {
+                    setTagsDraftByCategory(current => ({
+                      ...current,
+                      [category.id]: nextDraftInput,
+                    }));
+                    setTags(
+                      replaceCategoryTags({
+                        currentTags: draft.tags,
+                        categoryId: category.id,
+                        nextTags: tags,
+                      })
+                    );
+                  }}
+                  onSubmit={({ draft: nextDraftInput, tags }) => {
+                    setTagsDraftByCategory(current => ({
+                      ...current,
+                      [category.id]: nextDraftInput,
+                    }));
+                    setTags(
+                      replaceCategoryTags({
+                        currentTags: draft.tags,
+                        categoryId: category.id,
+                        nextTags: tags,
+                      })
+                    );
+                  }}
+                />
+              </section>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-tertiary">아직 태그 카테고리가 없어요.</p>
+        )}
       </section>
 
       <section className="space-y-3">

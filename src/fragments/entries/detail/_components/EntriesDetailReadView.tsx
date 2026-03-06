@@ -4,9 +4,16 @@ import { buildRoute } from '@/utils/route';
 import { useEntriesNotebookId } from '../../_providers/EntriesProvider';
 import { EntryHeader } from './EntryHeader';
 import { EntryMetadataRead } from './EntryMetadataRead';
+import type { TagCategory } from '@/repositories/TagCategoriesRepository';
 import type { EntryDetailItem } from '@/services/EntriesService';
 
-export const EntriesDetailReadView = ({ entry }: { entry: EntryDetailItem }) => {
+export const EntriesDetailReadView = ({
+  entry,
+  tagCategories,
+}: {
+  entry: EntryDetailItem;
+  tagCategories: TagCategory[] | null;
+}) => {
   const notebookId = useEntriesNotebookId();
   const [, navigate] = useLocation();
 
@@ -49,7 +56,7 @@ export const EntriesDetailReadView = ({ entry }: { entry: EntryDetailItem }) => 
           </div>
         </section>
 
-        <EntryMetadataRead entry={entry} />
+        <EntryMetadataRead entry={entry} tagCategories={tagCategories} />
       </div>
     </div>
   );

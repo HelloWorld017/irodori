@@ -1,5 +1,5 @@
 import { ink } from 'ink-mde';
-import { useEffect, useRef } from 'react';
+import { useEffect, useEffectEvent, useRef } from 'react';
 import type { Instance, Options } from 'ink-mde';
 
 type InkMdeEditorProps = {
@@ -27,32 +27,16 @@ const editorOptions: Options = {
     images: false,
     lists: true,
     readonly: false,
-    spellcheck: true,
-    toolbar: true,
+    spellcheck: false,
+    toolbar: false,
   },
   search: true,
-  toolbar: {
-    bold: true,
-    code: true,
-    codeBlock: true,
-    heading: true,
-    image: false,
-    italic: true,
-    link: true,
-    list: true,
-    orderedList: true,
-    quote: true,
-    taskList: true,
-    upload: false,
-  },
 };
 
 export const InkMdeEditor = ({ value, placeholder = '', onChange }: InkMdeEditorProps) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const editorRef = useRef<Instance | null>(null);
-  const onChangeRef = useRef(onChange);
-
-  onChangeRef.current = onChange;
+  const onChangeEvent = useEffectEvent(onChange);
 
   useEffect(() => {
     const target = containerRef.current;
@@ -71,7 +55,7 @@ export const InkMdeEditor = ({ value, placeholder = '', onChange }: InkMdeEditor
         hooks: {
           ...editorOptions.hooks,
           afterUpdate: (doc: string) => {
-            onChangeRef.current(doc);
+            onChangeEvent(doc);
           },
         },
       })

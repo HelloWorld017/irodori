@@ -6,6 +6,7 @@ import { queryKey } from '@/utils/queryKey';
 import { EntriesDetailEditView } from './_components/EntriesDetailEditView';
 import { EntriesDetailReadView } from './_components/EntriesDetailReadView';
 import { EntriesDetailProvider } from './_providers/EntriesDetailProvider';
+import type { TagCategory } from '@/repositories/TagCategoriesRepository';
 
 type EntriesDetailFragmentProps = {
   edit?: boolean;
@@ -27,7 +28,13 @@ export const EntriesDetailFragment = ({ edit = false }: EntriesDetailFragmentPro
     queryFn: () => services!.entryDrafts.getByEntryId(entryId),
   });
 
-  if (detailQuery.isPending || (edit && draftQuery.isPending)) {
+  const tagCategoriesQuery = useQuery({
+    enabled: services !== null && detailQuery.data !== undefined && detailQuery.data !== null,
+    queryKey: queryKey('entries', 'search-tag-categories', detailQuery.data?.notebookId ?? null),
+    queryFn: () => services!.tagCategories.listByNotebookId(detailQuery.data!.notebookId),
+  });
+
+  if (detailQuery.isPending || tagCategoriesQuery.isPending || (edit && draftQuery.isPending)) {
     return (
       <section
         className="rounded-[1.75rem] border border-line bg-elevated-background p-8 shadow-elevated"
@@ -59,8 +66,12 @@ export const EntriesDetailFragment = ({ edit = false }: EntriesDetailFragmentPro
     );
   }
 
+  const tagCategories: TagCategory[] | null = tagCategoriesQuery.isError
+    ? null
+    : (tagCategoriesQuery.data ?? []);
+
   if (!edit) {
-    return <EntriesDetailReadView entry={detailQuery.data} />;
+    return <EntriesDetailReadView entry={detailQuery.data} tagCategories={tagCategories} />;
   }
 
   const initialDraft = draftQuery.data?.data ?? toEntryDraftData(detailQuery.data);
@@ -72,7 +83,7 @@ export const EntriesDetailFragment = ({ edit = false }: EntriesDetailFragmentPro
       initialDraft={initialDraft}
       initialSavedAt={initialSavedAt}
     >
-      <EntriesDetailEditView entry={detailQuery.data} />
+      <EntriesDetailEditView entry={detailQuery.data} tagCategories={tagCategories} />
     </EntriesDetailProvider>
   );
 };

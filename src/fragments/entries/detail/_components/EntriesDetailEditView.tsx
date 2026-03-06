@@ -19,6 +19,7 @@ import {
 import { EntryHeader } from './EntryHeader';
 import { EntryMetadataEdit } from './EntryMetadataEdit';
 import { InkMdeEditor } from './InkMdeEditor';
+import type { TagCategory } from '@/repositories/TagCategoriesRepository';
 import type { EntryDetailItem } from '@/services/EntriesService';
 
 const getDraftStatusLabel = (
@@ -50,7 +51,13 @@ const getDraftStatusLabel = (
   return '편집 내용을 저장해 보세요';
 };
 
-export const EntriesDetailEditView = ({ entry }: { entry: EntryDetailItem }) => {
+export const EntriesDetailEditView = ({
+  entry,
+  tagCategories,
+}: {
+  entry: EntryDetailItem;
+  tagCategories: TagCategory[] | null;
+}) => {
   const services = useServices();
   const repositories = useRepositories();
   const clxDB = useClxDB();
@@ -215,7 +222,7 @@ export const EntriesDetailEditView = ({ entry }: { entry: EntryDetailItem }) => 
           />
         </section>
 
-        <EntryMetadataEdit />
+        <EntryMetadataEdit tagCategories={tagCategories} />
       </div>
     </div>
   );
