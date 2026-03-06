@@ -4,7 +4,7 @@ import { ColorPicker } from '@/fragments/_components/ColorPicker';
 import { IconPicker } from '@/fragments/_components/IconPicker';
 import { Tag } from '@/fragments/_components/Tag';
 import { Toggle } from '@/fragments/_components/Toggle';
-import { IconPencil, IconTrash } from '@/fragments/_icons';
+import { DynamicIcon, IconPencil, IconTrash } from '@/fragments/_icons';
 import { useServices } from '@/fragments/_providers/DatabaseProvider';
 import { useShowToast } from '@/fragments/_providers/ToastProvider';
 import { queryKey } from '@/utils/queryKey';
@@ -235,44 +235,42 @@ export const NotebookEditCategoryItem = ({
   };
 
   return (
-    <article className="rounded-2xl border border-line bg-base-background p-4">
+    <article className="rounded-2xl border border-line bg-base-background p-4 px-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             {category.icon ? (
-              <span
-                className="inline-flex h-7 w-7 items-center justify-center rounded-lg
-                  bg-elevated-background text-sm"
-              >
-                {category.icon}
+              <span className="mr-2 text-sm text-secondary">
+                <DynamicIcon name={category.icon} />
               </span>
             ) : null}
             <h3 className="text-base font-semibold text-primary">{category.label}</h3>
-            <span
-              className="h-3 w-3 rounded-full ring-1 ring-black/10"
-              style={{ backgroundColor: category.color }}
-            />
+            <span className="h-3 w-3 rounded-full" style={{ backgroundColor: category.color }} />
           </div>
-          <p className="text-xs text-secondary">
-            최소 {category.minSelect}개 · 최대 {category.maxSelect ?? '제한 없음'}개 선택
+          <p
+            className="flex items-center text-xs text-secondary [&>*]:flex [&>*]:items-center
+              [&>*]:before:mx-2 [&>*]:before:hidden [&>*]:before:h-0.5 [&>*]:before:w-0.5
+              [&>*]:before:rounded-full [&>*]:before:bg-tertiary [&>:not(:first-child)]:before:flex"
+          >
+            {category.minSelect > 0 && <span>최소 {category.minSelect}개</span>}
+            {!!category.maxSelect && <span>최대 {category.maxSelect}개</span>}
           </p>
         </div>
 
-        <div className="flex items-center gap-2 text-xs text-secondary">
-          <label htmlFor={`notebook-edit-category-displayed-${category.id}`}>목록 표시</label>
+        <label className="flex items-center gap-2 text-sm font-medium text-tertiary">
+          <span>목록 표시</span>
           <Toggle
-            id={`notebook-edit-category-displayed-${category.id}`}
             checked={displayed}
             disabled={isPending}
             onChange={event => handleDisplayedToggle(event.target.checked)}
             className="h-7 w-12"
           />
-        </div>
+        </label>
       </div>
 
       {isEditing ? (
-        <div className="mt-4 space-y-4 rounded-xl bg-elevated-background p-3">
-          <label className="block space-y-2">
+        <div className="mt-4 flex flex-col gap-4 rounded-xl">
+          <label className="flex flex-col gap-2">
             <span className="text-sm font-medium text-primary">제목</span>
             <input
               value={draftLabel}
@@ -285,12 +283,16 @@ export const NotebookEditCategoryItem = ({
             />
           </label>
 
-          <IconPicker value={draftIcon} onChange={setDraftIcon} disabled={isPending} />
-
-          <ColorPicker value={draftColor} onChange={setDraftColor} />
+          <div className="flex flex-col gap-2">
+            <span className="text-sm font-medium text-primary">모양</span>
+            <div className="flex gap-3">
+              <IconPicker value={draftIcon} onChange={setDraftIcon} disabled={isPending} />
+              <ColorPicker value={draftColor} onChange={setDraftColor} />
+            </div>
+          </div>
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <label className="block space-y-2">
+            <label className="flex flex-col gap-2">
               <span className="text-sm font-medium text-primary">최소 선택 수</span>
               <input
                 type="number"
@@ -305,7 +307,7 @@ export const NotebookEditCategoryItem = ({
               />
             </label>
 
-            <label className="block space-y-2">
+            <label className="flex flex-col gap-2">
               <span className="text-sm font-medium text-primary">최대 선택 수</span>
               <input
                 type="number"
@@ -330,7 +332,7 @@ export const NotebookEditCategoryItem = ({
                 setIsEditing(false);
               }}
               disabled={isPending}
-              className="rounded-lg border border-line bg-base-background px-3 py-1.5 text-xs
+              className="rounded-lg border border-line bg-base-background px-4 py-1.5 text-sm
                 font-medium text-primary transition hover:bg-elevated-background
                 disabled:cursor-not-allowed"
             >
@@ -340,7 +342,7 @@ export const NotebookEditCategoryItem = ({
               type="button"
               onClick={handleSaveEdit}
               disabled={isPending}
-              className="rounded-lg bg-highlight px-3 py-1.5 text-xs font-semibold
+              className="rounded-lg bg-highlight px-4 py-1.5 text-sm font-semibold
                 text-highlight-foreground transition hover:bg-highlight-hover
                 disabled:cursor-not-allowed disabled:bg-highlight-disabled"
             >
@@ -351,12 +353,11 @@ export const NotebookEditCategoryItem = ({
       ) : null}
 
       <div className="mt-4 space-y-2">
-        <h4 className="text-xs font-medium text-secondary">태그 목록</h4>
         {categoryTagsQuery.isPending ? (
-          <p className="text-xs text-tertiary">태그를 불러오는 중이에요...</p>
+          <p className="text-sm text-tertiary">태그를 불러오는 중이에요...</p>
         ) : null}
         {categoryTagsQuery.isError ? (
-          <p className="text-xs text-tertiary">태그를 불러오지 못했어요.</p>
+          <p className="text-sm text-tertiary">태그를 불러오지 못했어요.</p>
         ) : null}
         {categoryTagsQuery.isSuccess ? (
           categoryTagsQuery.data.length > 0 ? (
@@ -366,12 +367,12 @@ export const NotebookEditCategoryItem = ({
               ))}
             </div>
           ) : (
-            <p className="text-xs text-tertiary">아직 등록된 태그가 없어요.</p>
+            <p className="text-sm text-tertiary">아직 등록된 태그가 없어요.</p>
           )
         ) : null}
       </div>
 
-      <div className="mt-4 flex justify-end gap-2">
+      <div className="-mx-1 mt-4 flex justify-end gap-2">
         <button
           type="button"
           onClick={() => {
@@ -385,8 +386,8 @@ export const NotebookEditCategoryItem = ({
             setIsEditing(true);
           }}
           disabled={isPending}
-          className="flex items-center gap-1 rounded-lg border border-line bg-base-background px-3
-            py-1.5 text-xs font-medium text-primary transition hover:bg-elevated-background
+          className="flex items-center gap-1 rounded-lg bg-base-background px-3 py-1.5 text-sm
+            font-medium text-secondary transition hover:bg-elevated-background hover:text-primary
             disabled:cursor-not-allowed"
         >
           <IconPencil />
@@ -396,8 +397,8 @@ export const NotebookEditCategoryItem = ({
           type="button"
           onClick={handleRemove}
           disabled={isPending}
-          className="flex items-center gap-1 rounded-lg border border-line bg-base-background px-3
-            py-1.5 text-xs font-medium text-primary transition hover:bg-elevated-background
+          className="flex items-center gap-1 rounded-lg bg-base-background px-3 py-1.5 text-sm
+            font-medium text-secondary transition hover:bg-elevated-background hover:text-primary
             disabled:cursor-not-allowed"
         >
           <IconTrash />

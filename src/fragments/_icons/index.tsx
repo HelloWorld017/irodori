@@ -9,10 +9,11 @@ import {
   Trash,
   X,
 } from 'lucide-react';
-import type { ComponentProps, ComponentType } from 'react';
+import { DynamicIcon as LucideDynamicIcon } from 'lucide-react/dynamic';
+import type { ComponentProps, ComponentType, ReactNode } from 'react';
 
-const wrapLucideComponent = <T extends ComponentType>(LucideIcon: T) => {
-  const IconComponent = (props: ComponentProps<T>) => {
+const wrapLucideComponent = <TProps,>(LucideIcon: ComponentType<TProps>) => {
+  const IconComponent = (props: TProps) => {
     const Icon = LucideIcon as ComponentType<{ width: string; height: string }>;
     return <Icon width="1em" height="1em" stroke="currentColor" {...props} />;
   };
@@ -31,3 +32,9 @@ export const IconSearch = wrapLucideComponent(Search);
 export const IconSquarePlus = wrapLucideComponent(SquarePlus);
 export const IconTrash = wrapLucideComponent(Trash);
 export const IconX = wrapLucideComponent(X);
+
+type DynamicIconType = (
+  props: Omit<ComponentProps<typeof LucideDynamicIcon>, 'name'> & { name: string }
+) => ReactNode;
+
+export const DynamicIcon = wrapLucideComponent(LucideDynamicIcon) as DynamicIconType;

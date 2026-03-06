@@ -1,16 +1,18 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { COLORS_PRESET } from '@/constants/colors';
-import { IconPlus, IconSquarePlus } from '@/fragments/_icons';
+import { IconPlus } from '@/fragments/_icons';
 import { useServices } from '@/fragments/_providers/DatabaseProvider';
 import { useShowToast } from '@/fragments/_providers/ToastProvider';
+import { classes } from '@/utils/classes';
 import { queryKey } from '@/utils/queryKey';
 import { NotebookEditCategoryItem } from './NotebookEditCategoryItem';
 
 type NotebookEditCategoriesProps = {
   notebookId: string;
+  className?: string;
 };
 
-export const NotebookEditCategories = ({ notebookId }: NotebookEditCategoriesProps) => {
+export const NotebookEditCategories = ({ notebookId, className }: NotebookEditCategoriesProps) => {
   const services = useServices();
   const showToast = useShowToast();
   const queryClient = useQueryClient();
@@ -63,46 +65,47 @@ export const NotebookEditCategories = ({ notebookId }: NotebookEditCategoriesPro
   });
 
   return (
-    <section className="space-y-4">
-      {categoriesQuery.isPending ? (
-        <p className="text-sm text-secondary">카테고리 목록을 불러오는 중이에요...</p>
-      ) : null}
+    <section className={classes('h-full min-h-0 w-full flex-[1_1_0] overflow-y-auto', className)}>
+      <div className="flex flex-col gap-4">
+        {categoriesQuery.isPending ? (
+          <p className="text-sm text-secondary">카테고리 목록을 불러오는 중이에요...</p>
+        ) : null}
 
-      {categoriesQuery.isError ? (
-        <p className="text-sm text-secondary">카테고리 목록을 불러오지 못했어요.</p>
-      ) : null}
+        {categoriesQuery.isError ? (
+          <p className="text-sm text-secondary">카테고리 목록을 불러오지 못했어요.</p>
+        ) : null}
 
-      {categoriesQuery.isSuccess ? (
-        categoriesQuery.data.length > 0 ? (
-          <ul className="space-y-3">
-            {categoriesQuery.data.map(category => (
-              <li key={category.id}>
-                <NotebookEditCategoryItem
-                  notebookId={notebookId}
-                  category={category}
-                  categoriesQueryKey={categoriesQueryKey}
-                />
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-sm text-secondary">아직 태그 카테고리가 없어요.</p>
-        )
-      ) : null}
+        {categoriesQuery.isSuccess ? (
+          categoriesQuery.data.length > 0 ? (
+            <ul className="space-y-3">
+              {categoriesQuery.data.map(category => (
+                <li key={category.id}>
+                  <NotebookEditCategoryItem
+                    notebookId={notebookId}
+                    category={category}
+                    categoriesQueryKey={categoriesQueryKey}
+                  />
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="p-3 text-center text-sm text-secondary">아직 태그 카테고리가 없어요.</p>
+          )
+        ) : null}
 
-      <button
-        type="button"
-        onClick={() => {
-          createCategoryMutation.mutate();
-        }}
-        disabled={createCategoryMutation.isPending}
-        className="flex items-center gap-1.5 rounded-lg bg-highlight px-3 py-2 text-sm font-semibold
-          text-highlight-foreground transition hover:bg-highlight-hover disabled:cursor-not-allowed
-          disabled:bg-highlight-disabled"
-      >
-        <IconPlus className="text-base" />
-        {createCategoryMutation.isPending ? '추가 중...' : '빈 카테고리 추가'}
-      </button>
+        <button
+          type="button"
+          onClick={() => {
+            createCategoryMutation.mutate();
+          }}
+          disabled={createCategoryMutation.isPending}
+          className="flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-semibold
+            text-secondary transition hover:text-primary disabled:cursor-not-allowed"
+        >
+          <IconPlus className="text-base" />
+          {createCategoryMutation.isPending ? '추가 중...' : '빈 카테고리 추가'}
+        </button>
+      </div>
     </section>
   );
 };

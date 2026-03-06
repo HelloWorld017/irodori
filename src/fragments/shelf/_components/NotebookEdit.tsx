@@ -43,9 +43,9 @@ export const NotebookEdit = ({
 
       <section
         className="relative flex h-full max-h-144 w-full max-w-192 flex-col rounded-2xl
-          bg-base-background p-8 shadow-elevated ring-1 ring-line"
+          bg-base-background shadow-elevated ring-1 ring-line"
       >
-        <header className="flex flex-none items-start justify-between gap-4">
+        <header className="flex flex-none items-start justify-between gap-4 p-8 pb-0">
           <div className="space-y-1">
             <h2 className="text-lg font-semibold text-primary">
               {isCreateMode ? '새 일기장 만들기' : '일기장 수정하기'}
@@ -63,7 +63,7 @@ export const NotebookEdit = ({
         </header>
 
         {!isCreateMode ? (
-          <div className="-mx-3 mb-8 flex flex-none">
+          <div className="-mx-3 mb-4 flex flex-none px-8">
             <button
               type="button"
               onClick={() => setTab('detail')}
@@ -90,9 +90,10 @@ export const NotebookEdit = ({
           </div>
         ) : null}
 
-        <div className="flex flex-1 items-center justify-center">
+        <div className="flex flex-1 flex-col items-center justify-center">
           {isCreateMode || tab === 'detail' ? (
             <NotebookEditDetail
+              className="p-8"
               initialValue={initialValue}
               mode={mode}
               pending={pending}
@@ -102,7 +103,7 @@ export const NotebookEdit = ({
           ) : null}
 
           {!isCreateMode && tab === 'categories' && notebookId ? (
-            <NotebookEditCategories notebookId={notebookId} />
+            <NotebookEditCategories className="p-8 pt-0" notebookId={notebookId} />
           ) : null}
         </div>
       </section>

@@ -68,6 +68,7 @@ const config = defineConfig(
         },
       ],
       'import-x/prefer-default-export': 'off',
+      'jsx-a11y/label-has-associated-control': ['error', { controlComponents: ['Toggle'] }],
       'prettier/prettier': 'error',
       'react/no-unknown-property': 'off',
       'react/react-in-jsx-scope': 'off',

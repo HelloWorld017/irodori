@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { ColorPicker } from '@/fragments/_components/ColorPicker';
+import { classes } from '@/utils/classes';
 import { NotebookThumbnail } from './NotebookThumbnail';
 import type { NotebookEditValue } from './NotebookEdit';
 
 type NotebookEditDetailProps = {
+  className?: string;
   initialValue: NotebookEditValue;
   pending: boolean;
   mode: 'create' | 'edit';
@@ -12,6 +14,7 @@ type NotebookEditDetailProps = {
 };
 
 export const NotebookEditDetail = ({
+  className,
   initialValue,
   pending,
   mode,
@@ -24,14 +27,14 @@ export const NotebookEditDetail = ({
 
   return (
     <form
-      className="space-y-4"
+      className={classes('flex h-full w-full flex-col gap-4', className)}
       onSubmit={event => {
         event.preventDefault();
         onSubmit({ title, description, color });
       }}
     >
-      <div className="flex flex-col gap-8 md:flex-row md:items-start md:gap-12">
-        <div className="mx-auto shrink-0 md:mx-0">
+      <div className="flex flex-col gap-8 md:flex-row md:items-start md:gap-6">
+        <div className="mx-auto shrink-0 md:mx-12">
           <NotebookThumbnail title={title || '새 일기장'} color={color} />
         </div>
 
@@ -68,6 +71,7 @@ export const NotebookEditDetail = ({
         </div>
       </div>
 
+      <div className="flex-1" />
       <footer className="flex justify-end gap-2 pt-2">
         <button
           type="button"
