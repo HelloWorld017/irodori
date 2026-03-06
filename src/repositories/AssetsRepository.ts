@@ -173,6 +173,22 @@ export class AssetsRepository implements SyncedRepository<AssetSyncData, Executo
     return rows.map(toAsset);
   }
 
+  async listAssetsByIds(ids: string[]): Promise<Asset[]> {
+    if (ids.length === 0) {
+      return [];
+    }
+
+    const rows = await this.db
+      .selectFrom('assets')
+      .selectAll()
+      .where('id', 'in', ids)
+      .where('deleted_at', 'is', null)
+      .orderBy('created_at', 'desc')
+      .execute();
+
+    return rows.map(toAsset);
+  }
+
   async readAssetById(id: string): Promise<Asset | null> {
     const row = await this.db
       .selectFrom('assets')

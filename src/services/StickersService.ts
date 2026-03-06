@@ -1,6 +1,6 @@
 import type { Services } from '.';
 import type { Executor, Repositories } from '@/repositories';
-import type { Sticker, StickerKind } from '@/repositories/StickersRepository';
+import type { Sticker, StickerKind, StickerViewItem } from '@/repositories/StickersRepository';
 
 type CreateStickerInput = {
   kind: StickerKind;
@@ -48,7 +48,7 @@ export class StickersService {
     this.services = services;
   }
 
-  list(): Promise<Sticker[]> {
+  list(): Promise<StickerViewItem[]> {
     return this.repositories.stickers.listStickers();
   }
 

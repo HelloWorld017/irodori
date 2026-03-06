@@ -1,7 +1,7 @@
 import type { Services } from '.';
 import type { Executor, Repositories } from '@/repositories';
 import type { Entry, EntryListCursor, EntrySummary } from '@/repositories/EntriesRepository';
-import type { Sticker } from '@/repositories/StickersRepository';
+import type { StickerViewItem } from '@/repositories/StickersRepository';
 import type { TagViewItem } from '@/repositories/TagsRepository';
 import type { CursorPageInput, CursorPageResult } from '@/types/Cursor';
 
@@ -32,7 +32,7 @@ type RemoveEntryInput = {
 
 export type EntryViewSticker = {
   slot: number;
-  sticker: Sticker;
+  sticker: StickerViewItem;
 };
 
 export type EntryViewItem = EntrySummary & {

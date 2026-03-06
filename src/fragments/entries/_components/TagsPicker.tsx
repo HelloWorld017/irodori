@@ -128,7 +128,7 @@ export const TagsPicker = ({
       });
     },
     onSuccess: async createdTag => {
-      await queryClient.invalidateQueries({ queryKey: ['entries', 'search-tags'] });
+      await queryClient.invalidateQueries({ queryKey: queryKey('entries', 'search-tags') });
       onChange({
         draft: '',
         tags: toUniqueTags([...value.tags, createdTag]),

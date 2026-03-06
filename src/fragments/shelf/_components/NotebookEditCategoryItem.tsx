@@ -25,9 +25,6 @@ type CategoryUpdateDraft = {
   maxSelect: number | null;
 };
 
-const buildCategoryTagsQueryKey = (notebookId: string, categoryId: string) =>
-  queryKey('shelf', 'notebook-edit-category-tags', { notebookId, categoryId });
-
 export const NotebookEditCategoryItem = ({
   notebookId,
   category,
@@ -49,7 +46,10 @@ export const NotebookEditCategoryItem = ({
 
   const displayed = displayedOverride ?? category.displayed;
 
-  const categoryTagsQueryKey = buildCategoryTagsQueryKey(notebookId, category.id);
+  const categoryTagsQueryKey = queryKey('shelf', 'notebook-edit-category-tags', {
+    notebookId,
+    categoryId: category.id,
+  });
 
   const categoryTagsQuery = useQuery({
     enabled: services !== null,
@@ -64,7 +64,7 @@ export const NotebookEditCategoryItem = ({
       queryClient.invalidateQueries({
         queryKey: queryKey('entries', 'search-tag-categories', notebookId),
       }),
-      queryClient.invalidateQueries({ queryKey: ['entries', 'search-tags'] }),
+      queryClient.invalidateQueries({ queryKey: queryKey('entries', 'search-tags') }),
     ]);
   };
 

@@ -24,7 +24,7 @@ export const NotebookEditCategories = ({ notebookId, className }: NotebookEditCa
       queryClient.invalidateQueries({
         queryKey: queryKey('entries', 'search-tag-categories', notebookId),
       }),
-      queryClient.invalidateQueries({ queryKey: ['entries', 'search-tags'] }),
+      queryClient.invalidateQueries({ queryKey: queryKey('entries', 'search-tags') }),
     ]);
   };
 

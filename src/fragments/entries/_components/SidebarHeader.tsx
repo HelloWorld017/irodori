@@ -34,7 +34,7 @@ export const SidebarHeader = () => {
     },
     onSuccess: async entry => {
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['entries', 'list'] }),
+        queryClient.invalidateQueries({ queryKey: queryKey('entries', 'list') }),
         queryClient.invalidateQueries({ queryKey: queryKey('entries', 'count', notebookId) }),
       ]);
 

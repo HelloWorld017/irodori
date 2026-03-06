@@ -38,6 +38,10 @@ export type Sticker = {
   deletedAt: number | null;
 };
 
+export type StickerViewItem = Sticker & {
+  blobDigest: string | null;
+};
+
 export type StickerSyncData = {
   kind: StickerKind;
   emoji: string | null;
@@ -93,6 +97,13 @@ const toSticker = (row: Selectable<StickersTable>): Sticker => ({
   deletedAt: row.deleted_at,
 });
 
+const toStickerViewItem = (
+  row: Selectable<StickersTable> & { assetBlobDigest: string | null }
+): StickerViewItem => ({
+  ...toSticker(row),
+  blobDigest: row.assetBlobDigest,
+});
+
 const toStickerSyncData = (sticker: Sticker): StickerSyncData => ({
   kind: sticker.kind,
   emoji: sticker.emoji,
@@ -144,31 +155,39 @@ export class StickersRepository implements SyncedRepository<StickerSyncData, Exe
     this.schemaInitialized = true;
   }
 
-  async listStickers(): Promise<Sticker[]> {
+  async listStickers(): Promise<StickerViewItem[]> {
     const rows = await this.db
       .selectFrom('stickers')
-      .selectAll()
-      .where('deleted_at', 'is', null)
-      .orderBy('created_at', 'desc')
+      .leftJoin('assets', join =>
+        join.onRef('assets.id', '=', 'stickers.asset_id').on('assets.deleted_at', 'is', null)
+      )
+      .selectAll('stickers')
+      .select(sql<string | null>`assets.blob_digest`.as('assetBlobDigest'))
+      .where('stickers.deleted_at', 'is', null)
+      .orderBy('stickers.created_at', 'desc')
       .execute();
 
-    return rows.map(toSticker);
+    return rows.map(toStickerViewItem);
   }
 
-  async listStickersByIds(ids: string[]): Promise<Sticker[]> {
+  async listStickersByIds(ids: string[]): Promise<StickerViewItem[]> {
     if (ids.length === 0) {
       return [];
     }
 
     const rows = await this.db
       .selectFrom('stickers')
-      .selectAll()
-      .where('id', 'in', ids)
-      .where('deleted_at', 'is', null)
-      .orderBy('created_at', 'desc')
+      .leftJoin('assets', join =>
+        join.onRef('assets.id', '=', 'stickers.asset_id').on('assets.deleted_at', 'is', null)
+      )
+      .selectAll('stickers')
+      .select(sql<string | null>`assets.blob_digest`.as('assetBlobDigest'))
+      .where('stickers.id', 'in', ids)
+      .where('stickers.deleted_at', 'is', null)
+      .orderBy('stickers.created_at', 'desc')
       .execute();
 
-    return rows.map(toSticker);
+    return rows.map(toStickerViewItem);
   }
 
   async readStickerById(id: string): Promise<Sticker | null> {
