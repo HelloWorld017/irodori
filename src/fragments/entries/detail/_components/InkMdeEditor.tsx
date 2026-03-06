@@ -1,5 +1,5 @@
 import { ink } from 'ink-mde';
-import { useEffect, useEffectEvent, useRef } from 'react';
+import { useEffect, useEffectEvent, useRef, useState } from 'react';
 import type { Instance, Options } from 'ink-mde';
 
 type InkMdeEditorProps = {
@@ -33,9 +33,11 @@ const editorOptions: Options = {
   search: true,
 };
 
+const css = String.raw;
+
 export const InkMdeEditor = ({ value, placeholder = '', onChange }: InkMdeEditorProps) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const editorRef = useRef<Instance | null>(null);
+  const [initialValue] = useState(value);
   const onChangeEvent = useEffectEvent(onChange);
 
   useEffect(() => {
@@ -46,11 +48,12 @@ export const InkMdeEditor = ({ value, placeholder = '', onChange }: InkMdeEditor
     }
 
     let disposed = false;
+    let editor: Instance | null = null;
 
     void Promise.resolve(
       ink(target, {
         ...editorOptions,
-        doc: '',
+        doc: initialValue,
         placeholder,
         hooks: {
           ...editorOptions.hooks,
@@ -65,33 +68,42 @@ export const InkMdeEditor = ({ value, placeholder = '', onChange }: InkMdeEditor
         return;
       }
 
-      editorRef.current = instance;
+      editor = instance;
     });
 
     return () => {
       disposed = true;
-      editorRef.current?.destroy();
-      editorRef.current = null;
+      editor?.destroy();
       target.replaceChildren();
     };
-  }, [placeholder]);
+  }, [initialValue, placeholder]);
 
-  useEffect(() => {
-    const editor = editorRef.current;
+  const stylesheet = css`
+    .irodori__ink-mde-editor {
+      .ink-mde {
+        border: none;
+      }
 
-    if (!editor) {
-      return;
+      .cm-editor,
+      .cm-scroller,
+      .cm-content {
+        flex-grow: 1;
+      }
+
+      .cm-focused {
+        outline: 0;
+      }
     }
-
-    if (editor.getDoc() !== value) {
-      editor.update(value);
-    }
-  }, [value]);
+  `;
 
   return (
-    <div
-      ref={containerRef}
-      className="min-h-96 rounded-2xl border border-line bg-base-background p-3"
-    />
+    <>
+      <style>{stylesheet}</style>
+      <div
+        ref={containerRef}
+        className="irodori__ink-mde-editor flex h-[75vh] flex-col rounded-2xl border border-line
+          bg-base-background p-3"
+      />
+    </>
   );
 };

@@ -44,7 +44,7 @@ export const EntriesDetailFragment = ({ edit = false }: EntriesDetailFragmentPro
     );
   }
 
-  if (detailQuery.isError || (edit && draftQuery.isError)) {
+  if (detailQuery.isError || tagCategoriesQuery.isError || (edit && draftQuery.isError)) {
     return (
       <section
         className="rounded-[1.75rem] border border-line bg-elevated-background p-8 shadow-elevated"
@@ -66,10 +66,7 @@ export const EntriesDetailFragment = ({ edit = false }: EntriesDetailFragmentPro
     );
   }
 
-  const tagCategories: TagCategory[] | null = tagCategoriesQuery.isError
-    ? null
-    : (tagCategoriesQuery.data ?? []);
-
+  const tagCategories: TagCategory[] | null = tagCategoriesQuery.data ?? [];
   if (!edit) {
     return <EntriesDetailReadView entry={detailQuery.data} tagCategories={tagCategories} />;
   }

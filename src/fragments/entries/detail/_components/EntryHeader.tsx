@@ -31,7 +31,7 @@ export const EntryHeader = ({
 
   return (
     <section className="relative overflow-hidden rounded-[2rem]">
-      <div className="relative min-h-72 sm:min-h-88">
+      <div className="relative flex min-h-72 flex-col sm:min-h-88">
         {cover ? (
           <AssetImage
             blobDigest={cover.blobDigest}
@@ -52,20 +52,16 @@ export const EntryHeader = ({
           />
         )}
 
-        <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-t from-black/50 via-black/20 to-transparent" />
 
-        <div className="relative z-1 flex min-h-72 flex-col justify-between p-6 sm:min-h-88 sm:p-8">
-          <div className="flex items-start justify-between gap-4">
-            <span
-              className="rounded-full border border-white/25 bg-black/20 px-3 py-1 text-sm
-                font-medium text-white/90 backdrop-blur-md"
-            >
-              #{index}
-            </span>
-            {action}
-          </div>
+        <div
+          className="relative z-1 mx-auto flex w-full max-w-360 flex-1 flex-col justify-between p-6
+            sm:p-8"
+        >
+          <div className="flex items-start justify-end gap-4">{action}</div>
 
           <div className="max-w-3xl">
+            <div className="mb-4 text-xl text-white/90">#{index}</div>
             {titleContent ?? (
               <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
                 {title || '제목 없는 일기'}

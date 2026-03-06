@@ -12,7 +12,7 @@ export const EntriesDetailReadView = ({
   tagCategories,
 }: {
   entry: EntryDetailItem;
-  tagCategories: TagCategory[] | null;
+  tagCategories: TagCategory[];
 }) => {
   const notebookId = useEntriesNotebookId();
   const [, navigate] = useLocation();
@@ -32,8 +32,8 @@ export const EntriesDetailReadView = ({
                 replace: true,
               })
             }
-            className="inline-flex items-center gap-2 rounded-full border border-white/25
-              bg-black/20 px-3 py-2 text-sm font-medium text-white/90 backdrop-blur-md transition
+            className="inline-flex items-center gap-2 rounded-lg border border-white/25 bg-black/20
+              px-3 py-2 text-sm font-medium text-white/90 backdrop-blur-md transition
               hover:bg-black/35"
           >
             <IconPencil />
@@ -42,7 +42,9 @@ export const EntriesDetailReadView = ({
         }
       />
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.8fr)_minmax(18rem,0.95fr)]">
+      <div
+        className="m-auto grid max-w-360 gap-6 lg:grid-cols-[minmax(0,1.8fr)_minmax(18rem,0.6fr)]"
+      >
         <section className="rounded-[1.75rem] p-6">
           <div className="space-y-4">
             <p className="text-sm font-medium text-secondary">본문</p>

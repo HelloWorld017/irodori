@@ -17,6 +17,7 @@ type TagsPickerProps = {
   notebookId: string;
   tagsCategoryId?: string;
   searchLimit?: number;
+  multiLine?: boolean;
   value: TagsPickerValue;
   allowDraft?: boolean;
   allowCreateTag?: boolean;
@@ -41,6 +42,7 @@ export const TagsPicker = ({
   notebookId,
   tagsCategoryId,
   searchLimit = 5,
+  multiLine = true,
   value,
   allowDraft = true,
   allowCreateTag = false,
@@ -173,52 +175,61 @@ export const TagsPicker = ({
     <div className={classes('relative w-full', className)}>
       <div
         className={classes(
-          `flex min-h-11 flex-wrap items-center gap-2 rounded-2xl border border-line
-          bg-base-background px-3 py-2`,
+          'flex min-h-11 items-center gap-2 rounded-2xl border border-line bg-base-background p-3',
           inputClassName
         )}
       >
-        {icon}
-        {value.tags.map(tag => (
-          <Tag
-            key={tag.id}
-            label={tag.label}
-            color={tag.color}
-            onRemove={() => removeTag(tag.id)}
-          />
-        ))}
+        {icon && <div className="flex flex-none p-1">{icon}</div>}
+        <div
+          className={classes(
+            'flex min-w-0 flex-1',
+            !multiLine && 'relative justify-end overflow-x-hidden'
+          )}
+        >
+          <div
+            className={classes(
+              'flex flex-1 items-center gap-2',
+              multiLine && 'min-w-0 flex-wrap',
+              !multiLine && 'shrink-0 basis-auto'
+            )}
+          >
+            {value.tags.map(tag => (
+              <Tag key={tag.id} className="flex-none" onRemove={() => removeTag(tag.id)} {...tag} />
+            ))}
 
-        <input
-          className={`min-w-20 flex-1 self-stretch text-sm text-primary outline-none
-            placeholder:text-tertiary`}
-          value={value.draft}
-          onChange={event => {
-            onChange({
-              ...value,
-              draft: event.target.value,
-            });
-          }}
-          onKeyDown={event => {
-            if (
-              event.key === 'Backspace' &&
-              value.draft === '' &&
-              event.currentTarget.selectionStart === 0 &&
-              event.currentTarget.selectionEnd === 0 &&
-              value.tags.length > 0
-            ) {
-              event.preventDefault();
-              removeTag(value.tags[value.tags.length - 1].id);
-              return;
-            }
+            <input
+              className={`min-h-7 w-20 flex-[1_0] basis-20 self-stretch text-sm text-primary
+                outline-none placeholder:text-tertiary`}
+              value={value.draft}
+              onChange={event => {
+                onChange({
+                  ...value,
+                  draft: event.target.value,
+                });
+              }}
+              onKeyDown={event => {
+                if (
+                  event.key === 'Backspace' &&
+                  value.draft === '' &&
+                  event.currentTarget.selectionStart === 0 &&
+                  event.currentTarget.selectionEnd === 0 &&
+                  value.tags.length > 0
+                ) {
+                  event.preventDefault();
+                  removeTag(value.tags[value.tags.length - 1].id);
+                  return;
+                }
 
-            if (event.key === 'Enter') {
-              event.preventDefault();
-              handleSubmit();
-            }
-          }}
-          placeholder={placeholder}
-        />
-        {children}
+                if (event.key === 'Enter') {
+                  event.preventDefault();
+                  handleSubmit();
+                }
+              }}
+              placeholder={placeholder}
+            />
+          </div>
+        </div>
+        {children && <div className="flex flex-none gap-2 p-1">{children}</div>}
       </div>
 
       {maxSelectionReached ? (

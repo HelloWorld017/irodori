@@ -11,5 +11,10 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: { '@': resolve(__dirname, 'src') },
   },
+  server: {
+    watch: {
+      ignored: [resolve(__dirname, 'docs/**')],
+    },
+  },
   plugins: [sqlocal(), react(), tailwindcss()],
 }));

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { StickerPicker, type StickerPickerValue } from '@/fragments/_components/StickerPicker';
-import { DynamicIcon } from '@/fragments/_icons';
+import { Tag } from '@/fragments/_components/Tag';
 import { TagsPicker } from '../../_components/TagsPicker';
 import { useEntriesNotebookId } from '../../_providers/EntriesProvider';
 import {
@@ -9,7 +9,7 @@ import {
   useSetEntriesDetailStickerValue,
   useSetEntriesDetailTags,
 } from '../_providers/EntriesDetailProvider';
-import { buildTagCategoryGroups } from '../_utils/buildTagCategoryGroups';
+import { buildEntryMetadataTagSections } from '../_utils';
 import type { EntryDraftSticker } from '@/repositories/EntryDraftsRepository';
 import type { TagCategory } from '@/repositories/TagCategoriesRepository';
 import type { TagViewItem } from '@/repositories/TagsRepository';
@@ -42,6 +42,26 @@ const toStickerPickerValue = (sticker: EntryDraftSticker | null): StickerPickerV
   return { kind: 'sticker', stickerId: sticker.sticker.id };
 };
 
+const buildCategoryRuleLabel = ({
+  minSelect,
+  maxSelect,
+}: {
+  minSelect: number;
+  maxSelect: number | null;
+}): string | null => {
+  const parts: string[] = [];
+
+  if (minSelect > 0) {
+    parts.push(`최소 ${minSelect}개`);
+  }
+
+  if (maxSelect !== null) {
+    parts.push(`최대 ${maxSelect}개`);
+  }
+
+  return parts.length > 0 ? parts.join(' · ') : null;
+};
+
 const replaceCategoryTags = ({
   currentTags,
   categoryId,
@@ -55,7 +75,7 @@ const replaceCategoryTags = ({
   return [...otherTags, ...nextTags];
 };
 
-export const EntryMetadataEdit = ({ tagCategories }: { tagCategories: TagCategory[] | null }) => {
+export const EntryMetadataEdit = ({ tagCategories }: { tagCategories: TagCategory[] }) => {
   const notebookId = useEntriesNotebookId();
   const draft = useEntriesDetailDraft();
   const setDate = useSetEntriesDetailDate();
@@ -63,11 +83,14 @@ export const EntryMetadataEdit = ({ tagCategories }: { tagCategories: TagCategor
   const setStickerValue = useSetEntriesDetailStickerValue();
   const [tagsDraftByCategory, setTagsDraftByCategory] = useState<Record<string, string>>({});
 
-  const tagCategoryGroups = useMemo(
-    () =>
-      tagCategories ? buildTagCategoryGroups({ categories: tagCategories, tags: draft.tags }) : [],
+  const tagSections = useMemo(
+    () => buildEntryMetadataTagSections({ categories: tagCategories, tags: draft.tags }),
     [draft.tags, tagCategories]
   );
+
+  const removeTag = (tagId: string) => {
+    setTags(draft.tags.filter(tag => tag.id !== tagId));
+  };
 
   return (
     <aside className="space-y-5 rounded-[1.75rem] p-6">
@@ -82,66 +105,76 @@ export const EntryMetadataEdit = ({ tagCategories }: { tagCategories: TagCategor
         />
       </section>
 
-      <section className="space-y-3">
-        <p className="text-sm font-medium text-secondary">태그</p>
-
-        {tagCategories === null ? (
-          <p className="text-sm text-tertiary">태그 카테고리를 불러오지 못했어요.</p>
-        ) : tagCategoryGroups.length > 0 ? (
-          <div className="space-y-4">
-            {tagCategoryGroups.map(category => (
-              <section key={category.id} className="space-y-2.5">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-sm font-medium text-primary">{category.label}</span>
-                </div>
-
-                <TagsPicker
-                  notebookId={notebookId}
-                  tagsCategoryId={category.id}
-                  value={{
-                    draft: tagsDraftByCategory[category.id] ?? '',
-                    tags: category.tags,
-                  }}
-                  allowCreateTag
-                  placeholder={`${category.label} 태그를 추가하세요`}
-                  onChange={({ draft: nextDraftInput, tags }) => {
-                    setTagsDraftByCategory(current => ({
-                      ...current,
-                      [category.id]: nextDraftInput,
-                    }));
-                    setTags(
-                      replaceCategoryTags({
-                        currentTags: draft.tags,
-                        categoryId: category.id,
-                        nextTags: tags,
-                      })
-                    );
-                  }}
-                  onSubmit={({ draft: nextDraftInput, tags }) => {
-                    setTagsDraftByCategory(current => ({
-                      ...current,
-                      [category.id]: nextDraftInput,
-                    }));
-                    setTags(
-                      replaceCategoryTags({
-                        currentTags: draft.tags,
-                        categoryId: category.id,
-                        nextTags: tags,
-                      })
-                    );
-                  }}
-                />
-              </section>
+      {tagSections?.missingTags.length ? (
+        <section className="space-y-3">
+          <p className="text-sm font-medium text-secondary">태그</p>
+          <div className="flex flex-wrap gap-2">
+            {tagSections.missingTags.map(tag => (
+              <Tag key={tag.id} {...tag} onRemove={() => removeTag(tag.id)} />
             ))}
           </div>
-        ) : (
-          <p className="text-sm text-tertiary">아직 태그 카테고리가 없어요.</p>
-        )}
-      </section>
+        </section>
+      ) : null}
+
+      {tagSections?.categories.map(category => {
+        const ruleLabel = buildCategoryRuleLabel(category);
+
+        return (
+          <section key={category.id} className="space-y-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-sm font-medium text-secondary">{category.label}</p>
+              {ruleLabel ? <p className="text-xs text-tertiary">{ruleLabel}</p> : null}
+            </div>
+
+            <TagsPicker
+              notebookId={notebookId}
+              tagsCategoryId={category.id}
+              value={{
+                draft: tagsDraftByCategory[category.id] ?? '',
+                tags: category.tags,
+              }}
+              allowCreateTag
+              placeholder="태그 검색"
+              onChange={({ draft: nextDraftInput, tags }) => {
+                setTagsDraftByCategory(current => ({
+                  ...current,
+                  [category.id]: nextDraftInput,
+                }));
+                setTags(
+                  replaceCategoryTags({
+                    currentTags: draft.tags,
+                    categoryId: category.id,
+                    nextTags: tags,
+                  })
+                );
+              }}
+              onSubmit={({ draft: nextDraftInput, tags }) => {
+                setTagsDraftByCategory(current => ({
+                  ...current,
+                  [category.id]: nextDraftInput,
+                }));
+                setTags(
+                  replaceCategoryTags({
+                    currentTags: draft.tags,
+                    categoryId: category.id,
+                    nextTags: tags,
+                  })
+                );
+              }}
+            />
+          </section>
+        );
+      })}
+
+      {tagSections &&
+      tagSections.missingTags.length === 0 &&
+      tagSections.categories.length === 0 ? (
+        <p className="text-sm text-tertiary">아직 태그 카테고리가 없어요.</p>
+      ) : null}
 
       <section className="space-y-3">
         <p className="text-sm font-medium text-secondary">스티커</p>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="flex gap-3">
           {Array.from({ length: 3 }, (_, index) => {
             const slot = index + 1;
             const value = toStickerPickerValue(
@@ -149,14 +182,11 @@ export const EntryMetadataEdit = ({ tagCategories }: { tagCategories: TagCategor
             );
 
             return (
-              <div key={slot} className="space-y-2 text-center">
-                <StickerPicker
-                  value={value}
-                  className="w-full"
-                  onChange={nextValue => void setStickerValue(slot, nextValue)}
-                />
-                <p className="text-xs text-tertiary">슬롯 {slot}</p>
-              </div>
+              <StickerPicker
+                key={slot}
+                value={value}
+                onChange={nextValue => void setStickerValue(slot, nextValue)}
+              />
             );
           })}
         </div>

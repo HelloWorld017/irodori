@@ -238,15 +238,7 @@ export const NotebookEditCategoryItem = ({
     <article className="rounded-2xl border border-line bg-base-background p-4 px-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            {category.icon ? (
-              <span className="flex text-sm text-secondary">
-                <DynamicIcon name={category.icon} />
-              </span>
-            ) : null}
-            <h3 className="text-base font-semibold text-primary">{category.label}</h3>
-            <span className="h-3 w-3 rounded-full" style={{ backgroundColor: category.color }} />
-          </div>
+          <h3 className="text-base font-semibold text-primary">{category.label}</h3>
           <p
             className="flex items-center text-xs text-secondary [&>*]:flex [&>*]:items-center
               [&>*]:before:mx-2 [&>*]:before:hidden [&>*]:before:h-0.5 [&>*]:before:w-0.5
@@ -318,7 +310,7 @@ export const NotebookEditCategoryItem = ({
                 value={draftMaxSelect}
                 onChange={event => setDraftMaxSelect(event.target.value)}
                 disabled={isPending}
-                placeholder="비워두면 제한 없음"
+                placeholder="제한 없음"
                 className="w-full rounded-xl border border-line bg-base-background px-3 py-2 text-sm
                   text-primary transition outline-none focus:border-highlight
                   disabled:cursor-not-allowed"
@@ -365,7 +357,7 @@ export const NotebookEditCategoryItem = ({
           categoryTagsQuery.data.length > 0 ? (
             <div className="flex flex-wrap gap-2">
               {categoryTagsQuery.data.map(tag => (
-                <Tag key={tag.id} label={tag.label} color={tag.color} />
+                <Tag key={tag.id} {...tag} />
               ))}
             </div>
           ) : (

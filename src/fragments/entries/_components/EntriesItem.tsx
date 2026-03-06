@@ -23,7 +23,7 @@ export const EntriesItem = ({ entry }: EntriesItemProps) => {
           focus-visible:ring-highlight focus-visible:ring-offset-2
           focus-visible:ring-offset-base-background focus-visible:outline-none`,
           isActive
-            ? 'border-highlight bg-elevated-background'
+            ? 'border-highlight bg-section-background'
             : 'border-transparent bg-base-background hover:bg-base-background'
         )
       }

@@ -48,7 +48,7 @@ const getDraftStatusLabel = (
     return `${formatDate(lastSavedAt)} 임시저장됨`;
   }
 
-  return '편집 내용을 저장해 보세요';
+  return '';
 };
 
 export const EntriesDetailEditView = ({
@@ -56,7 +56,7 @@ export const EntriesDetailEditView = ({
   tagCategories,
 }: {
   entry: EntryDetailItem;
-  tagCategories: TagCategory[] | null;
+  tagCategories: TagCategory[];
 }) => {
   const services = useServices();
   const repositories = useRepositories();
@@ -187,7 +187,7 @@ export const EntriesDetailEditView = ({
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploadingCover}
-            className="rounded-full border border-white/25 bg-black/20 px-3 py-2 text-sm font-medium
+            className="rounded-lg border border-white/25 bg-black/20 px-3 py-2 text-sm font-medium
               text-white/90 backdrop-blur-md transition hover:bg-black/35
               disabled:cursor-not-allowed disabled:opacity-60"
           >
@@ -206,13 +206,12 @@ export const EntriesDetailEditView = ({
           />
         }
       />
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.8fr)_minmax(18rem,0.95fr)]">
+      <div
+        className="m-auto grid max-w-360 gap-6 lg:grid-cols-[minmax(0,1.8fr)_minmax(18rem,0.6fr)]"
+      >
         <section className="space-y-4 rounded-[1.75rem] p-6">
           <div className="space-y-1">
             <p className="text-sm font-medium text-secondary">본문</p>
-            <p className="text-sm text-tertiary">
-              편집 내용은 자동으로 임시저장되고, 저장하기를 눌러야 반영돼요.
-            </p>
           </div>
 
           <InkMdeEditor

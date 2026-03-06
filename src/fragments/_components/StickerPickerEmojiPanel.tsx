@@ -13,9 +13,9 @@ export const StickerPickerEmojiPanel = ({ onSelect }: EmojiPickerPanelProps) => 
     queryFn: () => fetchEmojiData(),
   });
 
-  const stylesheet = '.sticker-picker em-emoji-picker { --shadow: none; }';
+  const stylesheet = '.irodori__sticker-picker em-emoji-picker { --shadow: none; }';
   return (
-    <div className="sticker-picker mt-3 flex flex-col items-center">
+    <div className="irodori__sticker-picker mt-3 flex flex-col items-center">
       <style>{stylesheet}</style>
 
       {emojiQuery.isPending ? (

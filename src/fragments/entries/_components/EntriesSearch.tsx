@@ -32,8 +32,9 @@ export const EntriesSearch = ({
       icon={<IconSearch className="text-highlight" />}
       notebookId={notebookId}
       value={{ draft: criteriaWithFallback.draft, tags: criteriaWithFallback.tags }}
+      multiLine={false}
       allowDraft
-      placeholder="텍스트 또는 태그로 검색"
+      placeholder="검색"
       className={className}
       inputClassName={classes('bg-base-background/80 shadow-elevated backdrop-blur-xl')}
       onChange={({ draft, tags }) => {
