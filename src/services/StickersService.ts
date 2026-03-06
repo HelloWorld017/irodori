@@ -21,6 +21,11 @@ type RemoveStickerInput = {
   id: string;
 };
 
+type FindOrCreateEmojiStickerInput = {
+  emoji: string;
+  label?: string;
+};
+
 const normalizeLabel = (value: string): string => {
   const label = value.trim();
 
@@ -29,6 +34,16 @@ const normalizeLabel = (value: string): string => {
   }
 
   return label;
+};
+
+const normalizeEmoji = (value: string): string => {
+  const emoji = value.trim();
+
+  if (!emoji) {
+    throw new Error('Sticker emoji is required.');
+  }
+
+  return emoji;
 };
 
 const assertStickerExists = (sticker: Sticker | null, id: string): Sticker => {
@@ -50,6 +65,14 @@ export class StickersService {
 
   list(): Promise<StickerViewItem[]> {
     return this.repositories.stickers.listStickers();
+  }
+
+  getById(id: string): Promise<StickerViewItem | null> {
+    return this.repositories.stickers.listStickersByIds([id]).then(([sticker]) => sticker ?? null);
+  }
+
+  getByIds(ids: string[]): Promise<StickerViewItem[]> {
+    return this.repositories.stickers.listStickersByIds(ids);
   }
 
   async create(input: CreateStickerInput): Promise<Sticker> {
@@ -109,6 +132,42 @@ export class StickersService {
 
       await this.stageSticker(trx, sticker);
     });
+  }
+
+  async findOrCreateEmojiSticker(
+    input: FindOrCreateEmojiStickerInput,
+    executor?: Executor
+  ): Promise<Sticker> {
+    const emoji = normalizeEmoji(input.emoji);
+    const label = normalizeLabel(input.label ?? emoji);
+
+    const run = async (trx: Executor) => {
+      const existingSticker = await this.repositories.stickers.readEmojiStickerByEmoji(emoji, trx);
+
+      if (existingSticker) {
+        return existingSticker;
+      }
+
+      const now = Date.now();
+      const sticker = await this.repositories.stickers.createSticker(trx, {
+        id: crypto.randomUUID(),
+        kind: 'emoji',
+        emoji,
+        label,
+        assetId: null,
+        createdAt: now,
+        updatedAt: now,
+      });
+
+      await this.stageSticker(trx, sticker);
+      return sticker;
+    };
+
+    if (executor) {
+      return run(executor);
+    }
+
+    return this.repositories.withTransaction(run);
   }
 
   private stageSticker(trx: Executor, sticker: Sticker): Promise<void> {

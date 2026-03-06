@@ -1,9 +1,13 @@
 import { Popover, PopoverButton, PopoverPanel } from '@headlessui/react';
+import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { StickerPickerStickerPanel } from '@/fragments/_components/StickerPickerStickerPanel';
 import { IconTrash, IconX } from '@/fragments/_icons';
-import { StickerProvider, useStickerImageUrl } from '@/fragments/_providers/StickerProvider';
+import { useServices } from '@/fragments/_providers/DatabaseProvider';
+import { StickerProvider } from '@/fragments/_providers/StickerProvider';
 import { classes } from '@/utils/classes';
+import { queryKey } from '@/utils/queryKey';
+import { AssetImage } from './AssetImage';
 import { StickerPickerEmojiPanel } from './StickerPickerEmojiPanel';
 
 type StickerPickerTab = 'sticker' | 'emoji';
@@ -26,9 +30,14 @@ export const StickerPicker = ({
   className,
   onChange,
 }: StickerPickerProps) => {
+  const services = useServices();
   const [tab, setTab] = useState<StickerPickerTab>(value?.kind === 'emoji' ? 'emoji' : 'sticker');
   const selectedStickerId = value?.kind === 'sticker' ? value.stickerId : null;
-  const selectedStickerUrl = useStickerImageUrl(selectedStickerId);
+  const selectedStickerQuery = useQuery({
+    enabled: services !== null && selectedStickerId !== null,
+    queryKey: queryKey('common', 'sticker-picker-selected', selectedStickerId),
+    queryFn: () => services!.stickers.getById(selectedStickerId!),
+  });
 
   return (
     <Popover className={classes('relative', className)}>
@@ -49,9 +58,14 @@ export const StickerPicker = ({
           >
             {value?.kind === 'emoji' ? (
               <span className="text-[1.5rem] leading-none">{value.emoji}</span>
-            ) : (
-              selectedStickerUrl && <img src={selectedStickerUrl} alt="스티커" />
-            )}
+            ) : selectedStickerQuery.data?.blobDigest ? (
+              <AssetImage
+                blobDigest={selectedStickerQuery.data.blobDigest}
+                alt={selectedStickerQuery.data.label}
+                className="h-full w-full"
+                imageClassName="h-full w-full object-cover"
+              />
+            ) : null}
           </PopoverButton>
 
           <PopoverPanel

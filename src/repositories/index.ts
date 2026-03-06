@@ -1,6 +1,7 @@
 import { AssetsRepository } from './AssetsRepository';
 import { EntriesRepository } from './EntriesRepository';
 import { EntryAssetsRepository } from './EntryAssetsRepository';
+import { EntryDraftsRepository } from './EntryDraftsRepository';
 import { EntryStickersRepository } from './EntryStickersRepository';
 import { EntryTagsRepository } from './EntryTagsRepository';
 import { NotebooksRepository } from './NotebooksRepository';
@@ -11,6 +12,7 @@ import { TagsRepository } from './TagsRepository';
 import type { AssetsDatabase } from './AssetsRepository';
 import type { EntriesDatabase } from './EntriesRepository';
 import type { EntryAssetsDatabase } from './EntryAssetsRepository';
+import type { EntryDraftsDatabase } from './EntryDraftsRepository';
 import type { EntryStickersDatabase } from './EntryStickersRepository';
 import type { EntryTagsDatabase } from './EntryTagsRepository';
 import type { NotebooksDatabase } from './NotebooksRepository';
@@ -24,6 +26,7 @@ import type { Kysely, Transaction } from 'kysely';
 export type Database =
   & AssetsDatabase
   & EntriesDatabase
+  & EntryDraftsDatabase
   & EntryAssetsDatabase
   & EntryStickersDatabase
   & EntryTagsDatabase
@@ -44,6 +47,7 @@ export type Repositories = {
 export const RepositoryClasses = {
   assets: AssetsRepository,
   entries: EntriesRepository,
+  entryDrafts: EntryDraftsRepository,
   entryAssets: EntryAssetsRepository,
   entryStickers: EntryStickersRepository,
   entryTags: EntryTagsRepository,

@@ -201,6 +201,20 @@ export class StickersRepository implements SyncedRepository<StickerSyncData, Exe
     return row ? toSticker(row) : null;
   }
 
+  async readEmojiStickerByEmoji(emoji: string, executor?: Executor): Promise<Sticker | null> {
+    const db = executor ?? this.db;
+    const row = await db
+      .selectFrom('stickers')
+      .selectAll()
+      .where('kind', '=', 'emoji')
+      .where('emoji', '=', emoji)
+      .where('deleted_at', 'is', null)
+      .orderBy('created_at', 'desc')
+      .executeTakeFirst();
+
+    return row ? toSticker(row) : null;
+  }
+
   async createSticker(executor: Executor, input: CreateStickerInput): Promise<Sticker> {
     const sticker: Sticker = {
       id: input.id,

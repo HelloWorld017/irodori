@@ -1,4 +1,5 @@
 import type { Services } from '.';
+import type { EntryMetadata } from './EntryMetadataService';
 import type { Executor, Repositories } from '@/repositories';
 import type {
   Entry,
@@ -29,6 +30,7 @@ type UpdateEntryInput = {
   title: string;
   body: string;
   coverAssetId: string | null;
+  date: number;
 };
 
 type RemoveEntryInput = {
@@ -44,6 +46,8 @@ export type EntryViewItem = EntrySummary & {
   tags: TagViewItem[];
   stickers: EntryViewSticker[];
 };
+
+export type EntryDetailItem = EntryWithCoverAsset & EntryMetadata;
 
 const normalizeEntryTitle = (value: string): string => {
   const title = value.trim();
@@ -99,6 +103,21 @@ export class EntriesService {
     return this.repositories.entries.readEntryById(id);
   }
 
+  async getDetailById(id: string): Promise<EntryDetailItem | null> {
+    const entry = await this.repositories.entries.readEntryById(id);
+
+    if (!entry) {
+      return null;
+    }
+
+    const metadata = await this.services.entryMetadata.getByEntryId(id);
+
+    return {
+      ...entry,
+      ...metadata,
+    };
+  }
+
   async create(input: CreateEntryInput): Promise<Entry> {
     const now = Date.now();
     const id = crypto.randomUUID();
@@ -135,6 +154,7 @@ export class EntriesService {
           title,
           body: input.body,
           coverAssetId: input.coverAssetId,
+          date: input.date,
           updatedAt: now,
         }),
         input.id

@@ -1,4 +1,5 @@
 import { EntriesService } from './EntriesService';
+import { EntryDraftsService } from './EntryDraftsService';
 import { EntryMetadataService } from './EntryMetadataService';
 import { NotebooksService } from './NotebooksService';
 import { StickersService } from './StickersService';
@@ -12,6 +13,7 @@ export type Services = {
 
 export const ServiceClasses = {
   entries: EntriesService,
+  entryDrafts: EntryDraftsService,
   entryMetadata: EntryMetadataService,
   notebooks: NotebooksService,
   stickers: StickersService,

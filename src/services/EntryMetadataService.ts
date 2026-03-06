@@ -4,7 +4,7 @@ import type { Services } from '.';
 import type { Executor, Repositories } from '@/repositories';
 import type { EntrySticker } from '@/repositories/EntryStickersRepository';
 import type { EntryTag } from '@/repositories/EntryTagsRepository';
-import type { Sticker } from '@/repositories/StickersRepository';
+import type { StickerViewItem } from '@/repositories/StickersRepository';
 import type { TagViewItem } from '@/repositories/TagsRepository';
 
 type ReplaceTagsInput = {
@@ -25,7 +25,7 @@ type ClearStickerInput = {
 
 export type EntryMetadataSticker = {
   slot: number;
-  sticker: Sticker;
+  sticker: StickerViewItem;
 };
 
 export type EntryMetadata = {

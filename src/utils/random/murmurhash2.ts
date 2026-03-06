@@ -1,9 +1,9 @@
 export const murmurhash2 = (str: string): number => {
   let h = 0;
 
-  let k,
-    i = 0,
-    len = str.length;
+  let k = 0;
+  let i = 0;
+  let len = str.length;
   for (; len >= 4; ++i, len -= 4) {
     k =
       (str.charCodeAt(i) & 0xff) |

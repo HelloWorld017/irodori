@@ -109,6 +109,7 @@ export type UpdateEntryInput = {
   title: string;
   body: string;
   coverAssetId: string | null;
+  date: number;
   updatedAt: number;
 };
 
@@ -441,6 +442,7 @@ export class EntriesRepository implements SyncedRepository<EntrySyncData, Execut
         title: input.title,
         body: input.body,
         cover_asset_id: input.coverAssetId,
+        entry_date: input.date,
         updated_at: input.updatedAt,
       })
       .where('id', '=', input.id)
@@ -452,6 +454,7 @@ export class EntriesRepository implements SyncedRepository<EntrySyncData, Execut
       title: input.title,
       body: input.body,
       coverAssetId: input.coverAssetId,
+      date: input.date,
       updatedAt: input.updatedAt,
     };
   }
