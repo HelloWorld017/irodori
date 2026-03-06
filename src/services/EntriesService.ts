@@ -1,6 +1,11 @@
 import type { Services } from '.';
 import type { Executor, Repositories } from '@/repositories';
-import type { Entry, EntryListCursor, EntrySummary } from '@/repositories/EntriesRepository';
+import type {
+  Entry,
+  EntryListCursor,
+  EntrySummary,
+  EntryWithCoverAsset,
+} from '@/repositories/EntriesRepository';
 import type { StickerViewItem } from '@/repositories/StickersRepository';
 import type { TagViewItem } from '@/repositories/TagsRepository';
 import type { CursorPageInput, CursorPageResult } from '@/types/Cursor';
@@ -90,7 +95,7 @@ export class EntriesService {
     return this.repositories.entries.countEntriesByNotebookId(notebookId);
   }
 
-  getById(id: string): Promise<Entry | null> {
+  getById(id: string): Promise<EntryWithCoverAsset | null> {
     return this.repositories.entries.readEntryById(id);
   }
 

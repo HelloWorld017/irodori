@@ -1,8 +1,8 @@
 import { sql } from 'kysely';
 import { z } from 'zod';
-import { buildSingleFieldCursorWhere } from '@/utils/cursor';
 import { parseSyncDataOrThrow } from './_utils/parseSyncData';
 import type { Database, Executor } from '.';
+import type { Asset } from './AssetsRepository';
 import type { CursorPageInput, CursorPageResult, SingleFieldCursor } from '@/types/Cursor';
 import type {
   Repository,
@@ -42,7 +42,13 @@ export type Entry = {
   deletedAt: number | null;
 };
 
-export type EntrySummary = Omit<Entry, 'body'>;
+export type EntryCoverAsset = Pick<Asset, 'blobDigest' | 'blurhash' | 'mime' | 'width' | 'height'>;
+
+export type EntryWithCoverAsset = Entry & {
+  coverAsset: EntryCoverAsset | null;
+};
+
+export type EntrySummary = Omit<EntryWithCoverAsset, 'body'>;
 export type EntryListCursor = SingleFieldCursor<'entry_index', number>;
 
 export type ListEntrySummariesInput = CursorPageInput<EntryListCursor> & {
@@ -50,6 +56,30 @@ export type ListEntrySummariesInput = CursorPageInput<EntryListCursor> & {
   searchText?: string;
   tagIds?: string[];
 };
+
+type EntryCoverAssetColumns = {
+  coverAssetBlobDigest: string | null;
+  coverAssetBlurhash: string | null;
+  coverAssetMime: string | null;
+  coverAssetWidth: number | null;
+  coverAssetHeight: number | null;
+};
+
+type EntrySummaryRow = Pick<
+  Selectable<EntriesTable>,
+  | 'id'
+  | 'notebook_id'
+  | 'title'
+  | 'cover_asset_id'
+  | 'entry_index'
+  | 'entry_date'
+  | 'created_at'
+  | 'updated_at'
+  | 'deleted_at'
+> &
+  EntryCoverAssetColumns;
+
+type EntryWithCoverAssetRow = Selectable<EntriesTable> & EntryCoverAssetColumns;
 
 export type EntrySyncData = {
   notebookId: string;
@@ -100,29 +130,36 @@ const toEntry = (row: Selectable<EntriesTable>): Entry => ({
   deletedAt: row.deleted_at,
 });
 
-const toEntrySummary = (
-  row: Pick<
-    Selectable<EntriesTable>,
-    | 'id'
-    | 'notebook_id'
-    | 'title'
-    | 'cover_asset_id'
-    | 'entry_index'
-    | 'entry_date'
-    | 'created_at'
-    | 'updated_at'
-    | 'deleted_at'
-  >
-): EntrySummary => ({
+const toCoverAsset = (row: EntryCoverAssetColumns): EntryCoverAsset | null => {
+  if (row.coverAssetBlobDigest === null || row.coverAssetMime === null) {
+    return null;
+  }
+
+  return {
+    blobDigest: row.coverAssetBlobDigest,
+    blurhash: row.coverAssetBlurhash,
+    mime: row.coverAssetMime,
+    width: row.coverAssetWidth,
+    height: row.coverAssetHeight,
+  };
+};
+
+const toEntrySummary = (row: EntrySummaryRow): EntrySummary => ({
   id: row.id,
   notebookId: row.notebook_id,
   title: row.title,
   coverAssetId: row.cover_asset_id,
+  coverAsset: toCoverAsset(row),
   index: row.entry_index,
   date: row.entry_date,
   createdAt: row.created_at,
   updatedAt: row.updated_at,
   deletedAt: row.deleted_at,
+});
+
+const toEntryWithCoverAsset = (row: EntryWithCoverAssetRow): EntryWithCoverAsset => ({
+  ...toEntry(row),
+  coverAsset: toCoverAsset(row),
 });
 
 const toEntrySyncData = (entry: Entry): EntrySyncData => ({
@@ -165,6 +202,14 @@ const normalizeTagIds = (tagIds: string[] | undefined): string[] => {
 
   return [...new Set(tagIds.map(tagId => tagId.trim()).filter(tagId => tagId.length > 0))];
 };
+
+const coverAssetSelect = [
+  'assets.blob_digest as coverAssetBlobDigest',
+  'assets.blurhash as coverAssetBlurhash',
+  'assets.mime as coverAssetMime',
+  'assets.width as coverAssetWidth',
+  'assets.height as coverAssetHeight',
+] as const;
 
 export class EntriesRepository implements SyncedRepository<EntrySyncData, Executor>, Repository {
   readonly syncNamespace = 'entry';
@@ -244,33 +289,39 @@ export class EntriesRepository implements SyncedRepository<EntrySyncData, Execut
     input: ListEntrySummariesInput
   ): Promise<CursorPageResult<EntrySummary, EntryListCursor>> {
     const pageSize = Math.max(1, Math.min(input.limit ?? 30, 100));
-    const cursorWhere = buildSingleFieldCursorWhere(input.cursor, 'entry_index', 'desc');
     const searchText = normalizeSearchText(input.searchText);
     const tagIds = normalizeTagIds(input.tagIds);
 
     let query = this.db
       .selectFrom('entries')
+      .leftJoin('assets', join =>
+        join.onRef('assets.id', '=', 'entries.cover_asset_id').on('assets.deleted_at', 'is', null)
+      )
       .select([
-        'id',
-        'notebook_id',
-        'title',
-        'cover_asset_id',
-        'entry_index',
-        'entry_date',
-        'created_at',
-        'updated_at',
-        'deleted_at',
+        'entries.id as id',
+        'entries.notebook_id as notebook_id',
+        'entries.title as title',
+        'entries.cover_asset_id as cover_asset_id',
+        'entries.entry_index as entry_index',
+        'entries.entry_date as entry_date',
+        'entries.created_at as created_at',
+        'entries.updated_at as updated_at',
+        'entries.deleted_at as deleted_at',
+        ...coverAssetSelect,
       ])
-      .where('notebook_id', '=', input.notebookId)
-      .where('deleted_at', 'is', null)
-      .orderBy('entry_index', 'desc')
-      .orderBy('id', 'desc');
+      .where('entries.notebook_id', '=', input.notebookId)
+      .where('entries.deleted_at', 'is', null)
+      .orderBy('entries.entry_index', 'desc')
+      .orderBy('entries.id', 'desc');
 
     if (searchText) {
       const searchPattern = `%${searchText}%`;
 
       query = query.where(eb =>
-        eb.or([eb('title', 'like', searchPattern), eb('body', 'like', searchPattern)])
+        eb.or([
+          eb('entries.title', 'like', searchPattern),
+          eb('entries.body', 'like', searchPattern),
+        ])
       );
     }
 
@@ -287,8 +338,18 @@ export class EntriesRepository implements SyncedRepository<EntrySyncData, Execut
       );
     }
 
-    if (cursorWhere) {
-      query = query.where(cursorWhere);
+    if (input.cursor) {
+      const cursor = input.cursor;
+
+      query = query.where(eb =>
+        eb.or([
+          eb('entries.entry_index', '<', cursor.entry_index),
+          eb.and([
+            eb('entries.entry_index', '=', cursor.entry_index),
+            eb('entries.id', '<', cursor.id),
+          ]),
+        ])
+      );
     }
 
     const rows = await query.limit(pageSize + 1).execute();
@@ -308,15 +369,19 @@ export class EntriesRepository implements SyncedRepository<EntrySyncData, Execut
     };
   }
 
-  async readEntryById(id: string): Promise<Entry | null> {
+  async readEntryById(id: string): Promise<EntryWithCoverAsset | null> {
     const row = await this.db
       .selectFrom('entries')
-      .selectAll()
-      .where('id', '=', id)
-      .where('deleted_at', 'is', null)
+      .leftJoin('assets', join =>
+        join.onRef('assets.id', '=', 'entries.cover_asset_id').on('assets.deleted_at', 'is', null)
+      )
+      .selectAll('entries')
+      .select(coverAssetSelect)
+      .where('entries.id', '=', id)
+      .where('entries.deleted_at', 'is', null)
       .executeTakeFirst();
 
-    return row ? toEntry(row) : null;
+    return row ? toEntryWithCoverAsset(row) : null;
   }
 
   async createEntry(executor: Executor, input: CreateEntryInput): Promise<Entry> {

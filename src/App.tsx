@@ -9,7 +9,7 @@ import { OnboardingFragment } from '@/fragments/onboarding';
 import { ShelfFragment } from '@/fragments/shelf';
 import { getRoute } from '@/utils/route';
 import { EntriesDefaultFragment } from './fragments/entries/default';
-import { EntriesEditFragment } from './fragments/entries/edit';
+import { EntriesDetailFragment } from './fragments/entries/detail';
 
 const queryClient = new QueryClient();
 
@@ -24,7 +24,12 @@ const App = () => (
             <Route path={getRoute('entries', true)}>
               <EntriesFragment>
                 <Switch>
-                  <Route path={getRoute('entriesEdit')} component={EntriesEditFragment} />
+                  <Route path={getRoute('entriesDetail')}>
+                    <EntriesDetailFragment />
+                  </Route>
+                  <Route path={getRoute('entriesEdit')}>
+                    <EntriesDetailFragment edit />
+                  </Route>
                   <Route component={EntriesDefaultFragment} />
                 </Switch>
               </EntriesFragment>

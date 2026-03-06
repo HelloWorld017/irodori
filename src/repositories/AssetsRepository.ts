@@ -15,6 +15,7 @@ export type AssetStatus = 'pending' | 'uploaded' | 'failed';
 export type AssetsTable = {
   id: string;
   blob_digest: string;
+  blurhash: string | null;
   mime: string;
   size: number;
   width: number | null;
@@ -32,6 +33,7 @@ export type AssetsDatabase = {
 export type Asset = {
   id: string;
   blobDigest: string;
+  blurhash: string | null;
   mime: string;
   size: number;
   width: number | null;
@@ -44,6 +46,7 @@ export type Asset = {
 
 export type AssetSyncData = {
   blobDigest: string;
+  blurhash: string | null;
   mime: string;
   size: number;
   width: number | null;
@@ -57,6 +60,7 @@ export type AssetSyncData = {
 export type CreateAssetInput = {
   id: string;
   blobDigest: string;
+  blurhash: string | null;
   mime: string;
   size: number;
   width: number | null;
@@ -69,6 +73,7 @@ export type CreateAssetInput = {
 export type UpdateAssetInput = {
   id: string;
   blobDigest: string;
+  blurhash: string | null;
   mime: string;
   size: number;
   width: number | null;
@@ -84,6 +89,7 @@ export type DeleteAssetInput = {
 
 const assetSyncDataSchema: z.ZodType<AssetSyncData> = z.object({
   blobDigest: z.string(),
+  blurhash: z.string().nullable(),
   mime: z.string(),
   size: z.number(),
   width: z.number().nullable(),
@@ -97,6 +103,7 @@ const assetSyncDataSchema: z.ZodType<AssetSyncData> = z.object({
 const toAsset = (row: Selectable<AssetsTable>): Asset => ({
   id: row.id,
   blobDigest: row.blob_digest,
+  blurhash: row.blurhash,
   mime: row.mime,
   size: row.size,
   width: row.width,
@@ -109,6 +116,7 @@ const toAsset = (row: Selectable<AssetsTable>): Asset => ({
 
 const toAssetSyncData = (asset: Asset): AssetSyncData => ({
   blobDigest: asset.blobDigest,
+  blurhash: asset.blurhash,
   mime: asset.mime,
   size: asset.size,
   width: asset.width,
@@ -137,6 +145,7 @@ export class AssetsRepository implements SyncedRepository<AssetSyncData, Executo
       CREATE TABLE IF NOT EXISTS assets (
         id TEXT NOT NULL,
         blob_digest TEXT NOT NULL,
+        blurhash TEXT,
         mime TEXT NOT NULL,
         size INTEGER NOT NULL,
         width INTEGER,
@@ -204,6 +213,7 @@ export class AssetsRepository implements SyncedRepository<AssetSyncData, Executo
     const asset: Asset = {
       id: input.id,
       blobDigest: input.blobDigest,
+      blurhash: input.blurhash,
       mime: input.mime,
       size: input.size,
       width: input.width,
@@ -219,6 +229,7 @@ export class AssetsRepository implements SyncedRepository<AssetSyncData, Executo
       .values({
         id: asset.id,
         blob_digest: asset.blobDigest,
+        blurhash: asset.blurhash,
         mime: asset.mime,
         size: asset.size,
         width: asset.width,
@@ -249,6 +260,7 @@ export class AssetsRepository implements SyncedRepository<AssetSyncData, Executo
       .updateTable('assets')
       .set({
         blob_digest: input.blobDigest,
+        blurhash: input.blurhash,
         mime: input.mime,
         size: input.size,
         width: input.width,
@@ -263,6 +275,7 @@ export class AssetsRepository implements SyncedRepository<AssetSyncData, Executo
     return {
       ...toAsset(currentRow),
       blobDigest: input.blobDigest,
+      blurhash: input.blurhash,
       mime: input.mime,
       size: input.size,
       width: input.width,
@@ -314,6 +327,7 @@ export class AssetsRepository implements SyncedRepository<AssetSyncData, Executo
         .values({
           id: doc.id,
           blob_digest: data.blobDigest,
+          blurhash: data.blurhash,
           mime: data.mime,
           size: data.size,
           width: data.width,
@@ -326,6 +340,7 @@ export class AssetsRepository implements SyncedRepository<AssetSyncData, Executo
         .onConflict(conflict =>
           conflict.column('id').doUpdateSet({
             blob_digest: data.blobDigest,
+            blurhash: data.blurhash,
             mime: data.mime,
             size: data.size,
             width: data.width,
