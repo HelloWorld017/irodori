@@ -1,4 +1,6 @@
-export const murmurhash2 = (str: string): number => {
+const MAX_UINT32 = -1 >>> 0;
+
+const murmurhash2 = (str: string): number => {
   let h = 0;
 
   let k = 0;
@@ -35,5 +37,7 @@ export const murmurhash2 = (str: string): number => {
   h = (h & 0xffff) * 0x5bd1e995 + (((h >>> 16) * 0xe995) << 16);
   h ^= h >>> 15;
 
-  return h >>> 0;
+  return Math.max(0, ((h >>> 0) - 1) / MAX_UINT32);
 };
+
+export const seededRandom = murmurhash2;

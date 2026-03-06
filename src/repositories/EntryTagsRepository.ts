@@ -143,8 +143,9 @@ export class EntryTagsRepository
     this.schemaInitialized = true;
   }
 
-  async listEntryTagsByEntryId(entryId: string): Promise<EntryTag[]> {
-    const rows = await this.db
+  async listEntryTagsByEntryId(entryId: string, executor?: Executor): Promise<EntryTag[]> {
+    const db = executor ?? this.db;
+    const rows = await db
       .selectFrom('entry_tags')
       .selectAll()
       .where('entry_id', '=', entryId)

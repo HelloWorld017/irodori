@@ -1,1 +1,1 @@
-export * from './murmurhash2';
+export * from './seededRandom';

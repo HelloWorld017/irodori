@@ -1,18 +1,17 @@
 import { MeshGradient } from '@mesh-gradient/react';
 import { useMemo } from 'react';
 import { AssetImage } from '@/fragments/_components/AssetImage';
-import { murmurhash2 } from '@/utils/random';
+import { seededRandom } from '@/utils/random';
 import { GRADIENT_COLORS } from '../_constants/gradient';
-import type { EntryDetailItem } from '@/services/EntriesService';
+import type { EntryCoverAsset } from '@/repositories/EntriesRepository';
 import type { ReactNode } from 'react';
 
 export type EntryHeaderProps = {
   index: number;
   id: string;
   title: string;
-  cover: EntryDetailItem['coverAsset'];
   titleContent?: ReactNode;
-  coverAction?: ReactNode;
+  cover: EntryCoverAsset | null;
   action?: ReactNode;
 };
 
@@ -20,14 +19,14 @@ export const EntryHeader = ({
   index,
   id,
   title,
-  cover,
   titleContent,
-  coverAction,
+  cover,
   action,
 }: EntryHeaderProps) => {
+  const random = useMemo(() => seededRandom(id), [id]);
   const gradientColors = useMemo(
-    () => GRADIENT_COLORS[murmurhash2(id) % GRADIENT_COLORS.length],
-    [id]
+    () => GRADIENT_COLORS[Math.floor(random * GRADIENT_COLORS.length)],
+    [random]
   );
 
   return (
@@ -46,8 +45,8 @@ export const EntryHeader = ({
           <MeshGradient
             className="absolute inset-0 h-full w-full"
             options={{
-              colors: [...gradientColors] as [string, string, string, string],
-              seed: murmurhash2(id),
+              colors: gradientColors as [string, string, string, string],
+              seed: random,
               animationSpeed: 0.25,
             }}
           />
@@ -63,10 +62,7 @@ export const EntryHeader = ({
             >
               #{index}
             </span>
-            <div className="flex items-center gap-2">
-              {coverAction}
-              {action}
-            </div>
+            {action}
           </div>
 
           <div className="max-w-3xl">

@@ -88,7 +88,8 @@ export class EntryMetadataService {
 
     await this.repositories.withTransaction(async trx => {
       const currentEntryTags = await this.repositories.entryTags.listEntryTagsByEntryId(
-        input.entryId
+        input.entryId,
+        trx
       );
       const currentTagIds = new Set(currentEntryTags.map(entryTag => entryTag.tagId));
       const nextTagIdSet = new Set(nextTagIds);

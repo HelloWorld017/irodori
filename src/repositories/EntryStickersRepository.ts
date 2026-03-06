@@ -151,8 +151,9 @@ export class EntryStickersRepository
     this.schemaInitialized = true;
   }
 
-  async listEntryStickersByEntryId(entryId: string): Promise<EntrySticker[]> {
-    const rows = await this.db
+  async listEntryStickersByEntryId(entryId: string, executor?: Executor): Promise<EntrySticker[]> {
+    const db = executor ?? this.db;
+    const rows = await db
       .selectFrom('entry_stickers')
       .selectAll()
       .where('entry_id', '=', entryId)

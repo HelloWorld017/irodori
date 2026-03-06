@@ -252,7 +252,7 @@ export class EntryDraftsService {
     tags: TagViewItem[],
     now: number
   ): Promise<void> {
-    const currentEntryTags = await this.repositories.entryTags.listEntryTagsByEntryId(entryId);
+    const currentEntryTags = await this.repositories.entryTags.listEntryTagsByEntryId(entryId, trx);
     const currentTagIds = new Set(currentEntryTags.map(entryTag => entryTag.tagId));
     const nextTagIds = tags.map(tag => tag.id);
     const nextTagIdSet = new Set(nextTagIds);
@@ -300,8 +300,10 @@ export class EntryDraftsService {
     stickers: EntryDraftSticker[],
     now: number
   ): Promise<void> {
-    const currentEntryStickers =
-      await this.repositories.entryStickers.listEntryStickersByEntryId(entryId);
+    const currentEntryStickers = await this.repositories.entryStickers.listEntryStickersByEntryId(
+      entryId,
+      trx
+    );
     const currentEntryStickersBySlot = new Map(
       currentEntryStickers.map(entrySticker => [entrySticker.slot, entrySticker])
     );

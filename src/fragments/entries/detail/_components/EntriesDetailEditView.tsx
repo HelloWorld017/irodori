@@ -175,7 +175,7 @@ export const EntriesDetailEditView = ({ entry }: { entry: EntryDetailItem }) => 
         id={entry.id}
         title={draft.title}
         cover={draft.cover}
-        coverAction={
+        action={
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
