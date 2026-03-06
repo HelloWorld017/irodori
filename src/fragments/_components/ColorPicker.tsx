@@ -11,7 +11,7 @@ export const ColorPicker = ({ value, onChange }: ColorPickerProps) => (
       const selected = value === color;
 
       return (
-        <li key={color}>
+        <li key={color} className="flex">
           <button
             type="button"
             onClick={() => onChange(color)}

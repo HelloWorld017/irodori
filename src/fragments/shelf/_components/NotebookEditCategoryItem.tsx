@@ -240,7 +240,7 @@ export const NotebookEditCategoryItem = ({
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             {category.icon ? (
-              <span className="mr-2 text-sm text-secondary">
+              <span className="flex text-sm text-secondary">
                 <DynamicIcon name={category.icon} />
               </span>
             ) : null}
@@ -270,23 +270,25 @@ export const NotebookEditCategoryItem = ({
 
       {isEditing ? (
         <div className="mt-4 flex flex-col gap-4 rounded-xl">
-          <label className="flex flex-col gap-2">
-            <span className="text-sm font-medium text-primary">제목</span>
-            <input
-              value={draftLabel}
-              onChange={event => setDraftLabel(event.target.value)}
-              maxLength={60}
-              disabled={isPending}
-              className="w-full rounded-xl border border-line bg-base-background px-3 py-2 text-sm
-                text-primary transition outline-none focus:border-highlight
-                disabled:cursor-not-allowed"
-            />
-          </label>
-
           <div className="flex flex-col gap-2">
-            <span className="text-sm font-medium text-primary">모양</span>
+            <span className="text-sm font-medium text-primary">제목</span>
             <div className="flex gap-3">
               <IconPicker value={draftIcon} onChange={setDraftIcon} disabled={isPending} />
+              <input
+                value={draftLabel}
+                onChange={event => setDraftLabel(event.target.value)}
+                maxLength={60}
+                disabled={isPending}
+                className="h-10 w-full rounded-xl border border-line bg-base-background px-3 py-2
+                  text-sm text-primary transition outline-none focus:border-highlight
+                  disabled:cursor-not-allowed"
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <span className="text-sm font-medium text-primary">색상</span>
+            <div className="flex flex-1 items-center">
               <ColorPicker value={draftColor} onChange={setDraftColor} />
             </div>
           </div>

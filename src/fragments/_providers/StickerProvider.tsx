@@ -7,11 +7,11 @@ type StickerProviderProps = {
   cacheMax?: number;
 };
 
-type StickerPreviewState = Map<string, string | null>;
+type StickerImageState = Map<string, string | null>;
 
 type StickerContextValue = {
-  loadPreviewUrl: (blobDigest: string | null) => Promise<string | null>;
-  previewState: StickerPreviewState;
+  loadImageUrl: (blobDigest: string | null) => Promise<string | null>;
+  imageState: StickerImageState;
 };
 
 const DEFAULT_STICKER_CACHE_MAX = 300;
@@ -19,27 +19,27 @@ const DEFAULT_STICKER_CACHE_MAX = 300;
 const [StickerProvider, useSticker] = buildContext<StickerContextValue, StickerProviderProps>(
   ({ cacheMax = DEFAULT_STICKER_CACHE_MAX }) => {
     const clxDB = useClxDB();
-    const [previewState, setPreviewState] = useState<StickerPreviewState>(new Map());
+    const [imageState, setImageState] = useState<StickerImageState>(new Map());
     const inFlightLoadMapRef = useRef(new Map<string, Promise<string | null>>());
     const isMountedRef = useRef(true);
-    const previewStateRef = useRef(previewState);
+    const imageStateRef = useRef(imageState);
 
     useEffect(() => {
-      previewStateRef.current = previewState;
-    }, [previewState]);
+      imageStateRef.current = imageState;
+    }, [imageState]);
 
-    const commitPreviewState = useCallback(
-      (updater: (current: StickerPreviewState) => StickerPreviewState) => {
+    const commitImageState = useCallback(
+      (updater: (current: StickerImageState) => StickerImageState) => {
         if (!isMountedRef.current) {
           return;
         }
 
-        setPreviewState(current => updater(current));
+        setImageState(current => updater(current));
       },
       []
     );
 
-    const previewCache = useMemo(
+    const imageCache = useMemo(
       () =>
         new LRUCache<string, string>({
           max: cacheMax,
@@ -50,7 +50,7 @@ const [StickerProvider, useSticker] = buildContext<StickerContextValue, StickerP
               return;
             }
 
-            commitPreviewState(current => {
+            commitImageState(current => {
               if (!current.has(blobDigest)) {
                 return current;
               }
@@ -61,31 +61,31 @@ const [StickerProvider, useSticker] = buildContext<StickerContextValue, StickerP
             });
           },
         }),
-      [cacheMax, commitPreviewState]
+      [cacheMax, commitImageState]
     );
 
-    const loadPreviewUrl = useCallback(
+    const loadImageUrl = useCallback(
       async (blobDigest: string | null): Promise<string | null> => {
         if (!blobDigest || !clxDB) {
           return null;
         }
 
-        const cachedPreviewUrl = previewCache.get(blobDigest);
-        if (cachedPreviewUrl) {
-          commitPreviewState(current => {
-            if (current.get(blobDigest) === cachedPreviewUrl) {
+        const cachedImageUrl = imageCache.get(blobDigest);
+        if (cachedImageUrl) {
+          commitImageState(current => {
+            if (current.get(blobDigest) === cachedImageUrl) {
               return current;
             }
 
             const next = new Map(current);
-            next.set(blobDigest, cachedPreviewUrl);
+            next.set(blobDigest, cachedImageUrl);
             return next;
           });
-          return cachedPreviewUrl;
+          return cachedImageUrl;
         }
 
-        if (previewStateRef.current.has(blobDigest)) {
-          return previewStateRef.current.get(blobDigest) ?? null;
+        if (imageStateRef.current.has(blobDigest)) {
+          return imageStateRef.current.get(blobDigest) ?? null;
         }
 
         const inFlightLoad = inFlightLoadMapRef.current.get(blobDigest);
@@ -99,8 +99,8 @@ const [StickerProvider, useSticker] = buildContext<StickerContextValue, StickerP
             const file = await storedBlob.file();
             const objectUrl = URL.createObjectURL(file);
 
-            previewCache.set(blobDigest, objectUrl);
-            commitPreviewState(current => {
+            imageCache.set(blobDigest, objectUrl);
+            commitImageState(current => {
               if (current.get(blobDigest) === objectUrl) {
                 return current;
               }
@@ -111,8 +111,8 @@ const [StickerProvider, useSticker] = buildContext<StickerContextValue, StickerP
             });
             return objectUrl;
           } catch (error) {
-            console.error('Failed to load sticker preview', error);
-            commitPreviewState(current => {
+            console.error('Failed to load sticker image', error);
+            commitImageState(current => {
               if (current.get(blobDigest) === null) {
                 return current;
               }
@@ -130,7 +130,7 @@ const [StickerProvider, useSticker] = buildContext<StickerContextValue, StickerP
         inFlightLoadMapRef.current.set(blobDigest, loadPromise);
         return loadPromise;
       },
-      [clxDB, commitPreviewState, previewCache]
+      [clxDB, commitImageState, imageCache]
     );
 
     useEffect(() => {
@@ -140,38 +140,38 @@ const [StickerProvider, useSticker] = buildContext<StickerContextValue, StickerP
       return () => {
         isMountedRef.current = false;
         inFlightLoadMap.clear();
-        previewCache.clear();
+        imageCache.clear();
       };
-    }, [previewCache]);
+    }, [imageCache]);
 
     return {
-      loadPreviewUrl,
-      previewState,
+      loadImageUrl,
+      imageState,
     };
   }
 );
 
 export { StickerProvider };
 
-export const useLoadStickerPreviewUrl = () => useSticker(state => state.loadPreviewUrl);
+export const useLoadStickerImageUrl = () => useSticker(state => state.loadImageUrl);
 
-export const useStickerPreviewUrl = (blobDigest: string | null) => {
-  const previewUrl = useSticker(state => {
+export const useStickerImageUrl = (blobDigest: string | null) => {
+  const imageUrl = useSticker(state => {
     if (!blobDigest) {
       return null;
     }
 
-    return state.previewState.get(blobDigest);
+    return state.imageState.get(blobDigest);
   });
-  const loadPreviewUrl = useLoadStickerPreviewUrl();
+  const loadImageUrl = useLoadStickerImageUrl();
 
   useEffect(() => {
-    if (!blobDigest || previewUrl !== undefined) {
+    if (!blobDigest || imageUrl !== undefined) {
       return;
     }
 
-    void loadPreviewUrl(blobDigest);
-  }, [blobDigest, loadPreviewUrl, previewUrl]);
+    void loadImageUrl(blobDigest);
+  }, [blobDigest, loadImageUrl, imageUrl]);
 
-  return previewUrl;
+  return imageUrl;
 };

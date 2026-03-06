@@ -3,8 +3,9 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import { useMemo, useRef, useState } from 'react';
 import { IconSearch } from '@/fragments/_icons';
 import { useServices } from '@/fragments/_providers/DatabaseProvider';
+import { useStickerImageUrl } from '@/fragments/_providers/StickerProvider';
+import { classes } from '@/utils/classes';
 import { queryKey } from '@/utils/queryKey';
-import { StickerPickerSticker } from './StickerPickerSticker';
 import type { StickerViewItem } from '@/repositories/StickersRepository';
 
 const STICKER_COLUMNS = 3;
@@ -17,8 +18,53 @@ type StickerPickerStickerPanelProps = {
   onSelect: (stickerId: string) => void;
 };
 
+type StickerPickerStickerProps = {
+  sticker: StickerViewItem & { assetId: string };
+  selected: boolean;
+  onSelect: (stickerId: string) => void;
+};
+
 const isUploadedSticker = (sticker: StickerViewItem): sticker is UploadedSticker =>
   sticker.kind === 'custom' && sticker.assetId !== null;
+
+export const StickerPickerSticker = ({
+  sticker,
+  selected,
+  onSelect,
+}: StickerPickerStickerProps) => {
+  const previewUrl = useStickerImageUrl(sticker.blobDigest);
+
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(sticker.id)}
+      className={classes(
+        'flex h-24 flex-col items-center justify-center gap-1 rounded-xl border px-1 transition',
+        selected
+          ? 'border-highlight bg-highlight text-highlight-foreground'
+          : 'border-line bg-base-background text-primary hover:bg-elevated-background'
+      )}
+      title={sticker.label}
+    >
+      <div
+        className={classes(
+          'flex h-14 w-14 items-center justify-center overflow-hidden rounded-lg',
+          selected ? 'bg-highlight-foreground/20' : 'bg-elevated-background'
+        )}
+      >
+        {previewUrl && (
+          <img
+            src={previewUrl}
+            alt={sticker.label}
+            className="h-12 w-12 object-contain"
+            loading="lazy"
+          />
+        )}
+      </div>
+      <span className="line-clamp-1 w-full text-[11px]">{sticker.label}</span>
+    </button>
+  );
+};
 
 export const StickerPickerStickerPanel = ({
   selectedStickerId,

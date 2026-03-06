@@ -1,8 +1,8 @@
 import { Popover, PopoverButton, PopoverPanel } from '@headlessui/react';
 import { useState } from 'react';
 import { StickerPickerStickerPanel } from '@/fragments/_components/StickerPickerStickerPanel';
-import { DynamicIcon, IconX } from '@/fragments/_icons';
-import { StickerProvider } from '@/fragments/_providers/StickerProvider';
+import { IconX } from '@/fragments/_icons';
+import { StickerProvider, useStickerImageUrl } from '@/fragments/_providers/StickerProvider';
 import { classes } from '@/utils/classes';
 import { StickerPickerEmojiPanel } from './StickerPickerEmojiPanel';
 
@@ -28,6 +28,7 @@ export const StickerPicker = ({
 }: StickerPickerProps) => {
   const [tab, setTab] = useState<StickerPickerTab>(value?.kind === 'emoji' ? 'emoji' : 'sticker');
   const selectedStickerId = value?.kind === 'sticker' ? value.stickerId : null;
+  const selectedStickerUrl = useStickerImageUrl(selectedStickerId);
 
   return (
     <Popover className={classes('relative', className)}>
@@ -49,7 +50,7 @@ export const StickerPicker = ({
             {value?.kind === 'emoji' ? (
               <span className="text-[1.5rem] leading-none">{value.emoji}</span>
             ) : (
-              <DynamicIcon name="sticker" className="text-lg" />
+              selectedStickerUrl && <img src={selectedStickerUrl} alt="스티커" />
             )}
           </PopoverButton>
 
