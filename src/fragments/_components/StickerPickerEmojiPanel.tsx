@@ -13,8 +13,11 @@ export const StickerPickerEmojiPanel = ({ onSelect }: EmojiPickerPanelProps) => 
     queryFn: () => fetchEmojiData(),
   });
 
+  const stylesheet = '.sticker-picker em-emoji-picker { --shadow: none; }';
   return (
-    <div className="mt-3 overflow-hidden rounded-xl border border-line bg-elevated-background p-1">
+    <div className="sticker-picker mt-3 flex flex-col items-center">
+      <style>{stylesheet}</style>
+
       {emojiQuery.isPending ? (
         <p className="mt-4 text-center text-sm text-tertiary">스티커를 불러오는 중이에요...</p>
       ) : null}
@@ -27,10 +30,9 @@ export const StickerPickerEmojiPanel = ({ onSelect }: EmojiPickerPanelProps) => 
         <EmojiMartPicker
           data={emojiQuery.data}
           emojiVersion={14}
+          theme="light"
           locale="ko"
           set="native"
-          theme="light"
-          dynamicWidth
           navPosition="bottom"
           previewPosition="none"
           searchPosition="sticky"

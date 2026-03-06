@@ -1,7 +1,7 @@
 import { Popover, PopoverButton, PopoverPanel } from '@headlessui/react';
 import { useState } from 'react';
 import { StickerPickerStickerPanel } from '@/fragments/_components/StickerPickerStickerPanel';
-import { IconX } from '@/fragments/_icons';
+import { IconTrash, IconX } from '@/fragments/_icons';
 import { StickerProvider, useStickerImageUrl } from '@/fragments/_providers/StickerProvider';
 import { classes } from '@/utils/classes';
 import { StickerPickerEmojiPanel } from './StickerPickerEmojiPanel';
@@ -92,21 +92,34 @@ export const StickerPicker = ({
                   </button>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    onChange(null);
-                    close();
-                  }}
-                  disabled={value === null}
-                  className="flex h-9 w-9 items-center justify-center rounded-lg border border-line
-                    bg-base-background text-base text-secondary transition
-                    hover:bg-elevated-background hover:text-primary disabled:cursor-not-allowed
-                    disabled:opacity-50"
-                  aria-label="스티커 선택 해제"
-                >
-                  <IconX />
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onChange(null);
+                      close();
+                    }}
+                    disabled={value === null}
+                    className="flex h-9 w-9 flex-none items-center justify-center rounded-lg border
+                      border-line bg-base-background text-base text-secondary transition
+                      hover:bg-elevated-background hover:text-primary disabled:cursor-not-allowed
+                      disabled:opacity-50"
+                    aria-label="스티커 선택 해제"
+                  >
+                    <IconTrash />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={close}
+                    className="flex h-9 w-9 flex-none items-center justify-center rounded-lg border
+                      border-line bg-base-background text-base text-secondary transition
+                      hover:bg-elevated-background hover:text-primary disabled:cursor-not-allowed
+                      disabled:opacity-50"
+                    aria-label="닫기"
+                  >
+                    <IconX />
+                  </button>
+                </div>
               </div>
 
               {tab === 'sticker' ? (

@@ -129,9 +129,9 @@ export const StickerPickerStickerPanel = ({
 
       {!stickersQuery.isPending && !stickersQuery.isError ? (
         uploadedStickers.length === 0 ? (
-          <p className="mt-4 text-center text-sm text-tertiary">업로드된 스티커가 없어요.</p>
+          <p className="mt-4 py-8 text-center text-sm text-tertiary">업로드된 스티커가 없어요.</p>
         ) : filteredStickers.length === 0 ? (
-          <p className="mt-4 text-center text-sm text-tertiary">일치하는 스티커가 없어요.</p>
+          <p className="mt-4 py-8 text-center text-sm text-tertiary">일치하는 스티커가 없어요.</p>
         ) : (
           <div
             ref={scrollElementRef}

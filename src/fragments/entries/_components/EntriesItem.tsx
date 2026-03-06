@@ -16,6 +16,7 @@ export const EntriesItem = ({ entry }: EntriesItemProps) => {
   return (
     <Link
       href={buildRoute('entriesDetail', { notebookId, entryId: entry.id })}
+      replace
       className={isActive =>
         classes(
           `flex w-full flex-col rounded-xl border p-4 text-left transition focus-visible:ring-2
