@@ -14,9 +14,9 @@ importers:
       '@headlessui/react':
         specifier: ^2.2.9
         version: 2.2.9(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      '@mesh-gradient/core':
+      '@mesh-gradient/react':
         specifier: ^1.5.0
-        version: 1.5.0
+        version: 1.5.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@tanstack/react-query':
         specifier: 5.90.21
         version: 5.90.21(react@19.2.4)
@@ -641,6 +641,12 @@ packages:
 
   '@mesh-gradient/core@1.5.0':
     resolution: {integrity: sha512-68kCPIoY24EZsexxVT/w3B9/jGnscB7ntgy/GSBt4UVIJxNxq0VB5YmLSadRdoSdYa5WTOm8BgAwiXUnzVzD6Q==}
+
+  '@mesh-gradient/react@1.5.0':
+    resolution: {integrity: sha512-zJ7JJzWzVU1Z/XHkYnRDKcbXhjlfqGEkZni5eT5xDBqi8/NQFJj3g6AO1n5FxAeCkjUbaFKwVNay8etbEy0lzQ==}
+    peerDependencies:
+      react: '>=18.0.0'
+      react-dom: '>=18.0.0'
 
   '@microsoft/api-extractor-model@7.33.4':
     resolution: {integrity: sha512-u1LTaNTikZAQ9uK6KG1Ms7nvNedsnODnspq/gH2dcyETWvH4hVNGNDvRAEutH66kAmxA4/necElqGNs1FggC8w==}
@@ -3606,6 +3612,12 @@ snapshots:
   '@marijn/find-cluster-break@1.0.2': {}
 
   '@mesh-gradient/core@1.5.0': {}
+
+  '@mesh-gradient/react@1.5.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+    dependencies:
+      '@mesh-gradient/core': 1.5.0
+      react: 19.2.4
+      react-dom: 19.2.4(react@19.2.4)
 
   '@microsoft/api-extractor-model@7.33.4(@types/node@25.3.2)':
     dependencies:
