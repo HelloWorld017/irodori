@@ -1,7 +1,9 @@
 import { sql } from 'kysely';
-import { z } from 'zod';
+import { VERSION } from '@/constants/database';
+import { notebookSyncDataSchema } from './_schema/NotebooksSchema';
 import { parseSyncDataOrThrow } from './_utils/parseSyncData';
 import type { Database, Executor } from '.';
+import type { NotebookSyncData } from './_schema/NotebooksSchema';
 import type {
   Repository,
   SyncDeletePayload,
@@ -9,6 +11,8 @@ import type {
   SyncedRepository,
 } from '@/types/Repository';
 import type { Kysely, Selectable } from 'kysely';
+
+export type { NotebookSyncData } from './_schema/NotebooksSchema';
 
 export type NotebooksTable = {
   id: string;
@@ -27,16 +31,6 @@ export type NotebooksDatabase = {
 
 export type Notebook = {
   id: string;
-  title: string;
-  description: string;
-  color: string;
-  sortOrder: number;
-  createdAt: number;
-  updatedAt: number;
-  deletedAt: number | null;
-};
-
-export type NotebookSyncData = {
   title: string;
   description: string;
   color: string;
@@ -80,6 +74,7 @@ const toNotebook = (row: Selectable<NotebooksTable>): Notebook => ({
 });
 
 const toNotebookSyncData = (notebook: Notebook): NotebookSyncData => ({
+  version: VERSION,
   title: notebook.title,
   description: notebook.description,
   color: notebook.color,
@@ -89,16 +84,6 @@ const toNotebookSyncData = (notebook: Notebook): NotebookSyncData => ({
   deletedAt: notebook.deletedAt,
 });
 
-const notebookSyncDataSchema: z.ZodType<NotebookSyncData> = z.object({
-  title: z.string(),
-  description: z.string(),
-  color: z.string(),
-  sortOrder: z.number(),
-  createdAt: z.number(),
-  updatedAt: z.number(),
-  deletedAt: z.number().nullable(),
-});
-
 const parseNotebookSyncData = (id: string, data: unknown): NotebookSyncData =>
   parseSyncDataOrThrow(notebookSyncDataSchema, 'notebook', id, data);
 
@@ -106,41 +91,10 @@ export class NotebooksRepository
   implements SyncedRepository<NotebookSyncData, Executor>, Repository
 {
   readonly syncNamespace = 'notebook';
-  private schemaInitialized = false;
 
   constructor(private readonly db: Kysely<Database>) {}
 
-  async initialize(): Promise<void> {
-    if (this.schemaInitialized) {
-      return;
-    }
-
-    await sql`
-      CREATE TABLE IF NOT EXISTS notebooks (
-        id TEXT NOT NULL,
-        title TEXT NOT NULL,
-        description TEXT NOT NULL DEFAULT '',
-        color TEXT NOT NULL,
-        sort_order INTEGER NOT NULL,
-        created_at INTEGER NOT NULL,
-        updated_at INTEGER NOT NULL,
-        deleted_at INTEGER,
-        PRIMARY KEY (id)
-      )
-    `.execute(this.db);
-
-    await sql`
-      CREATE INDEX IF NOT EXISTS notebooks_sort_order_idx
-      ON notebooks (sort_order)
-    `.execute(this.db);
-
-    await sql`
-      CREATE INDEX IF NOT EXISTS notebooks_deleted_at_idx
-      ON notebooks (deleted_at)
-    `.execute(this.db);
-
-    this.schemaInitialized = true;
-  }
+  async initialize(): Promise<void> {}
 
   async listNotebooks(): Promise<Notebook[]> {
     const rows = await this.db

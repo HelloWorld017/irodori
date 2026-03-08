@@ -1,4 +1,3 @@
-import { sql } from 'kysely';
 import type { Database, Executor } from '.';
 import type { Repository } from '@/types/Repository';
 import type { DatabaseDocument, ShardDocument } from 'clxdb';
@@ -91,33 +90,10 @@ const writeDocuments = async (
 
 export class SyncDocumentsRepository implements Repository {
   private readonly subscribers = new Set<() => void>();
-  private schemaInitialized = false;
 
   constructor(private readonly db: Kysely<Database>) {}
 
-  async initialize(): Promise<void> {
-    if (this.schemaInitialized) {
-      return;
-    }
-
-    await sql`
-      CREATE TABLE IF NOT EXISTS sync_documents (
-        id TEXT NOT NULL,
-        at INTEGER NOT NULL,
-        seq INTEGER,
-        del INTEGER NOT NULL DEFAULT 0,
-        data TEXT,
-        PRIMARY KEY (id)
-      )
-    `.execute(this.db);
-
-    await sql`
-      CREATE INDEX IF NOT EXISTS sync_documents_seq_idx
-      ON sync_documents (seq)
-    `.execute(this.db);
-
-    this.schemaInitialized = true;
-  }
+  async initialize(): Promise<void> {}
 
   async readDocuments(ids: string[]): Promise<(DatabaseDocument | null)[]> {
     if (ids.length === 0) {

@@ -1,7 +1,8 @@
-import { sql } from 'kysely';
-import { z } from 'zod';
+import { VERSION } from '@/constants/database';
+import { entryTagSyncDataSchema } from './_schema/EntryTagsSchema';
 import { parseSyncDataOrThrow } from './_utils/parseSyncData';
 import type { Database, Executor } from '.';
+import type { EntryTagSyncData } from './_schema/EntryTagsSchema';
 import type {
   Repository,
   SyncDeletePayload,
@@ -9,6 +10,8 @@ import type {
   SyncUpsertPayload,
 } from '@/types/Repository';
 import type { Kysely, Selectable } from 'kysely';
+
+export type { EntryTagSyncData } from './_schema/EntryTagsSchema';
 
 const ENTRY_TAG_SEPARATOR = ':';
 
@@ -53,14 +56,6 @@ export type EntryTag = {
   deletedAt: number | null;
 };
 
-export type EntryTagSyncData = {
-  entryId: string;
-  tagId: string;
-  createdAt: number;
-  updatedAt: number;
-  deletedAt: number | null;
-};
-
 export type UpsertEntryTagInput = {
   entryId: string;
   tagId: string;
@@ -83,19 +78,12 @@ const toEntryTag = (row: Selectable<EntryTagsTable>): EntryTag => ({
 });
 
 const toEntryTagSyncData = (entryTag: EntryTag): EntryTagSyncData => ({
+  version: VERSION,
   entryId: entryTag.entryId,
   tagId: entryTag.tagId,
   createdAt: entryTag.createdAt,
   updatedAt: entryTag.updatedAt,
   deletedAt: entryTag.deletedAt,
-});
-
-const entryTagSyncDataSchema: z.ZodType<EntryTagSyncData> = z.object({
-  entryId: z.string(),
-  tagId: z.string(),
-  createdAt: z.number(),
-  updatedAt: z.number(),
-  deletedAt: z.number().nullable(),
 });
 
 const parseEntryTagSyncData = (id: string, data: unknown): EntryTagSyncData =>
@@ -105,43 +93,10 @@ export class EntryTagsRepository
   implements SyncedRepository<EntryTagSyncData, Executor>, Repository
 {
   readonly syncNamespace = 'entry-tag';
-  private schemaInitialized = false;
 
   constructor(private readonly db: Kysely<Database>) {}
 
-  async initialize(): Promise<void> {
-    if (this.schemaInitialized) {
-      return;
-    }
-
-    await sql`
-      CREATE TABLE IF NOT EXISTS entry_tags (
-        entry_id TEXT NOT NULL,
-        tag_id TEXT NOT NULL,
-        created_at INTEGER NOT NULL,
-        updated_at INTEGER NOT NULL,
-        deleted_at INTEGER,
-        PRIMARY KEY (entry_id, tag_id)
-      )
-    `.execute(this.db);
-
-    await sql`
-      CREATE INDEX IF NOT EXISTS entry_tags_entry_id_idx
-      ON entry_tags (entry_id)
-    `.execute(this.db);
-
-    await sql`
-      CREATE INDEX IF NOT EXISTS entry_tags_tag_id_idx
-      ON entry_tags (tag_id)
-    `.execute(this.db);
-
-    await sql`
-      CREATE INDEX IF NOT EXISTS entry_tags_deleted_at_idx
-      ON entry_tags (deleted_at)
-    `.execute(this.db);
-
-    this.schemaInitialized = true;
-  }
+  async initialize(): Promise<void> {}
 
   async listEntryTagsByEntryId(entryId: string, executor?: Executor): Promise<EntryTag[]> {
     const db = executor ?? this.db;

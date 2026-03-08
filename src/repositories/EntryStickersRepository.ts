@@ -1,7 +1,8 @@
-import { sql } from 'kysely';
-import { z } from 'zod';
+import { VERSION } from '@/constants/database';
+import { entryStickerSyncDataSchema } from './_schema/EntryStickersSchema';
 import { parseSyncDataOrThrow } from './_utils/parseSyncData';
 import type { Database, Executor } from '.';
+import type { EntryStickerSyncData } from './_schema/EntryStickersSchema';
 import type {
   Repository,
   SyncDeletePayload,
@@ -9,6 +10,8 @@ import type {
   SyncUpsertPayload,
 } from '@/types/Repository';
 import type { Kysely, Selectable } from 'kysely';
+
+export type { EntryStickerSyncData } from './_schema/EntryStickersSchema';
 
 const ENTRY_STICKER_SEPARATOR = ':';
 
@@ -60,15 +63,6 @@ export type EntrySticker = {
   deletedAt: number | null;
 };
 
-export type EntryStickerSyncData = {
-  entryId: string;
-  slot: number;
-  stickerId: string;
-  createdAt: number;
-  updatedAt: number;
-  deletedAt: number | null;
-};
-
 export type UpsertEntryStickerInput = {
   entryId: string;
   slot: number;
@@ -93,21 +87,13 @@ const toEntrySticker = (row: Selectable<EntryStickersTable>): EntrySticker => ({
 });
 
 const toEntryStickerSyncData = (entrySticker: EntrySticker): EntryStickerSyncData => ({
+  version: VERSION,
   entryId: entrySticker.entryId,
   slot: entrySticker.slot,
   stickerId: entrySticker.stickerId,
   createdAt: entrySticker.createdAt,
   updatedAt: entrySticker.updatedAt,
   deletedAt: entrySticker.deletedAt,
-});
-
-const entryStickerSyncDataSchema: z.ZodType<EntryStickerSyncData> = z.object({
-  entryId: z.string(),
-  slot: z.number(),
-  stickerId: z.string(),
-  createdAt: z.number(),
-  updatedAt: z.number(),
-  deletedAt: z.number().nullable(),
 });
 
 const parseEntryStickerSyncData = (id: string, data: unknown): EntryStickerSyncData =>
@@ -117,39 +103,10 @@ export class EntryStickersRepository
   implements SyncedRepository<EntryStickerSyncData, Executor>, Repository
 {
   readonly syncNamespace = 'entry-sticker';
-  private schemaInitialized = false;
 
   constructor(private readonly db: Kysely<Database>) {}
 
-  async initialize(): Promise<void> {
-    if (this.schemaInitialized) {
-      return;
-    }
-
-    await sql`
-      CREATE TABLE IF NOT EXISTS entry_stickers (
-        entry_id TEXT NOT NULL,
-        slot INTEGER NOT NULL,
-        sticker_id TEXT NOT NULL,
-        created_at INTEGER NOT NULL,
-        updated_at INTEGER NOT NULL,
-        deleted_at INTEGER,
-        PRIMARY KEY (entry_id, slot)
-      )
-    `.execute(this.db);
-
-    await sql`
-      CREATE INDEX IF NOT EXISTS entry_stickers_sticker_id_idx
-      ON entry_stickers (sticker_id)
-    `.execute(this.db);
-
-    await sql`
-      CREATE INDEX IF NOT EXISTS entry_stickers_deleted_at_idx
-      ON entry_stickers (deleted_at)
-    `.execute(this.db);
-
-    this.schemaInitialized = true;
-  }
+  async initialize(): Promise<void> {}
 
   async listEntryStickersByEntryId(entryId: string, executor?: Executor): Promise<EntrySticker[]> {
     const db = executor ?? this.db;

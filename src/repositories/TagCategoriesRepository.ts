@@ -1,7 +1,9 @@
 import { sql } from 'kysely';
-import { z } from 'zod';
+import { VERSION } from '@/constants/database';
+import { tagCategorySyncDataSchema } from './_schema/TagCategoriesSchema';
 import { parseSyncDataOrThrow } from './_utils/parseSyncData';
 import type { Database, Executor } from '.';
+import type { TagCategorySyncData } from './_schema/TagCategoriesSchema';
 import type {
   Repository,
   SyncDeletePayload,
@@ -9,6 +11,8 @@ import type {
   SyncUpsertPayload,
 } from '@/types/Repository';
 import type { Kysely, Selectable } from 'kysely';
+
+export type { TagCategorySyncData } from './_schema/TagCategoriesSchema';
 
 export type TagCategoriesTable = {
   id: string;
@@ -32,21 +36,6 @@ export type TagCategoriesDatabase = {
 
 export type TagCategory = {
   id: string;
-  notebookId: string;
-  label: string;
-  icon: string | null;
-  color: string;
-  displayed: boolean;
-  sortOrder: number;
-  minSelect: number;
-  maxSelect: number | null;
-  required: boolean;
-  createdAt: number;
-  updatedAt: number;
-  deletedAt: number | null;
-};
-
-export type TagCategorySyncData = {
   notebookId: string;
   label: string;
   icon: string | null;
@@ -117,6 +106,7 @@ const toTagCategory = (row: Selectable<TagCategoriesTable>): TagCategory => ({
 });
 
 const toTagCategorySyncData = (category: TagCategory): TagCategorySyncData => ({
+  version: VERSION,
   notebookId: category.notebookId,
   label: category.label,
   icon: category.icon,
@@ -129,21 +119,6 @@ const toTagCategorySyncData = (category: TagCategory): TagCategorySyncData => ({
   createdAt: category.createdAt,
   updatedAt: category.updatedAt,
   deletedAt: category.deletedAt,
-});
-
-const tagCategorySyncDataSchema: z.ZodType<TagCategorySyncData> = z.object({
-  notebookId: z.string(),
-  label: z.string(),
-  icon: z.string().nullable(),
-  color: z.string(),
-  displayed: z.boolean(),
-  sortOrder: z.number(),
-  minSelect: z.number(),
-  maxSelect: z.number().nullable(),
-  required: z.boolean(),
-  createdAt: z.number(),
-  updatedAt: z.number(),
-  deletedAt: z.number().nullable(),
 });
 
 const parseTagCategorySyncData = (id: string, data: unknown): TagCategorySyncData =>
@@ -163,51 +138,10 @@ export class TagCategoriesRepository
   implements SyncedRepository<TagCategorySyncData, Executor>, Repository
 {
   readonly syncNamespace = 'tag-category';
-  private schemaInitialized = false;
 
   constructor(private readonly db: Kysely<Database>) {}
 
-  async initialize(): Promise<void> {
-    if (this.schemaInitialized) {
-      return;
-    }
-
-    await sql`
-      CREATE TABLE IF NOT EXISTS tag_categories (
-        id TEXT NOT NULL,
-        notebook_id TEXT NOT NULL,
-        label TEXT NOT NULL,
-        icon TEXT,
-        color TEXT NOT NULL,
-        displayed INTEGER NOT NULL DEFAULT 1,
-        sort_order INTEGER NOT NULL,
-        min_select INTEGER NOT NULL DEFAULT 0,
-        max_select INTEGER,
-        required INTEGER NOT NULL DEFAULT 0,
-        created_at INTEGER NOT NULL,
-        updated_at INTEGER NOT NULL,
-        deleted_at INTEGER,
-        PRIMARY KEY (id)
-      )
-    `.execute(this.db);
-
-    await sql`
-      CREATE INDEX IF NOT EXISTS tag_categories_notebook_id_idx
-      ON tag_categories (notebook_id)
-    `.execute(this.db);
-
-    await sql`
-      CREATE INDEX IF NOT EXISTS tag_categories_sort_order_idx
-      ON tag_categories (sort_order)
-    `.execute(this.db);
-
-    await sql`
-      CREATE INDEX IF NOT EXISTS tag_categories_deleted_at_idx
-      ON tag_categories (deleted_at)
-    `.execute(this.db);
-
-    this.schemaInitialized = true;
-  }
+  async initialize(): Promise<void> {}
 
   async listTagCategoriesByNotebookId(notebookId: string): Promise<TagCategory[]> {
     const rows = await this.db

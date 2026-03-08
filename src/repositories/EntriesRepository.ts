@@ -1,8 +1,10 @@
 import { sql } from 'kysely';
-import { z } from 'zod';
+import { VERSION } from '@/constants/database';
+import { entrySyncDataSchema } from './_schema/EntriesSchema';
 import { parseSyncDataOrThrow } from './_utils/parseSyncData';
 import type { Database, Executor } from '.';
 import type { Asset } from './AssetsRepository';
+import type { EntrySyncData } from './_schema/EntriesSchema';
 import type { CursorPageInput, CursorPageResult, SingleFieldCursor } from '@/types/Cursor';
 import type {
   Repository,
@@ -11,6 +13,8 @@ import type {
   SyncUpsertPayload,
 } from '@/types/Repository';
 import type { Kysely, Selectable } from 'kysely';
+
+export type { EntrySyncData } from './_schema/EntriesSchema';
 
 export type EntriesTable = {
   id: string;
@@ -80,18 +84,6 @@ type EntrySummaryRow = Pick<
   EntryCoverAssetColumns;
 
 type EntryWithCoverAssetRow = Selectable<EntriesTable> & EntryCoverAssetColumns;
-
-export type EntrySyncData = {
-  notebookId: string;
-  title: string;
-  body: string;
-  coverAssetId: string | null;
-  index: number;
-  date: number;
-  createdAt: number;
-  updatedAt: number;
-  deletedAt: number | null;
-};
 
 export type CreateEntryInput = {
   id: string;
@@ -164,6 +156,7 @@ const toEntryWithCoverAsset = (row: EntryWithCoverAssetRow): EntryWithCoverAsset
 });
 
 const toEntrySyncData = (entry: Entry): EntrySyncData => ({
+  version: VERSION,
   notebookId: entry.notebookId,
   title: entry.title,
   body: entry.body,
@@ -173,18 +166,6 @@ const toEntrySyncData = (entry: Entry): EntrySyncData => ({
   createdAt: entry.createdAt,
   updatedAt: entry.updatedAt,
   deletedAt: entry.deletedAt,
-});
-
-const entrySyncDataSchema: z.ZodType<EntrySyncData> = z.object({
-  notebookId: z.string(),
-  title: z.string(),
-  body: z.string(),
-  coverAssetId: z.string().nullable(),
-  index: z.number(),
-  date: z.number(),
-  createdAt: z.number(),
-  updatedAt: z.number(),
-  deletedAt: z.number().nullable(),
 });
 
 const parseEntrySyncData = (id: string, data: unknown): EntrySyncData =>
@@ -214,53 +195,10 @@ const coverAssetSelect = [
 
 export class EntriesRepository implements SyncedRepository<EntrySyncData, Executor>, Repository {
   readonly syncNamespace = 'entry';
-  private schemaInitialized = false;
 
   constructor(private readonly db: Kysely<Database>) {}
 
-  async initialize(): Promise<void> {
-    if (this.schemaInitialized) {
-      return;
-    }
-
-    await sql`
-      CREATE TABLE IF NOT EXISTS entries (
-        id TEXT NOT NULL,
-        notebook_id TEXT NOT NULL,
-        title TEXT NOT NULL,
-        body TEXT NOT NULL DEFAULT '',
-        cover_asset_id TEXT,
-        entry_index INTEGER NOT NULL,
-        entry_date INTEGER NOT NULL,
-        created_at INTEGER NOT NULL,
-        updated_at INTEGER NOT NULL,
-        deleted_at INTEGER,
-        PRIMARY KEY (id)
-      )
-    `.execute(this.db);
-
-    await sql`
-      CREATE INDEX IF NOT EXISTS entries_notebook_id_idx
-      ON entries (notebook_id)
-    `.execute(this.db);
-
-    await sql`
-      CREATE INDEX IF NOT EXISTS entries_updated_at_idx
-      ON entries (updated_at)
-    `.execute(this.db);
-
-    await sql`
-      CREATE INDEX IF NOT EXISTS entries_notebook_id_entry_index_id_idx
-      ON entries (notebook_id, entry_index, id)
-    `.execute(this.db);
-
-    await sql`
-      CREATE INDEX IF NOT EXISTS entries_deleted_at_idx
-      ON entries (deleted_at)
-    `.execute(this.db);
-
-    this.schemaInitialized = true;
-  }
+  async initialize(): Promise<void> {}
 
   async listEntriesByNotebookId(notebookId: string): Promise<Entry[]> {
     const rows = await this.db

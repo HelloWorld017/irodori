@@ -1,7 +1,9 @@
 import { sql } from 'kysely';
-import { z } from 'zod';
+import { VERSION } from '@/constants/database';
+import { tagSyncDataSchema } from './_schema/TagsSchema';
 import { parseSyncDataOrThrow } from './_utils/parseSyncData';
 import type { Database, Executor } from '.';
+import type { TagSyncData } from './_schema/TagsSchema';
 import type {
   Repository,
   SyncDeletePayload,
@@ -9,6 +11,8 @@ import type {
   SyncUpsertPayload,
 } from '@/types/Repository';
 import type { Kysely, Selectable } from 'kysely';
+
+export type { TagSyncData } from './_schema/TagsSchema';
 
 export type TagsTable = {
   id: string;
@@ -40,16 +44,6 @@ export type TagViewItem = Omit<Tag, 'icon' | 'color'> & {
   displayed: boolean;
   icon: string | null;
   color: string;
-};
-
-export type TagSyncData = {
-  categoryId: string;
-  label: string;
-  icon: string | null;
-  color: string | null;
-  createdAt: number;
-  updatedAt: number;
-  deletedAt: number | null;
 };
 
 export type CreateTagInput = {
@@ -119,6 +113,7 @@ const toTagViewItem = (
 };
 
 const toTagSyncData = (tag: Tag): TagSyncData => ({
+  version: VERSION,
   categoryId: tag.categoryId,
   label: tag.label,
   icon: tag.icon,
@@ -126,16 +121,6 @@ const toTagSyncData = (tag: Tag): TagSyncData => ({
   createdAt: tag.createdAt,
   updatedAt: tag.updatedAt,
   deletedAt: tag.deletedAt,
-});
-
-const tagSyncDataSchema: z.ZodType<TagSyncData> = z.object({
-  categoryId: z.string(),
-  label: z.string(),
-  icon: z.string().nullable(),
-  color: z.string().nullable(),
-  createdAt: z.number(),
-  updatedAt: z.number(),
-  deletedAt: z.number().nullable(),
 });
 
 const parseTagSyncData = (id: string, data: unknown): TagSyncData =>
@@ -165,41 +150,10 @@ const normalizeSearchCategoryIds = (categoryIds: string[] | undefined): string[]
 
 export class TagsRepository implements SyncedRepository<TagSyncData, Executor>, Repository {
   readonly syncNamespace = 'tag';
-  private schemaInitialized = false;
 
   constructor(private readonly db: Kysely<Database>) {}
 
-  async initialize(): Promise<void> {
-    if (this.schemaInitialized) {
-      return;
-    }
-
-    await sql`
-      CREATE TABLE IF NOT EXISTS tags (
-        id TEXT NOT NULL,
-        category_id TEXT NOT NULL,
-        label TEXT NOT NULL,
-        icon TEXT,
-        color TEXT,
-        created_at INTEGER NOT NULL,
-        updated_at INTEGER NOT NULL,
-        deleted_at INTEGER,
-        PRIMARY KEY (id)
-      )
-    `.execute(this.db);
-
-    await sql`
-      CREATE INDEX IF NOT EXISTS tags_category_id_idx
-      ON tags (category_id)
-    `.execute(this.db);
-
-    await sql`
-      CREATE INDEX IF NOT EXISTS tags_deleted_at_idx
-      ON tags (deleted_at)
-    `.execute(this.db);
-
-    this.schemaInitialized = true;
-  }
+  async initialize(): Promise<void> {}
 
   async listTagsByCategoryId(categoryId: string): Promise<TagViewItem[]> {
     let query = this.db

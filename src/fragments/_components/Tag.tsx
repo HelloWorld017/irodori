@@ -10,7 +10,7 @@ type TagProps = {
 };
 
 export const Tag = ({ label, color, icon, className, onRemove }: TagProps) => (
-  <span
+  <div
     className={classes(
       `inline-flex max-w-full items-center gap-1 rounded-full bg-[var(--color-tag-background)] px-2
       py-1 text-sm font-medium text-[var(--color-tag-foreground)]`,
@@ -40,5 +40,5 @@ export const Tag = ({ label, color, icon, className, onRemove }: TagProps) => (
         <IconX className="text-[0.8rem]" />
       </button>
     )}
-  </span>
+  </div>
 );

@@ -1,7 +1,9 @@
 import { sql } from 'kysely';
-import { z } from 'zod';
+import { VERSION } from '@/constants/database';
+import { stickerSyncDataSchema } from './_schema/StickersSchema';
 import { parseSyncDataOrThrow } from './_utils/parseSyncData';
 import type { Database, Executor } from '.';
+import type { StickerSyncData } from './_schema/StickersSchema';
 import type {
   Repository,
   SyncDeletePayload,
@@ -9,6 +11,8 @@ import type {
   SyncUpsertPayload,
 } from '@/types/Repository';
 import type { Kysely, Selectable } from 'kysely';
+
+export type { StickerSyncData } from './_schema/StickersSchema';
 
 export type StickerKind = 'emoji' | 'custom';
 
@@ -42,16 +46,6 @@ export type StickerViewItem = Sticker & {
   blobDigest: string | null;
 };
 
-export type StickerSyncData = {
-  kind: StickerKind;
-  emoji: string | null;
-  label: string;
-  assetId: string | null;
-  createdAt: number;
-  updatedAt: number;
-  deletedAt: number | null;
-};
-
 export type CreateStickerInput = {
   id: string;
   kind: StickerKind;
@@ -76,16 +70,6 @@ export type DeleteStickerInput = {
   deletedAt: number;
 };
 
-const stickerSyncDataSchema: z.ZodType<StickerSyncData> = z.object({
-  kind: z.enum(['emoji', 'custom']),
-  emoji: z.string().nullable(),
-  label: z.string(),
-  assetId: z.string().nullable(),
-  createdAt: z.number(),
-  updatedAt: z.number(),
-  deletedAt: z.number().nullable(),
-});
-
 const toSticker = (row: Selectable<StickersTable>): Sticker => ({
   id: row.id,
   kind: row.kind,
@@ -105,6 +89,7 @@ const toStickerViewItem = (
 });
 
 const toStickerSyncData = (sticker: Sticker): StickerSyncData => ({
+  version: VERSION,
   kind: sticker.kind,
   emoji: sticker.emoji,
   label: sticker.label,
@@ -119,41 +104,10 @@ const parseStickerSyncData = (id: string, data: unknown): StickerSyncData =>
 
 export class StickersRepository implements SyncedRepository<StickerSyncData, Executor>, Repository {
   readonly syncNamespace = 'sticker';
-  private schemaInitialized = false;
 
   constructor(private readonly db: Kysely<Database>) {}
 
-  async initialize(): Promise<void> {
-    if (this.schemaInitialized) {
-      return;
-    }
-
-    await sql`
-      CREATE TABLE IF NOT EXISTS stickers (
-        id TEXT NOT NULL,
-        kind TEXT NOT NULL,
-        emoji TEXT,
-        label TEXT NOT NULL,
-        asset_id TEXT,
-        created_at INTEGER NOT NULL,
-        updated_at INTEGER NOT NULL,
-        deleted_at INTEGER,
-        PRIMARY KEY (id)
-      )
-    `.execute(this.db);
-
-    await sql`
-      CREATE INDEX IF NOT EXISTS stickers_kind_idx
-      ON stickers (kind)
-    `.execute(this.db);
-
-    await sql`
-      CREATE INDEX IF NOT EXISTS stickers_deleted_at_idx
-      ON stickers (deleted_at)
-    `.execute(this.db);
-
-    this.schemaInitialized = true;
-  }
+  async initialize(): Promise<void> {}
 
   async listStickers(): Promise<StickerViewItem[]> {
     const rows = await this.db

@@ -1,7 +1,8 @@
-import { sql } from 'kysely';
-import { z } from 'zod';
+import { VERSION } from '@/constants/database';
+import { entryDraftDataSchema, entryDraftSyncDataSchema } from './_schema/EntryDraftsSchema';
 import { parseSyncDataOrThrow } from './_utils/parseSyncData';
 import type { Database, Executor } from '.';
+import type { EntryDraftData, EntryDraftSyncData } from './_schema/EntryDraftsSchema';
 import type {
   Repository,
   SyncDeletePayload,
@@ -10,29 +11,12 @@ import type {
 } from '@/types/Repository';
 import type { Kysely, Selectable } from 'kysely';
 
-export type EntryDraftCover = {
-  id: string;
-  blobDigest: string;
-  blurhash: string | null;
-  mime: string;
-  width: number | null;
-  height: number | null;
-};
-
-export type EntryDraftSticker = {
-  slot: number;
-  stickerId: string;
-};
-
-export type EntryDraftData = {
-  title: string;
-  body: string;
-  date: number;
-  cover: EntryDraftCover | null;
-  tagIds: string[];
-  stickers: EntryDraftSticker[];
-  excludedTagIds: string[];
-};
+export type {
+  EntryDraftCover,
+  EntryDraftData,
+  EntryDraftSticker,
+  EntryDraftSyncData,
+} from './_schema/EntryDraftsSchema';
 
 export type EntryDraftsTable = {
   entry_id: string;
@@ -54,14 +38,6 @@ export type EntryDraft = {
   deletedAt: number | null;
 };
 
-export type EntryDraftSyncData = {
-  entryId: string;
-  data: EntryDraftData;
-  createdAt: number;
-  updatedAt: number;
-  deletedAt: number | null;
-};
-
 export type UpsertEntryDraftInput = {
   entryId: string;
   data: EntryDraftData;
@@ -74,38 +50,6 @@ export type DeleteEntryDraftInput = {
   deletedAt: number;
 };
 
-const entryDraftCoverSchema: z.ZodType<EntryDraftCover> = z.object({
-  id: z.string(),
-  blobDigest: z.string(),
-  blurhash: z.string().nullable(),
-  mime: z.string(),
-  width: z.number().nullable(),
-  height: z.number().nullable(),
-});
-
-const entryDraftStickerSchema: z.ZodType<EntryDraftSticker> = z.object({
-  slot: z.number().int(),
-  stickerId: z.string(),
-});
-
-const entryDraftDataSchema: z.ZodType<EntryDraftData> = z.object({
-  title: z.string(),
-  body: z.string(),
-  date: z.number(),
-  cover: entryDraftCoverSchema.nullable(),
-  tagIds: z.array(z.string()),
-  stickers: z.array(entryDraftStickerSchema),
-  excludedTagIds: z.array(z.string()),
-});
-
-const entryDraftSyncDataSchema: z.ZodType<EntryDraftSyncData> = z.object({
-  entryId: z.string(),
-  data: entryDraftDataSchema,
-  createdAt: z.number(),
-  updatedAt: z.number(),
-  deletedAt: z.number().nullable(),
-});
-
 const toEntryDraft = (row: Selectable<EntryDraftsTable>): EntryDraft => ({
   entryId: row.entry_id,
   data: parseEntryDraftData(row.entry_id, row.data),
@@ -115,6 +59,7 @@ const toEntryDraft = (row: Selectable<EntryDraftsTable>): EntryDraft => ({
 });
 
 const toEntryDraftSyncData = (entryDraft: EntryDraft): EntryDraftSyncData => ({
+  version: VERSION,
   entryId: entryDraft.entryId,
   data: entryDraft.data,
   createdAt: entryDraft.createdAt,
@@ -136,38 +81,10 @@ export class EntryDraftsRepository
   implements SyncedRepository<EntryDraftSyncData, Executor>, Repository
 {
   readonly syncNamespace = 'entry-draft';
-  private schemaInitialized = false;
 
   constructor(private readonly db: Kysely<Database>) {}
 
-  async initialize(): Promise<void> {
-    if (this.schemaInitialized) {
-      return;
-    }
-
-    await sql`
-      CREATE TABLE IF NOT EXISTS entry_drafts (
-        entry_id TEXT NOT NULL,
-        data TEXT NOT NULL,
-        created_at INTEGER NOT NULL,
-        updated_at INTEGER NOT NULL,
-        deleted_at INTEGER,
-        PRIMARY KEY (entry_id)
-      )
-    `.execute(this.db);
-
-    await sql`
-      CREATE INDEX IF NOT EXISTS entry_drafts_updated_at_idx
-      ON entry_drafts (updated_at)
-    `.execute(this.db);
-
-    await sql`
-      CREATE INDEX IF NOT EXISTS entry_drafts_deleted_at_idx
-      ON entry_drafts (deleted_at)
-    `.execute(this.db);
-
-    this.schemaInitialized = true;
-  }
+  async initialize(): Promise<void> {}
 
   async readEntryDraftByEntryId(entryId: string): Promise<EntryDraft | null> {
     const row = await this.db

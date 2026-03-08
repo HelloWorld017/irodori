@@ -1,7 +1,8 @@
-import { sql } from 'kysely';
-import { z } from 'zod';
+import { VERSION } from '@/constants/database';
+import { entryAssetSyncDataSchema } from './_schema/EntryAssetsSchema';
 import { parseSyncDataOrThrow } from './_utils/parseSyncData';
 import type { Database, Executor } from '.';
+import type { EntryAssetSyncData } from './_schema/EntryAssetsSchema';
 import type {
   Repository,
   SyncDeletePayload,
@@ -9,6 +10,8 @@ import type {
   SyncUpsertPayload,
 } from '@/types/Repository';
 import type { Kysely, Selectable } from 'kysely';
+
+export type { EntryAssetSyncData } from './_schema/EntryAssetsSchema';
 
 const ENTRY_ASSET_SEPARATOR = ':';
 
@@ -70,15 +73,6 @@ export type EntryAsset = {
   deletedAt: number | null;
 };
 
-export type EntryAssetSyncData = {
-  entryId: string;
-  assetId: string;
-  usage: EntryAssetUsage;
-  createdAt: number;
-  updatedAt: number;
-  deletedAt: number | null;
-};
-
 export type UpsertEntryAssetInput = {
   entryId: string;
   assetId: string;
@@ -104,21 +98,13 @@ const toEntryAsset = (row: Selectable<EntryAssetsTable>): EntryAsset => ({
 });
 
 const toEntryAssetSyncData = (entryAsset: EntryAsset): EntryAssetSyncData => ({
+  version: VERSION,
   entryId: entryAsset.entryId,
   assetId: entryAsset.assetId,
   usage: entryAsset.usage,
   createdAt: entryAsset.createdAt,
   updatedAt: entryAsset.updatedAt,
   deletedAt: entryAsset.deletedAt,
-});
-
-const entryAssetSyncDataSchema: z.ZodType<EntryAssetSyncData> = z.object({
-  entryId: z.string(),
-  assetId: z.string(),
-  usage: z.enum(['cover', 'inline']),
-  createdAt: z.number(),
-  updatedAt: z.number(),
-  deletedAt: z.number().nullable(),
 });
 
 const parseEntryAssetSyncData = (id: string, data: unknown): EntryAssetSyncData =>
@@ -128,44 +114,10 @@ export class EntryAssetsRepository
   implements SyncedRepository<EntryAssetSyncData, Executor>, Repository
 {
   readonly syncNamespace = 'entry-asset';
-  private schemaInitialized = false;
 
   constructor(private readonly db: Kysely<Database>) {}
 
-  async initialize(): Promise<void> {
-    if (this.schemaInitialized) {
-      return;
-    }
-
-    await sql`
-      CREATE TABLE IF NOT EXISTS entry_assets (
-        entry_id TEXT NOT NULL,
-        asset_id TEXT NOT NULL,
-        usage TEXT NOT NULL,
-        created_at INTEGER NOT NULL,
-        updated_at INTEGER NOT NULL,
-        deleted_at INTEGER,
-        PRIMARY KEY (entry_id, asset_id, usage)
-      )
-    `.execute(this.db);
-
-    await sql`
-      CREATE INDEX IF NOT EXISTS entry_assets_entry_id_idx
-      ON entry_assets (entry_id)
-    `.execute(this.db);
-
-    await sql`
-      CREATE INDEX IF NOT EXISTS entry_assets_usage_idx
-      ON entry_assets (usage)
-    `.execute(this.db);
-
-    await sql`
-      CREATE INDEX IF NOT EXISTS entry_assets_deleted_at_idx
-      ON entry_assets (deleted_at)
-    `.execute(this.db);
-
-    this.schemaInitialized = true;
-  }
+  async initialize(): Promise<void> {}
 
   async listEntryAssetsByEntryId(
     entryId: string,
