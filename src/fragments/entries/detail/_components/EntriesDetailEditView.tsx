@@ -215,7 +215,6 @@ export const EntriesDetailEditView = ({
           </div>
 
           <InkMdeEditor
-            notebookId={notebookId}
             value={draft.body}
             placeholder="오늘 하루를 적어보세요"
             onChange={setBody}

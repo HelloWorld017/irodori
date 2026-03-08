@@ -1,6 +1,10 @@
 import type { Services } from '.';
 import type { Executor, Repositories } from '@/repositories';
-import type { SearchTagsInput, Tag, TagViewItem } from '@/repositories/TagsRepository';
+import type {
+  SearchTagsInput as RepositorySearchTagsInput,
+  Tag,
+  TagViewItem,
+} from '@/repositories/TagsRepository';
 
 const isUuidLike = (value: string): boolean =>
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
@@ -10,7 +14,6 @@ type CreateTagInput = {
   label: string;
   icon?: string | null;
   color?: string | null;
-  archivedAt?: number | null;
 };
 
 type UpdateTagInput = {
@@ -18,7 +21,10 @@ type UpdateTagInput = {
   label: string;
   icon: string | null;
   color: string | null;
-  archivedAt: number | null;
+};
+
+type SearchTagsInput = Pick<RepositorySearchTagsInput, 'notebookId' | 'query' | 'limit'> & {
+  categoryId?: string;
 };
 
 type RemoveTagInput = {
@@ -144,12 +150,10 @@ export class TagsService {
     return this.repositories.tags.searchTags({
       notebookId: input.notebookId,
       id: parsedQuery.id ?? undefined,
-      categoryId: input.categoryId,
       categoryIds: categoryIds ?? undefined,
       query: parsedQuery.labelQuery ?? undefined,
       queryMode: parsedQuery.id ? undefined : 'contains',
       limit: input.limit,
-      includeArchived: input.includeArchived,
     });
   }
 
@@ -174,12 +178,10 @@ export class TagsService {
     const matches = await this.repositories.tags.searchTags({
       notebookId: input.notebookId,
       id: parsedReference.id ?? undefined,
-      categoryId: input.categoryId,
       categoryIds: categoryIds ?? undefined,
       query: parsedReference.id ? undefined : (parsedReference.labelQuery ?? undefined),
       queryMode: parsedReference.id ? undefined : 'exact',
       limit: 2,
-      includeArchived: false,
     });
 
     return matches.length === 1 ? matches[0] : null;
@@ -199,7 +201,6 @@ export class TagsService {
         label,
         icon,
         color,
-        archivedAt: input.archivedAt ?? null,
         createdAt: now,
         updatedAt: now,
       });
@@ -222,7 +223,6 @@ export class TagsService {
           label,
           icon,
           color,
-          archivedAt: input.archivedAt,
           updatedAt: now,
         }),
         input.id

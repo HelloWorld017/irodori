@@ -16,7 +16,6 @@ export type TagsTable = {
   label: string;
   icon: string | null;
   color: string | null;
-  archived_at: number | null;
   created_at: number;
   updated_at: number;
   deleted_at: number | null;
@@ -32,7 +31,6 @@ export type Tag = {
   label: string;
   icon: string | null;
   color: string | null;
-  archivedAt: number | null;
   createdAt: number;
   updatedAt: number;
   deletedAt: number | null;
@@ -49,7 +47,6 @@ export type TagSyncData = {
   label: string;
   icon: string | null;
   color: string | null;
-  archivedAt: number | null;
   createdAt: number;
   updatedAt: number;
   deletedAt: number | null;
@@ -61,7 +58,6 @@ export type CreateTagInput = {
   label: string;
   icon: string | null;
   color: string | null;
-  archivedAt: number | null;
   createdAt: number;
   updatedAt: number;
 };
@@ -71,19 +67,16 @@ export type UpdateTagInput = {
   label: string;
   icon: string | null;
   color: string | null;
-  archivedAt: number | null;
   updatedAt: number;
 };
 
 export type SearchTagsInput = {
   notebookId: string;
   id?: string;
-  categoryId?: string;
   categoryIds?: string[];
   query?: string;
   queryMode?: 'contains' | 'exact';
   limit?: number;
-  includeArchived?: boolean;
 };
 
 export type DeleteTagInput = {
@@ -97,7 +90,6 @@ const toTag = (row: Selectable<TagsTable>): Tag => ({
   label: row.label,
   icon: row.icon,
   color: row.color,
-  archivedAt: row.archived_at,
   createdAt: row.created_at,
   updatedAt: row.updated_at,
   deletedAt: row.deleted_at,
@@ -131,7 +123,6 @@ const toTagSyncData = (tag: Tag): TagSyncData => ({
   label: tag.label,
   icon: tag.icon,
   color: tag.color,
-  archivedAt: tag.archivedAt,
   createdAt: tag.createdAt,
   updatedAt: tag.updatedAt,
   deletedAt: tag.deletedAt,
@@ -142,7 +133,6 @@ const tagSyncDataSchema: z.ZodType<TagSyncData> = z.object({
   label: z.string(),
   icon: z.string().nullable(),
   color: z.string().nullable(),
-  archivedAt: z.number().nullable(),
   createdAt: z.number(),
   updatedAt: z.number(),
   deletedAt: z.number().nullable(),
@@ -191,7 +181,6 @@ export class TagsRepository implements SyncedRepository<TagSyncData, Executor>, 
         label TEXT NOT NULL,
         icon TEXT,
         color TEXT,
-        archived_at INTEGER,
         created_at INTEGER NOT NULL,
         updated_at INTEGER NOT NULL,
         deleted_at INTEGER,
@@ -205,11 +194,6 @@ export class TagsRepository implements SyncedRepository<TagSyncData, Executor>, 
     `.execute(this.db);
 
     await sql`
-      CREATE INDEX IF NOT EXISTS tags_archived_at_idx
-      ON tags (archived_at)
-    `.execute(this.db);
-
-    await sql`
       CREATE INDEX IF NOT EXISTS tags_deleted_at_idx
       ON tags (deleted_at)
     `.execute(this.db);
@@ -217,10 +201,7 @@ export class TagsRepository implements SyncedRepository<TagSyncData, Executor>, 
     this.schemaInitialized = true;
   }
 
-  async listTagsByCategoryId(
-    categoryId: string,
-    options?: { includeArchived?: boolean }
-  ): Promise<TagViewItem[]> {
+  async listTagsByCategoryId(categoryId: string): Promise<TagViewItem[]> {
     let query = this.db
       .selectFrom('tags')
       .innerJoin('tag_categories', 'tag_categories.id', 'tags.category_id')
@@ -232,19 +213,12 @@ export class TagsRepository implements SyncedRepository<TagSyncData, Executor>, 
       .where('tags.deleted_at', 'is', null)
       .where('tag_categories.deleted_at', 'is', null);
 
-    if (!options?.includeArchived) {
-      query = query.where('tags.archived_at', 'is', null);
-    }
-
     const rows = await query.orderBy('tags.created_at', 'desc').execute();
 
     return rows.map(toTagViewItem);
   }
 
-  async listTagsByNotebookId(
-    notebookId: string,
-    options?: { includeArchived?: boolean }
-  ): Promise<TagViewItem[]> {
+  async listTagsByNotebookId(notebookId: string): Promise<TagViewItem[]> {
     let query = this.db
       .selectFrom('tags')
       .innerJoin('tag_categories', 'tag_categories.id', 'tags.category_id')
@@ -255,10 +229,6 @@ export class TagsRepository implements SyncedRepository<TagSyncData, Executor>, 
       .where('tag_categories.notebook_id', '=', notebookId)
       .where('tags.deleted_at', 'is', null)
       .where('tag_categories.deleted_at', 'is', null);
-
-    if (!options?.includeArchived) {
-      query = query.where('tags.archived_at', 'is', null);
-    }
 
     const rows = await query
       .orderBy('tag_categories.sort_order', 'asc')
@@ -315,16 +285,8 @@ export class TagsRepository implements SyncedRepository<TagSyncData, Executor>, 
       query = query.where('tags.id', '=', input.id);
     }
 
-    if (input.categoryId) {
-      query = query.where('tags.category_id', '=', input.categoryId);
-    }
-
     if (categoryIds.length > 0) {
       query = query.where('tags.category_id', 'in', categoryIds);
-    }
-
-    if (!input.includeArchived) {
-      query = query.where('tags.archived_at', 'is', null);
     }
 
     if (searchQuery) {
@@ -363,7 +325,6 @@ export class TagsRepository implements SyncedRepository<TagSyncData, Executor>, 
       label: input.label,
       icon: input.icon,
       color: input.color,
-      archivedAt: input.archivedAt,
       createdAt: input.createdAt,
       updatedAt: input.updatedAt,
       deletedAt: null,
@@ -377,7 +338,6 @@ export class TagsRepository implements SyncedRepository<TagSyncData, Executor>, 
         label: tag.label,
         icon: tag.icon,
         color: tag.color,
-        archived_at: tag.archivedAt,
         created_at: tag.createdAt,
         updated_at: tag.updatedAt,
         deleted_at: tag.deletedAt,
@@ -405,7 +365,6 @@ export class TagsRepository implements SyncedRepository<TagSyncData, Executor>, 
         label: input.label,
         icon: input.icon,
         color: input.color,
-        archived_at: input.archivedAt,
         updated_at: input.updatedAt,
       })
       .where('id', '=', input.id)
@@ -417,7 +376,6 @@ export class TagsRepository implements SyncedRepository<TagSyncData, Executor>, 
       label: input.label,
       icon: input.icon,
       color: input.color,
-      archivedAt: input.archivedAt,
       updatedAt: input.updatedAt,
     };
   }
@@ -467,7 +425,6 @@ export class TagsRepository implements SyncedRepository<TagSyncData, Executor>, 
           label: data.label,
           icon: data.icon,
           color: data.color,
-          archived_at: data.archivedAt,
           created_at: data.createdAt,
           updated_at: data.updatedAt,
           deleted_at: data.deletedAt,
@@ -478,7 +435,6 @@ export class TagsRepository implements SyncedRepository<TagSyncData, Executor>, 
             label: data.label,
             icon: data.icon,
             color: data.color,
-            archived_at: data.archivedAt,
             created_at: data.createdAt,
             updated_at: data.updatedAt,
             deleted_at: data.deletedAt,
