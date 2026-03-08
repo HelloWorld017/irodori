@@ -24,16 +24,6 @@ export const entryDraftDataSchema = z.object({
   excludedTagIds: z.array(z.string()),
 });
 
-export const entryDraftSyncDataSchema = z.object({
-  version: z.int().gte(0),
-  entryId: z.string(),
-  data: entryDraftDataSchema,
-  createdAt: z.number(),
-  updatedAt: z.number(),
-  deletedAt: z.number().nullable(),
-});
-
 export type EntryDraftCover = z.output<typeof entryDraftCoverSchema>;
 export type EntryDraftSticker = z.output<typeof entryDraftStickerSchema>;
 export type EntryDraftData = z.output<typeof entryDraftDataSchema>;
-export type EntryDraftSyncData = z.output<typeof entryDraftSyncDataSchema>;

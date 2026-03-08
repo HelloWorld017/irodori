@@ -155,7 +155,6 @@ export class EntryDraftsService {
         updatedAt: now,
       });
 
-      await this.stageEntryDraft(trx, entryDraft);
       return entryDraft;
     });
   }
@@ -164,16 +163,10 @@ export class EntryDraftsService {
     const now = Date.now();
 
     await this.repositories.withTransaction(async trx => {
-      const entryDraft = await this.repositories.entryDrafts.deleteEntryDraft(trx, {
+      await this.repositories.entryDrafts.deleteEntryDraft(trx, {
         entryId: input.entryId,
         deletedAt: now,
       });
-
-      if (!entryDraft) {
-        return;
-      }
-
-      await this.stageEntryDraft(trx, entryDraft);
     });
   }
 
@@ -199,14 +192,10 @@ export class EntryDraftsService {
       await this.publishTags(trx, input.entryId, data.tagIds, now);
       await this.publishStickers(trx, input.entryId, data.stickers, now);
 
-      const deletedDraft = await this.repositories.entryDrafts.deleteEntryDraft(trx, {
+      await this.repositories.entryDrafts.deleteEntryDraft(trx, {
         entryId: input.entryId,
         deletedAt: now,
       });
-
-      if (deletedDraft) {
-        await this.stageEntryDraft(trx, deletedDraft);
-      }
     });
   }
 
@@ -312,12 +301,6 @@ export class EntryDraftsService {
   private stageEntry(trx: Executor, entry: Entry): Promise<void> {
     return this.services.sync.stageUpdatedDocuments(trx, this.repositories.entries, [
       { id: entry.id, data: this.repositories.entries.toSyncData(entry) },
-    ]);
-  }
-
-  private stageEntryDraft(trx: Executor, entryDraft: EntryDraft): Promise<void> {
-    return this.services.sync.stageUpdatedDocuments(trx, this.repositories.entryDrafts, [
-      { id: entryDraft.entryId, data: this.repositories.entryDrafts.toSyncData(entryDraft) },
     ]);
   }
 
