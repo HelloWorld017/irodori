@@ -40,6 +40,7 @@ export const StickerPicker = ({
   });
 
   const displayedSticker = selectedStickerQuery.data ?? null;
+  const emoji = value?.kind === 'emoji' ? value.emoji : displayedSticker?.emoji;
 
   return (
     <Popover className={classes('relative', className)}>
@@ -58,8 +59,8 @@ export const StickerPicker = ({
             )}
             aria-label="스티커 선택"
           >
-            {value?.kind === 'emoji' ? (
-              <span className="text-[1.5rem] leading-none">{value.emoji}</span>
+            {emoji ? (
+              <span className="text-[1.5rem] leading-none">{emoji}</span>
             ) : displayedSticker?.blobDigest ? (
               <AssetImage
                 blobDigest={displayedSticker.blobDigest}

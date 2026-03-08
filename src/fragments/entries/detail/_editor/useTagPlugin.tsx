@@ -44,6 +44,7 @@ class TagChipWidget extends WidgetType {
   toDOM(): HTMLElement {
     const dom = document.createElement('span');
     dom.contentEditable = 'false';
+    dom.style.userSelect = 'none';
 
     const root = createRoot(dom);
     root.render(<Tag {...this.tag} />);
@@ -89,6 +90,7 @@ const tagReferenceDecorator = (getTagById: TagPluginProps['getTagById']) =>
 
       return Decoration.replace({
         widget: new TagChipWidget(tag),
+        inclusive: false,
       });
     },
   });
@@ -264,7 +266,7 @@ const createTagPlugin = ({
   rememberTag,
   searchTags,
   resolveTag,
-}: TagPluginProps): NonNullable<Options['plugins']> => {
+}: TagPluginProps): Options.Plugin[] => {
   const decorator = tagReferenceDecorator(getTagById);
   const tagDecorations = ViewPlugin.fromClass(
     class {
@@ -280,6 +282,11 @@ const createTagPlugin = ({
     },
     {
       decorations: value => value.decorations,
+      provide: plugin =>
+        EditorView.atomicRanges.of(view => {
+          let pluginState = view.plugin(plugin);
+          return pluginState ? pluginState.decorations : Decoration.none;
+        }),
     }
   );
 

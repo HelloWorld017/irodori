@@ -140,12 +140,13 @@ export const EntryMetadataEdit = ({ tagCategories }: { tagCategories: TagCategor
         <div className="flex gap-3">
           {Array.from({ length: 3 }, (_, index) => {
             const slot = index + 1;
-            const stickerRef = draft.stickers.find(sticker => sticker.slot === slot) ?? null;
+            const stickerId =
+              draft.stickers.find(sticker => sticker.slot === slot)?.stickerId ?? null;
 
             return (
               <StickerPicker
                 key={slot}
-                value={toStickerPickerValue(stickerRef?.stickerId ?? null)}
+                value={toStickerPickerValue(stickerId)}
                 onChange={nextValue => void setStickerValue(slot, nextValue)}
               />
             );

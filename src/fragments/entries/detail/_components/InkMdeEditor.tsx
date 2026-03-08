@@ -1,3 +1,5 @@
+import { autocompletion } from '@codemirror/autocomplete';
+import { drawSelection } from '@codemirror/view';
 import { ink } from 'ink-mde';
 import { useEffect, useRef, useState } from 'react';
 import { useTagPlugin } from '../_editor/useTagPlugin';
@@ -24,7 +26,7 @@ const editorOptions: Options = {
   interface: {
     appearance: 'light',
     attribution: false,
-    autocomplete: true,
+    autocomplete: false,
     images: false,
     lists: true,
     readonly: false,
@@ -57,12 +59,23 @@ export const InkMdeEditor = ({ value, placeholder = '', onChange }: InkMdeEditor
 
     let disposed = false;
 
+    const plugins = [...tagPlugin, { type: 'default', value: drawSelection() }] as const;
+    const completion = autocompletion({
+      defaultKeymap: true,
+      icons: false,
+      override: plugins
+        .filter((plugin): plugin is Options.Plugins.Completion => plugin.type === 'completion')
+        .map(plugin => plugin.value)
+        .filter(<T extends object>(value: T | Promise<T>): value is T => !('then' in value)),
+      optionClass: () => 'ink-tooltip-option',
+    });
+
     void Promise.resolve(
       ink(target, {
         ...editorOptions,
         doc: initialValue,
         placeholder,
-        plugins: [tagPlugin],
+        plugins: [...plugins, { type: 'default', value: completion }],
         hooks: {
           ...editorOptions.hooks,
           afterUpdate: (doc: string) => {
