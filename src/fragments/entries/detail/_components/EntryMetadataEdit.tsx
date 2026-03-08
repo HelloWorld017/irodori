@@ -5,14 +5,14 @@ import { TagsPicker } from '../../_components/TagsPicker';
 import { useEntriesNotebookId } from '../../_providers/EntriesProvider';
 import {
   useEntriesDetailDraft,
+  useRemoveEntriesDetailTag,
+  useReplaceEntriesDetailTagsInCategory,
   useSetEntriesDetailDate,
   useSetEntriesDetailStickerValue,
-  useSetEntriesDetailTags,
 } from '../_providers/EntriesDetailProvider';
 import { buildEntryMetadataTagSections } from '../_utils';
 import type { EntryDraftSticker } from '@/repositories/EntryDraftsRepository';
 import type { TagCategory } from '@/repositories/TagCategoriesRepository';
-import type { TagViewItem } from '@/repositories/TagsRepository';
 
 const toDateInputValue = (value: number): string => {
   const date = new Date(value);
@@ -62,24 +62,12 @@ const buildCategoryRuleLabel = ({
   return parts.length > 0 ? parts.join(' · ') : null;
 };
 
-const replaceCategoryTags = ({
-  currentTags,
-  categoryId,
-  nextTags,
-}: {
-  currentTags: TagViewItem[];
-  categoryId: string;
-  nextTags: TagViewItem[];
-}): TagViewItem[] => {
-  const otherTags = currentTags.filter(tag => tag.categoryId !== categoryId);
-  return [...otherTags, ...nextTags];
-};
-
 export const EntryMetadataEdit = ({ tagCategories }: { tagCategories: TagCategory[] }) => {
   const notebookId = useEntriesNotebookId();
   const draft = useEntriesDetailDraft();
   const setDate = useSetEntriesDetailDate();
-  const setTags = useSetEntriesDetailTags();
+  const removeTag = useRemoveEntriesDetailTag();
+  const replaceTagsInCategory = useReplaceEntriesDetailTagsInCategory();
   const setStickerValue = useSetEntriesDetailStickerValue();
   const [tagsDraftByCategory, setTagsDraftByCategory] = useState<Record<string, string>>({});
 
@@ -87,10 +75,6 @@ export const EntryMetadataEdit = ({ tagCategories }: { tagCategories: TagCategor
     () => buildEntryMetadataTagSections({ categories: tagCategories, tags: draft.tags }),
     [draft.tags, tagCategories]
   );
-
-  const removeTag = (tagId: string) => {
-    setTags(draft.tags.filter(tag => tag.id !== tagId));
-  };
 
   return (
     <aside className="space-y-5 rounded-[1.75rem] p-6">
@@ -140,26 +124,14 @@ export const EntryMetadataEdit = ({ tagCategories }: { tagCategories: TagCategor
                   ...current,
                   [category.id]: nextDraftInput,
                 }));
-                setTags(
-                  replaceCategoryTags({
-                    currentTags: draft.tags,
-                    categoryId: category.id,
-                    nextTags: tags,
-                  })
-                );
+                replaceTagsInCategory(category.id, tags);
               }}
               onSubmit={({ draft: nextDraftInput, tags }) => {
                 setTagsDraftByCategory(current => ({
                   ...current,
                   [category.id]: nextDraftInput,
                 }));
-                setTags(
-                  replaceCategoryTags({
-                    currentTags: draft.tags,
-                    categoryId: category.id,
-                    nextTags: tags,
-                  })
-                );
+                replaceTagsInCategory(category.id, tags);
               }}
             />
           </section>

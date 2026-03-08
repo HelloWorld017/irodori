@@ -93,6 +93,22 @@ const toUniqueTags = (tags: TagViewItem[]): TagViewItem[] => {
   return [...tagsById.values()];
 };
 
+const normalizeDraftExcludedTagIds = (tagIds: string[]): string[] => {
+  const normalizedTagIds = new Set<string>();
+
+  tagIds.forEach(tagId => {
+    const normalizedTagId = tagId.trim();
+
+    if (!normalizedTagId) {
+      return;
+    }
+
+    normalizedTagIds.add(normalizedTagId);
+  });
+
+  return [...normalizedTagIds];
+};
+
 const toUniqueStickers = (stickers: EntryDraftSticker[]): EntryDraftSticker[] => {
   const stickersBySlot = new Map<number, EntryDraftSticker>();
 
@@ -127,6 +143,7 @@ export const normalizeEntryDraftData = (data: EntryDraftData): EntryDraftData =>
   date: normalizeDraftDate(data.date),
   cover: normalizeDraftCover(data.cover),
   tags: toUniqueTags(data.tags),
+  excludedTagIds: normalizeDraftExcludedTagIds(data.excludedTagIds),
   stickers: toUniqueStickers(data.stickers),
 });
 
@@ -143,6 +160,7 @@ export const toEntryDraftData = (entry: EntryDetailItem): EntryDraftData =>
           }
         : null,
     tags: entry.tags,
+    excludedTagIds: [],
     stickers: entry.stickers.map(({ slot, sticker }) =>
       sticker.kind === 'emoji' && sticker.emoji
         ? {

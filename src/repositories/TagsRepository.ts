@@ -230,6 +230,33 @@ export class TagsRepository implements SyncedRepository<TagSyncData, Executor>, 
     return rows.map(toTagViewItem);
   }
 
+  async listTagsByNotebookId(
+    notebookId: string,
+    options?: { includeArchived?: boolean }
+  ): Promise<TagViewItem[]> {
+    let query = this.db
+      .selectFrom('tags')
+      .innerJoin('tag_categories', 'tag_categories.id', 'tags.category_id')
+      .selectAll('tags')
+      .select(sql<number>`tag_categories.displayed`.as('categoryDisplayed'))
+      .select(sql<string | null>`tag_categories.icon`.as('categoryIcon'))
+      .select(sql<string>`tag_categories.color`.as('categoryColor'))
+      .where('tag_categories.notebook_id', '=', notebookId)
+      .where('tags.deleted_at', 'is', null)
+      .where('tag_categories.deleted_at', 'is', null);
+
+    if (!options?.includeArchived) {
+      query = query.where('tags.archived_at', 'is', null);
+    }
+
+    const rows = await query
+      .orderBy('tag_categories.sort_order', 'asc')
+      .orderBy('tags.created_at', 'desc')
+      .execute();
+
+    return rows.map(toTagViewItem);
+  }
+
   async listTagsByIds(ids: string[]): Promise<TagViewItem[]> {
     if (ids.length === 0) {
       return [];

@@ -40,6 +40,7 @@ export type EntryDraftData = {
   cover: EntryDraftCover | null;
   tags: TagViewItem[];
   stickers: EntryDraftSticker[];
+  excludedTagIds: string[];
 };
 
 export type EntryDraftsTable = {
@@ -136,6 +137,7 @@ const entryDraftDataSchema: z.ZodType<EntryDraftData> = z.object({
   cover: entryDraftCoverSchema.nullable(),
   tags: z.array(tagViewItemSchema),
   stickers: z.array(entryDraftStickerSchema),
+  excludedTagIds: z.array(z.string()),
 });
 
 const entryDraftSyncDataSchema: z.ZodType<EntryDraftSyncData> = z.object({

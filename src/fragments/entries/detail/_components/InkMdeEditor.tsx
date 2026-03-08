@@ -1,8 +1,13 @@
 import { ink } from 'ink-mde';
-import { useEffect, useEffectEvent, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useServices } from '@/fragments/_providers/DatabaseProvider';
+import { buildInkMdeTagPlugins } from '../_utils/buildInkMdeTagPlugins';
+import type { TagViewItem } from '@/repositories/TagsRepository';
 import type { Instance, Options } from 'ink-mde';
 
 type InkMdeEditorProps = {
+  notebookId: string;
+  resolvedTagsById: Map<string, TagViewItem>;
   value: string;
   placeholder?: string;
   onChange: (value: string) => void;
@@ -23,7 +28,7 @@ const editorOptions: Options = {
   interface: {
     appearance: 'light',
     attribution: false,
-    autocomplete: false,
+    autocomplete: true,
     images: false,
     lists: true,
     readonly: false,
@@ -35,10 +40,69 @@ const editorOptions: Options = {
 
 const css = String.raw;
 
-export const InkMdeEditor = ({ value, placeholder = '', onChange }: InkMdeEditorProps) => {
+export const InkMdeEditor = ({
+  notebookId,
+  resolvedTagsById,
+  value,
+  placeholder = '',
+  onChange,
+}: InkMdeEditorProps) => {
+  const services = useServices();
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const editorRef = useRef<Instance | null>(null);
+  const onChangeRef = useRef(onChange);
+  const knownTagsRef = useRef(new Map(resolvedTagsById));
   const [initialValue] = useState(value);
-  const onChangeEvent = useEffectEvent(onChange);
+
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
+
+  useEffect(() => {
+    knownTagsRef.current = new Map([...knownTagsRef.current, ...resolvedTagsById]);
+  }, [resolvedTagsById]);
+
+  const getTagById = useCallback((tagId: string) => knownTagsRef.current.get(tagId) ?? null, []);
+  const rememberTag = useCallback((tag: TagViewItem) => {
+    knownTagsRef.current.set(tag.id, tag);
+  }, []);
+  const searchTags = useCallback(
+    async (query: string) => {
+      if (!services) {
+        return [];
+      }
+
+      const tags = await services.tags.search({
+        notebookId,
+        query,
+        limit: 8,
+      });
+      tags.forEach(tag => {
+        knownTagsRef.current.set(tag.id, tag);
+      });
+      return tags;
+    },
+    [notebookId, services]
+  );
+  const resolveTag = useCallback(
+    async (reference: string) => {
+      if (!services) {
+        return null;
+      }
+
+      const tag = await services.tags.resolveReference({
+        notebookId,
+        reference,
+      });
+
+      if (tag) {
+        knownTagsRef.current.set(tag.id, tag);
+      }
+
+      return tag;
+    },
+    [notebookId, services]
+  );
 
   useEffect(() => {
     const target = containerRef.current;
@@ -48,17 +112,19 @@ export const InkMdeEditor = ({ value, placeholder = '', onChange }: InkMdeEditor
     }
 
     let disposed = false;
-    let editor: Instance | null = null;
+
+    const plugins = buildInkMdeTagPlugins({ getTagById, rememberTag, searchTags, resolveTag });
 
     void Promise.resolve(
       ink(target, {
         ...editorOptions,
         doc: initialValue,
         placeholder,
+        plugins,
         hooks: {
           ...editorOptions.hooks,
           afterUpdate: (doc: string) => {
-            onChangeEvent(doc);
+            onChangeRef.current(doc);
           },
         },
       })
@@ -68,15 +134,16 @@ export const InkMdeEditor = ({ value, placeholder = '', onChange }: InkMdeEditor
         return;
       }
 
-      editor = instance;
+      editorRef.current = instance;
     });
 
     return () => {
       disposed = true;
-      editor?.destroy();
+      editorRef.current?.destroy();
+      editorRef.current = null;
       target.replaceChildren();
     };
-  }, [initialValue, placeholder]);
+  }, [getTagById, initialValue, placeholder, rememberTag, resolveTag, searchTags]);
 
   const stylesheet = css`
     .irodori__ink-mde-editor {
@@ -92,6 +159,10 @@ export const InkMdeEditor = ({ value, placeholder = '', onChange }: InkMdeEditor
 
       .cm-focused {
         outline: 0;
+      }
+
+      .cm-widgetBuffer {
+        display: none;
       }
     }
   `;

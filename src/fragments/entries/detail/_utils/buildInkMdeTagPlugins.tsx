@@ -1,0 +1,299 @@
+import {
+  type Completion,
+  type CompletionContext,
+  type CompletionResult,
+} from '@codemirror/autocomplete';
+import { EditorView, MatchDecorator, ViewPlugin, Decoration, WidgetType } from '@codemirror/view';
+import { createRoot, type Root } from 'react-dom/client';
+import { Tag } from '@/fragments/_components/Tag';
+import {
+  TAG_REFERENCE_CONTENT_REGEX,
+  TAG_REFERENCE_INPUT_REGEX,
+  isTagReferenceId,
+  toTagReference,
+} from './tagReferences';
+import type { TagViewItem } from '@/repositories/TagsRepository';
+import type { Options } from 'ink-mde';
+
+type BuildInkMdeTagPluginsInput = {
+  getTagById: (tagId: string) => TagViewItem | null;
+  rememberTag: (tag: TagViewItem) => void;
+  searchTags: (query: string) => Promise<TagViewItem[]>;
+  resolveTag: (reference: string) => Promise<TagViewItem | null>;
+};
+
+const widgetRoots = new WeakMap<HTMLElement, Root>();
+
+class TagChipWidget extends WidgetType {
+  constructor(private readonly tag: TagViewItem) {
+    super();
+  }
+
+  eq(widget: WidgetType): boolean {
+    return (
+      widget instanceof TagChipWidget &&
+      widget.tag.id === this.tag.id &&
+      widget.tag.label === this.tag.label &&
+      widget.tag.color === this.tag.color &&
+      widget.tag.icon === this.tag.icon
+    );
+  }
+
+  toDOM(): HTMLElement {
+    const dom = document.createElement('span');
+    dom.contentEditable = 'false';
+
+    const root = createRoot(dom);
+    root.render(<Tag {...this.tag} />);
+    widgetRoots.set(dom, root);
+
+    return dom;
+  }
+
+  updateDOM(dom: HTMLElement): boolean {
+    const root = widgetRoots.get(dom);
+
+    if (!root) {
+      return false;
+    }
+
+    root.render(<Tag {...this.tag} />);
+    return true;
+  }
+
+  ignoreEvent(): boolean {
+    return true;
+  }
+
+  destroy(dom: HTMLElement): void {
+    widgetRoots.get(dom)?.unmount();
+    widgetRoots.delete(dom);
+  }
+}
+
+const tagReferenceDecorator = (getTagById: BuildInkMdeTagPluginsInput['getTagById']) =>
+  new MatchDecorator({
+    regexp: new RegExp(TAG_REFERENCE_CONTENT_REGEX.source, 'g'),
+    decoration: match => {
+      const tagId = match[1]?.trim();
+      if (!tagId) {
+        return null;
+      }
+
+      const tag = getTagById(tagId);
+      if (!tag) {
+        return null;
+      }
+
+      return Decoration.replace({
+        widget: new TagChipWidget(tag),
+      });
+    },
+  });
+
+const buildCompletionResult = ({
+  context,
+  query,
+  tags,
+  rememberTag,
+}: {
+  context: CompletionContext;
+  query: string;
+  tags: TagViewItem[];
+  rememberTag: BuildInkMdeTagPluginsInput['rememberTag'];
+}): CompletionResult | null => {
+  if (tags.length === 0) {
+    return null;
+  }
+
+  const match = context.matchBefore(TAG_REFERENCE_INPUT_REGEX);
+  if (!match) {
+    return null;
+  }
+
+  return {
+    from: match.from,
+    to: context.pos,
+    filter: false,
+    options: tags.map<Completion>(tag => ({
+      label: tag.label,
+      detail: tag.id,
+      type: 'text',
+      boost: isTagReferenceId(query) && tag.id === query ? 100 : undefined,
+      section: '태그',
+      commitCharacters: [']'],
+      apply: (view, _completion, from, to) => {
+        rememberTag(tag);
+
+        const insertedReference = toTagReference(tag.id);
+        view.dispatch({
+          changes: {
+            from,
+            to,
+            insert: insertedReference,
+          },
+          selection: {
+            anchor: from + insertedReference.length,
+          },
+        });
+      },
+    })),
+  };
+};
+
+const buildCompletionSource =
+  ({ searchTags, rememberTag }: Pick<BuildInkMdeTagPluginsInput, 'searchTags' | 'rememberTag'>) =>
+  async (context: CompletionContext): Promise<CompletionResult | null> => {
+    const match = context.matchBefore(TAG_REFERENCE_INPUT_REGEX);
+
+    if (!match) {
+      return null;
+    }
+
+    const query = match.text
+      .slice(2)
+      .replace(/\]\]?$/, '')
+      .trim();
+    if (!query) {
+      return null;
+    }
+
+    if (match.from === match.to && !context.explicit) {
+      return null;
+    }
+
+    const tags = await searchTags(query);
+    return buildCompletionResult({ context, query, tags, rememberTag });
+  };
+
+const buildAutoResolveExtension = ({
+  resolveTag,
+  rememberTag,
+}: Pick<BuildInkMdeTagPluginsInput, 'resolveTag' | 'rememberTag'>) => {
+  const resolvedReferenceCache = new Map<string, Promise<TagViewItem | null>>();
+
+  const resolveReference = (reference: string) => {
+    const cached = resolvedReferenceCache.get(reference);
+    if (cached) {
+      return cached;
+    }
+
+    const request = resolveTag(reference)
+      .then(tag => {
+        if (tag) {
+          rememberTag(tag);
+        }
+
+        return tag;
+      })
+      .finally(() => {
+        resolvedReferenceCache.delete(reference);
+      });
+
+    resolvedReferenceCache.set(reference, request);
+    return request;
+  };
+
+  return EditorView.updateListener.of(update => {
+    if (!update.docChanged) {
+      return;
+    }
+
+    const doc = update.state.doc.toString();
+    const unresolvedMatches = [...doc.matchAll(TAG_REFERENCE_CONTENT_REGEX)].flatMap(match => {
+      const reference = match[1]?.trim();
+      const index = match.index;
+
+      if (!reference || index === undefined || isTagReferenceId(reference)) {
+        return [];
+      }
+
+      return [
+        {
+          from: index,
+          to: index + match[0].length,
+          reference,
+          raw: match[0],
+        },
+      ];
+    });
+
+    if (unresolvedMatches.length === 0) {
+      return;
+    }
+
+    void Promise.all(
+      unresolvedMatches.map(async match => ({
+        ...match,
+        tag: await resolveReference(match.reference),
+      }))
+    ).then(matches => {
+      const changes = matches.flatMap(match => {
+        if (!match.tag) {
+          return [];
+        }
+
+        const currentText = update.view.state.sliceDoc(match.from, match.to);
+        if (currentText !== match.raw) {
+          return [];
+        }
+
+        return [
+          {
+            from: match.from,
+            to: match.to,
+            insert: toTagReference(match.tag.id),
+          },
+        ];
+      });
+
+      if (changes.length === 0) {
+        return;
+      }
+
+      update.view.dispatch({ changes });
+    });
+  });
+};
+
+export const buildInkMdeTagPlugins = ({
+  getTagById,
+  rememberTag,
+  searchTags,
+  resolveTag,
+}: BuildInkMdeTagPluginsInput): NonNullable<Options['plugins']> => {
+  const decorator = tagReferenceDecorator(getTagById);
+  const tagDecorations = ViewPlugin.fromClass(
+    class {
+      decorations = Decoration.none;
+
+      constructor(view: EditorView) {
+        this.decorations = decorator.createDeco(view);
+      }
+
+      update(update: Parameters<typeof decorator.updateDeco>[0]) {
+        this.decorations = decorator.updateDeco(update, this.decorations);
+      }
+    },
+    {
+      decorations: value => value.decorations,
+    }
+  );
+
+  return [
+    {
+      type: 'completion',
+      value: buildCompletionSource({ searchTags, rememberTag }),
+    },
+    {
+      type: 'default',
+      value: [
+        tagDecorations,
+        EditorView.atomicRanges.of(
+          view => view.plugin(tagDecorations)?.decorations ?? Decoration.none
+        ),
+        buildAutoResolveExtension({ resolveTag, rememberTag }),
+      ],
+    },
+  ];
+};

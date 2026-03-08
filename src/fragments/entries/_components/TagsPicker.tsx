@@ -73,8 +73,9 @@ export const TagsPicker = ({
   }, [tagCategoriesQuery.data, tagsCategoryId]);
 
   const selectedTagIds = useMemo(() => new Set(value.tags.map(tag => tag.id)), [value.tags]);
-  const normalizedDraft = value.draft.trim().toLowerCase();
-  const debouncedDraft = useDebouncedValue(normalizedDraft, { delay: 200 });
+  const trimmedDraft = value.draft.trim();
+  const normalizedDraft = trimmedDraft.toLowerCase();
+  const debouncedDraft = useDebouncedValue(trimmedDraft, { delay: 200 });
 
   const tagsQuery = useQuery({
     enabled: services !== null && debouncedDraft !== '',
@@ -95,8 +96,7 @@ export const TagsPicker = ({
 
   const maxSelect = tagsCategoryId ? (selectedCategory?.maxSelect ?? null) : null;
   const maxSelectionReached = maxSelect !== null && value.tags.length >= maxSelect;
-  const hasTagQueryError =
-    tagCategoriesQuery.isError || (normalizedDraft !== '' && tagsQuery.isError);
+  const hasTagQueryError = tagCategoriesQuery.isError || (trimmedDraft !== '' && tagsQuery.isError);
 
   const suggestions = useMemo(
     () => (tagsQuery.data ?? []).filter(tag => !selectedTagIds.has(tag.id)),
@@ -110,7 +110,8 @@ export const TagsPicker = ({
   const canCreateTagCandidate =
     allowCreateTag &&
     Boolean(tagsCategoryId) &&
-    normalizedDraft !== '' &&
+    trimmedDraft !== '' &&
+    !trimmedDraft.includes(':') &&
     !hasMatchedLabel &&
     !tagsQuery.isFetching;
 
@@ -270,7 +271,7 @@ export const TagsPicker = ({
                     return;
                   }
 
-                  createTagMutation.mutate(value.draft);
+                  createTagMutation.mutate(trimmedDraft);
                 }}
                 disabled={createTagMutation.isPending || maxSelectionReached}
                 className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-primary
@@ -280,7 +281,7 @@ export const TagsPicker = ({
                 <IconSquarePlus className="text-base" />
                 {createTagMutation.isPending
                   ? '새 태그를 만들고 있어요...'
-                  : `"${value.draft.trim()}" 태그 추가`}
+                  : `"${trimmedDraft}" 태그 추가`}
               </button>
             </li>
           ) : null}
