@@ -1,3 +1,4 @@
+import { stableJSONSerialize } from '../json';
 import type { RouteKind } from '../route';
 
 export type QueryRouteKind = 'common' | RouteKind;
@@ -13,3 +14,5 @@ export const queryKey = (route: RouteKind | 'common', action: string, params?: u
   action,
   params,
 ];
+
+export const batchKey = (...params: Parameters<typeof queryKey>) => stableJSONSerialize(params);

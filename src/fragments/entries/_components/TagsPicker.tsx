@@ -26,7 +26,9 @@ type TagsPickerProps = {
   placeholder?: string;
   icon?: ReactNode;
   children?: ReactNode;
-  onChange: (value: TagsPickerValue) => void;
+  onChange?: (value: TagsPickerValue) => void;
+  onAddTag?: (tagId: string) => void;
+  onRemoveTag?: (tagId: string) => void;
   onSubmit?: (value: TagsPickerValue) => void;
 };
 
@@ -52,6 +54,8 @@ export const TagsPicker = ({
   icon,
   children,
   onChange,
+  onAddTag,
+  onRemoveTag,
   onSubmit,
 }: TagsPickerProps) => {
   const services = useServices();
@@ -132,7 +136,8 @@ export const TagsPicker = ({
     },
     onSuccess: async createdTag => {
       await queryClient.invalidateQueries({ queryKey: queryKey('entries', 'search-tags') });
-      onChange({
+      onAddTag?.(createdTag.id);
+      onChange?.({
         draft: '',
         tags: toUniqueTags([...value.tags, createdTag]),
       });
@@ -147,7 +152,8 @@ export const TagsPicker = ({
   });
 
   const removeTag = (tagId: string) => {
-    onChange({
+    onRemoveTag?.(tagId);
+    onChange?.({
       ...value,
       tags: value.tags.filter(tag => tag.id !== tagId),
     });
@@ -158,7 +164,8 @@ export const TagsPicker = ({
       return;
     }
 
-    onChange({
+    onAddTag?.(tag.id);
+    onChange?.({
       draft: '',
       tags: toUniqueTags([...value.tags, tag]),
     });
@@ -203,7 +210,7 @@ export const TagsPicker = ({
                 outline-none placeholder:text-tertiary`}
               value={value.draft}
               onChange={event => {
-                onChange({
+                onChange?.({
                   ...value,
                   draft: event.target.value,
                 });

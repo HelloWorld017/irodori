@@ -2,8 +2,6 @@ import { sql } from 'kysely';
 import { z } from 'zod';
 import { parseSyncDataOrThrow } from './_utils/parseSyncData';
 import type { Database, Executor } from '.';
-import type { StickerViewItem } from './StickersRepository';
-import type { TagViewItem } from './TagsRepository';
 import type {
   Repository,
   SyncDeletePayload,
@@ -21,24 +19,17 @@ export type EntryDraftCover = {
   height: number | null;
 };
 
-export type EntryDraftSticker =
-  | {
-      slot: number;
-      kind: 'sticker';
-      sticker: StickerViewItem;
-    }
-  | {
-      slot: number;
-      kind: 'emoji';
-      emoji: string;
-    };
+export type EntryDraftSticker = {
+  slot: number;
+  stickerId: string;
+};
 
 export type EntryDraftData = {
   title: string;
   body: string;
   date: number;
   cover: EntryDraftCover | null;
-  tags: TagViewItem[];
+  tagIds: string[];
   stickers: EntryDraftSticker[];
   excludedTagIds: string[];
 };
@@ -83,31 +74,6 @@ export type DeleteEntryDraftInput = {
   deletedAt: number;
 };
 
-const tagViewItemSchema: z.ZodType<TagViewItem> = z.object({
-  id: z.string(),
-  categoryId: z.string(),
-  label: z.string(),
-  displayed: z.boolean(),
-  icon: z.string().nullable(),
-  color: z.string(),
-  archivedAt: z.number().nullable(),
-  createdAt: z.number(),
-  updatedAt: z.number(),
-  deletedAt: z.number().nullable(),
-});
-
-const stickerViewItemSchema: z.ZodType<StickerViewItem> = z.object({
-  id: z.string(),
-  kind: z.enum(['emoji', 'custom']),
-  emoji: z.string().nullable(),
-  label: z.string(),
-  assetId: z.string().nullable(),
-  blobDigest: z.string().nullable(),
-  createdAt: z.number(),
-  updatedAt: z.number(),
-  deletedAt: z.number().nullable(),
-});
-
 const entryDraftCoverSchema: z.ZodType<EntryDraftCover> = z.object({
   id: z.string(),
   blobDigest: z.string(),
@@ -117,25 +83,17 @@ const entryDraftCoverSchema: z.ZodType<EntryDraftCover> = z.object({
   height: z.number().nullable(),
 });
 
-const entryDraftStickerSchema: z.ZodType<EntryDraftSticker> = z.discriminatedUnion('kind', [
-  z.object({
-    slot: z.number().int(),
-    kind: z.literal('sticker'),
-    sticker: stickerViewItemSchema,
-  }),
-  z.object({
-    slot: z.number().int(),
-    kind: z.literal('emoji'),
-    emoji: z.string(),
-  }),
-]);
+const entryDraftStickerSchema: z.ZodType<EntryDraftSticker> = z.object({
+  slot: z.number().int(),
+  stickerId: z.string(),
+});
 
 const entryDraftDataSchema: z.ZodType<EntryDraftData> = z.object({
   title: z.string(),
   body: z.string(),
   date: z.number(),
   cover: entryDraftCoverSchema.nullable(),
-  tags: z.array(tagViewItemSchema),
+  tagIds: z.array(z.string()),
   stickers: z.array(entryDraftStickerSchema),
   excludedTagIds: z.array(z.string()),
 });

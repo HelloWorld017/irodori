@@ -2,8 +2,6 @@ import type { Services } from '.';
 import type { Executor, Repositories } from '@/repositories';
 import type { SearchTagsInput, Tag, TagViewItem } from '@/repositories/TagsRepository';
 
-const normalizeText = (value: string): string => value.trim().toLowerCase();
-
 const isUuidLike = (value: string): boolean =>
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 
@@ -131,97 +129,60 @@ export class TagsService {
 
   async search(input: SearchTagsInput): Promise<TagViewItem[]> {
     const parsedQuery = parseTagSearchQuery(input.query);
-    const [tags, categories] = await Promise.all([
-      this.repositories.tags.listTagsByNotebookId(input.notebookId, {
-        includeArchived: input.includeArchived,
-      }),
-      this.services.tagCategories.listByNotebookId(input.notebookId),
-    ]);
-
-    const categoriesById = new Map(categories.map(category => [category.id, category]));
-    const normalizedLabelQuery = parsedQuery.labelQuery
-      ? normalizeText(parsedQuery.labelQuery)
-      : null;
-    const normalizedCategoryLabelQuery = parsedQuery.categoryLabelQuery
-      ? normalizeText(parsedQuery.categoryLabelQuery)
-      : null;
-    const limit = input.limit === undefined ? 20 : Math.max(1, Math.min(input.limit, 100));
-
-    const filteredTags = tags.filter(tag => {
-      if (input.categoryId && tag.categoryId !== input.categoryId) {
-        return false;
-      }
-
-      if (parsedQuery.id) {
-        return tag.id === parsedQuery.id;
-      }
-
-      if (normalizedLabelQuery && !normalizeText(tag.label).includes(normalizedLabelQuery)) {
-        return false;
-      }
-
-      if (!normalizedCategoryLabelQuery) {
-        return true;
-      }
-
-      const category = categoriesById.get(tag.categoryId);
-      if (!category) {
-        return false;
-      }
-
-      return normalizeText(category.label).includes(normalizedCategoryLabelQuery);
+    const categoryIds = await this.resolveCategoryIds({
+      notebookId: input.notebookId,
+      categoryId: input.categoryId,
+      categoryLabelQuery: parsedQuery.categoryLabelQuery,
+      exact: false,
+      limit: input.limit,
     });
 
-    return filteredTags.slice(0, limit);
+    if (categoryIds !== null && categoryIds.length === 0) {
+      return [];
+    }
+
+    return this.repositories.tags.searchTags({
+      notebookId: input.notebookId,
+      id: parsedQuery.id ?? undefined,
+      categoryId: input.categoryId,
+      categoryIds: categoryIds ?? undefined,
+      query: parsedQuery.labelQuery ?? undefined,
+      queryMode: parsedQuery.id ? undefined : 'contains',
+      limit: input.limit,
+      includeArchived: input.includeArchived,
+    });
   }
 
   async resolveReference(input: ResolveTagReferenceInput): Promise<TagViewItem | null> {
-    const tags = await this.repositories.tags.listTagsByNotebookId(input.notebookId);
-    const filteredTags = input.categoryId
-      ? tags.filter(tag => tag.categoryId === input.categoryId)
-      : tags;
-    const normalizedReference = input.reference.trim();
+    const parsedReference = parseTagSearchQuery(input.reference);
+    const categoryIds = await this.resolveCategoryIds({
+      notebookId: input.notebookId,
+      categoryId: input.categoryId,
+      categoryLabelQuery: parsedReference.categoryLabelQuery,
+      exact: true,
+      limit: 2,
+    });
 
-    if (!normalizedReference) {
+    if (categoryIds !== null && categoryIds.length === 0) {
       return null;
     }
 
-    if (isUuidLike(normalizedReference)) {
-      return filteredTags.find(tag => tag.id === normalizedReference) ?? null;
-    }
-
-    const separatorIndex = normalizedReference.indexOf(':');
-    if (separatorIndex < 0) {
-      const exactMatches = filteredTags.filter(
-        tag => normalizeText(tag.label) === normalizeText(normalizedReference)
-      );
-
-      return exactMatches.length === 1 ? exactMatches[0] : null;
-    }
-
-    const categoryLabel = normalizedReference.slice(0, separatorIndex).trim();
-    const label = normalizedReference.slice(separatorIndex + 1).trim();
-
-    if (!categoryLabel || !label) {
+    if (!parsedReference.id && !parsedReference.labelQuery) {
       return null;
     }
 
-    const categories = await this.services.tagCategories.listByNotebookId(input.notebookId);
-    const categoryIds = new Set(
-      categories
-        .filter(category => normalizeText(category.label) === normalizeText(categoryLabel))
-        .map(category => category.id)
-    );
+    const matches = await this.repositories.tags.searchTags({
+      notebookId: input.notebookId,
+      id: parsedReference.id ?? undefined,
+      categoryId: input.categoryId,
+      categoryIds: categoryIds ?? undefined,
+      query: parsedReference.id ? undefined : (parsedReference.labelQuery ?? undefined),
+      queryMode: parsedReference.id ? undefined : 'exact',
+      limit: 2,
+      includeArchived: false,
+    });
 
-    if (categoryIds.size === 0) {
-      return null;
-    }
-
-    const exactMatches = filteredTags.filter(
-      tag => categoryIds.has(tag.categoryId) && normalizeText(tag.label) === normalizeText(label)
-    );
-
-    return exactMatches.length === 1 ? exactMatches[0] : null;
+    return matches.length === 1 ? matches[0] : null;
   }
 
   async create(input: CreateTagInput): Promise<TagViewItem> {
@@ -286,6 +247,37 @@ export class TagsService {
 
       await this.stageTag(trx, tag);
     });
+  }
+
+  private async resolveCategoryIds({
+    notebookId,
+    categoryId,
+    categoryLabelQuery,
+    exact,
+    limit,
+  }: {
+    notebookId: string;
+    categoryId?: string;
+    categoryLabelQuery: string | null;
+    exact: boolean;
+    limit?: number;
+  }): Promise<string[] | null> {
+    if (categoryId) {
+      return [categoryId];
+    }
+
+    if (!categoryLabelQuery) {
+      return null;
+    }
+
+    const categories = await this.services.tagCategories.search({
+      notebookId,
+      query: categoryLabelQuery,
+      exact,
+      limit,
+    });
+
+    return [...new Set(categories.map(category => category.id))];
   }
 
   private stageTag(trx: Executor, tag: Tag): Promise<void> {

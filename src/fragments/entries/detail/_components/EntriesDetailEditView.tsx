@@ -11,7 +11,6 @@ import { useEntriesNotebookId } from '../../_providers/EntriesProvider';
 import {
   useEntriesDetailDraft,
   useEntriesDetailIsDirty,
-  useEntriesDetailResolvedTagsById,
   useEntriesDetailSaveState,
   useSetEntriesDetailBody,
   useSetEntriesDetailCover,
@@ -69,7 +68,6 @@ export const EntriesDetailEditView = ({
   const draft = useEntriesDetailDraft();
   const isDirty = useEntriesDetailIsDirty();
   const { saveState, lastSavedAt } = useEntriesDetailSaveState();
-  const resolvedTagsById = useEntriesDetailResolvedTagsById();
   const setTitle = useSetEntriesDetailTitle();
   const setBody = useSetEntriesDetailBody();
   const setCover = useSetEntriesDetailCover();
@@ -218,7 +216,6 @@ export const EntriesDetailEditView = ({
 
           <InkMdeEditor
             notebookId={notebookId}
-            resolvedTagsById={resolvedTagsById}
             value={draft.body}
             placeholder="오늘 하루를 적어보세요"
             onChange={setBody}

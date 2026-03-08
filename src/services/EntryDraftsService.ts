@@ -12,8 +12,6 @@ import type {
 } from '@/repositories/EntryDraftsRepository';
 import type { EntrySticker } from '@/repositories/EntryStickersRepository';
 import type { EntryTag } from '@/repositories/EntryTagsRepository';
-import type { StickerViewItem } from '@/repositories/StickersRepository';
-import type { TagViewItem } from '@/repositories/TagsRepository';
 
 const MAX_ENTRY_STICKER_SLOT = 3;
 
@@ -30,23 +28,6 @@ const normalizeDraftCover = (cover: EntryDraftCover | null): EntryDraftCover | n
   };
 };
 
-const normalizeDraftTag = (tag: TagViewItem): TagViewItem => ({
-  ...tag,
-  id: tag.id.trim(),
-  categoryId: tag.categoryId.trim(),
-  icon: tag.icon?.trim() ?? null,
-  color: tag.color.trim(),
-});
-
-const normalizeDraftStickerViewItem = (sticker: StickerViewItem): StickerViewItem => ({
-  ...sticker,
-  id: sticker.id.trim(),
-  label: sticker.label.trim(),
-  emoji: sticker.emoji?.trim() ?? null,
-  assetId: sticker.assetId?.trim() ?? null,
-  blobDigest: sticker.blobDigest?.trim() ?? null,
-});
-
 const normalizeDraftSticker = (sticker: EntryDraftSticker): EntryDraftSticker | null => {
   if (
     !Number.isInteger(sticker.slot) ||
@@ -56,44 +37,18 @@ const normalizeDraftSticker = (sticker: EntryDraftSticker): EntryDraftSticker | 
     return null;
   }
 
-  if (sticker.kind === 'emoji') {
-    const emoji = sticker.emoji.trim();
-
-    if (!emoji) {
-      return null;
-    }
-
-    return {
-      slot: sticker.slot,
-      kind: 'emoji',
-      emoji,
-    };
+  const stickerId = sticker.stickerId.trim();
+  if (!stickerId) {
+    return null;
   }
 
   return {
     slot: sticker.slot,
-    kind: 'sticker',
-    sticker: normalizeDraftStickerViewItem(sticker.sticker),
+    stickerId,
   };
 };
 
-const toUniqueTags = (tags: TagViewItem[]): TagViewItem[] => {
-  const tagsById = new Map<string, TagViewItem>();
-
-  tags.forEach(tag => {
-    const normalizedTag = normalizeDraftTag(tag);
-
-    if (!normalizedTag.id) {
-      return;
-    }
-
-    tagsById.set(normalizedTag.id, normalizedTag);
-  });
-
-  return [...tagsById.values()];
-};
-
-const normalizeDraftExcludedTagIds = (tagIds: string[]): string[] => {
+const toUniqueTagIds = (tagIds: string[]): string[] => {
   const normalizedTagIds = new Set<string>();
 
   tagIds.forEach(tagId => {
@@ -142,9 +97,9 @@ export const normalizeEntryDraftData = (data: EntryDraftData): EntryDraftData =>
   body: data.body,
   date: normalizeDraftDate(data.date),
   cover: normalizeDraftCover(data.cover),
-  tags: toUniqueTags(data.tags),
-  excludedTagIds: normalizeDraftExcludedTagIds(data.excludedTagIds),
+  tagIds: toUniqueTagIds(data.tagIds),
   stickers: toUniqueStickers(data.stickers),
+  excludedTagIds: toUniqueTagIds(data.excludedTagIds),
 });
 
 export const toEntryDraftData = (entry: EntryDetailItem): EntryDraftData =>
@@ -159,21 +114,12 @@ export const toEntryDraftData = (entry: EntryDetailItem): EntryDraftData =>
             ...entry.coverAsset,
           }
         : null,
-    tags: entry.tags,
+    tagIds: entry.tags.map(tag => tag.id),
+    stickers: entry.stickers.map(({ slot, sticker }) => ({
+      slot,
+      stickerId: sticker.id,
+    })),
     excludedTagIds: [],
-    stickers: entry.stickers.map(({ slot, sticker }) =>
-      sticker.kind === 'emoji' && sticker.emoji
-        ? {
-            slot,
-            kind: 'emoji',
-            emoji: sticker.emoji,
-          }
-        : {
-            slot,
-            kind: 'sticker',
-            sticker,
-          }
-    ),
   });
 
 const assertEntryExists = (entry: Entry | null, id: string): Entry => {
@@ -250,7 +196,7 @@ export class EntryDraftsService {
       );
 
       await this.stageEntry(trx, entry);
-      await this.publishTags(trx, input.entryId, data.tags, now);
+      await this.publishTags(trx, input.entryId, data.tagIds, now);
       await this.publishStickers(trx, input.entryId, data.stickers, now);
 
       const deletedDraft = await this.repositories.entryDrafts.deleteEntryDraft(trx, {
@@ -267,16 +213,15 @@ export class EntryDraftsService {
   private async publishTags(
     trx: Executor,
     entryId: string,
-    tags: TagViewItem[],
+    tagIds: string[],
     now: number
   ): Promise<void> {
     const currentEntryTags = await this.repositories.entryTags.listEntryTagsByEntryId(entryId, trx);
     const currentTagIds = new Set(currentEntryTags.map(entryTag => entryTag.tagId));
-    const nextTagIds = tags.map(tag => tag.id);
-    const nextTagIdSet = new Set(nextTagIds);
+    const nextTagIdSet = new Set(tagIds);
     const changedEntryTags: EntryTag[] = [];
 
-    for (const tagId of nextTagIds) {
+    for (const tagId of tagIds) {
       if (currentTagIds.has(tagId)) {
         continue;
       }
@@ -328,18 +273,9 @@ export class EntryDraftsService {
     const changedEntryStickers: EntrySticker[] = [];
 
     for (const draftSticker of stickers) {
-      const stickerId =
-        draftSticker.kind === 'emoji'
-          ? (
-              await this.services.stickers.findOrCreateEmojiSticker(
-                { emoji: draftSticker.emoji },
-                trx
-              )
-            ).id
-          : draftSticker.sticker.id;
       const currentEntrySticker = currentEntryStickersBySlot.get(draftSticker.slot);
 
-      if (currentEntrySticker?.stickerId === stickerId) {
+      if (currentEntrySticker?.stickerId === draftSticker.stickerId) {
         currentEntryStickersBySlot.delete(draftSticker.slot);
         continue;
       }
@@ -347,7 +283,7 @@ export class EntryDraftsService {
       const nextEntrySticker = await this.repositories.entryStickers.upsertEntrySticker(trx, {
         entryId,
         slot: draftSticker.slot,
-        stickerId,
+        stickerId: draftSticker.stickerId,
         createdAt: currentEntrySticker?.createdAt ?? now,
         updatedAt: now,
       });

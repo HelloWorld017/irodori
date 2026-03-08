@@ -1,6 +1,6 @@
 import type { Services } from '.';
 import type { Executor, Repositories } from '@/repositories';
-import type { TagCategory } from '@/repositories/TagCategoriesRepository';
+import type { SearchTagCategoriesInput, TagCategory } from '@/repositories/TagCategoriesRepository';
 
 type CreateTagCategoryInput = {
   notebookId: string;
@@ -73,6 +73,10 @@ export class TagCategoriesService {
 
   listByNotebookId(notebookId: string): Promise<TagCategory[]> {
     return this.repositories.tagCategories.listTagCategoriesByNotebookId(notebookId);
+  }
+
+  search(input: SearchTagCategoriesInput): Promise<TagCategory[]> {
+    return this.repositories.tagCategories.searchTagCategories(input);
   }
 
   async create(input: CreateTagCategoryInput): Promise<TagCategory> {

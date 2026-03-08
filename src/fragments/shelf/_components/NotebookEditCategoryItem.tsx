@@ -4,7 +4,7 @@ import { ColorPicker } from '@/fragments/_components/ColorPicker';
 import { IconPicker } from '@/fragments/_components/IconPicker';
 import { Tag } from '@/fragments/_components/Tag';
 import { Toggle } from '@/fragments/_components/Toggle';
-import { DynamicIcon, IconPencil, IconTrash } from '@/fragments/_icons';
+import { IconPencil, IconTrash } from '@/fragments/_icons';
 import { useServices } from '@/fragments/_providers/DatabaseProvider';
 import { useShowToast } from '@/fragments/_providers/ToastProvider';
 import { queryKey } from '@/utils/queryKey';

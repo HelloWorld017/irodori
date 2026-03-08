@@ -44,13 +44,6 @@ export const EntriesSearch = ({
           tags,
         });
       }}
-      onSubmit={({ draft, tags }) => {
-        onCriteriaChange({
-          ...criteriaWithFallback,
-          draft,
-          tags,
-        });
-      }}
     >
       <IconCalendar className="text-base" />
     </TagsPicker>

@@ -39,6 +39,8 @@ export const StickerPicker = ({
     queryFn: () => services!.stickers.getById(selectedStickerId!),
   });
 
+  const displayedSticker = selectedStickerQuery.data ?? null;
+
   return (
     <Popover className={classes('relative', className)}>
       {({ close }) => (
@@ -58,10 +60,10 @@ export const StickerPicker = ({
           >
             {value?.kind === 'emoji' ? (
               <span className="text-[1.5rem] leading-none">{value.emoji}</span>
-            ) : selectedStickerQuery.data?.blobDigest ? (
+            ) : displayedSticker?.blobDigest ? (
               <AssetImage
-                blobDigest={selectedStickerQuery.data.blobDigest}
-                alt={selectedStickerQuery.data.label}
+                blobDigest={displayedSticker.blobDigest}
+                alt={displayedSticker.label}
                 className="h-full w-full"
                 imageClassName="h-full w-full object-cover"
               />

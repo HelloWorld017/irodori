@@ -77,8 +77,11 @@ export type UpdateTagInput = {
 
 export type SearchTagsInput = {
   notebookId: string;
+  id?: string;
   categoryId?: string;
+  categoryIds?: string[];
   query?: string;
+  queryMode?: 'contains' | 'exact';
   limit?: number;
   includeArchived?: boolean;
 };
@@ -160,6 +163,14 @@ const normalizeSearchLimit = (value: number | undefined): number => {
   }
 
   return Math.max(1, Math.min(value, 100));
+};
+
+const normalizeSearchCategoryIds = (categoryIds: string[] | undefined): string[] => {
+  if (!categoryIds) {
+    return [];
+  }
+
+  return [...new Set(categoryIds.map(categoryId => categoryId.trim()).filter(Boolean))];
 };
 
 export class TagsRepository implements SyncedRepository<TagSyncData, Executor>, Repository {
@@ -281,6 +292,11 @@ export class TagsRepository implements SyncedRepository<TagSyncData, Executor>, 
   async searchTags(input: SearchTagsInput): Promise<TagViewItem[]> {
     const searchQuery = normalizeSearchQuery(input.query);
     const limit = normalizeSearchLimit(input.limit);
+    const categoryIds = normalizeSearchCategoryIds(input.categoryIds);
+
+    if (categoryIds.length === 0 && input.categoryIds) {
+      return [];
+    }
 
     let query = this.db
       .selectFrom('tags')
@@ -295,8 +311,16 @@ export class TagsRepository implements SyncedRepository<TagSyncData, Executor>, 
       .orderBy('tag_categories.sort_order', 'asc')
       .orderBy('tags.created_at', 'desc');
 
+    if (input.id) {
+      query = query.where('tags.id', '=', input.id);
+    }
+
     if (input.categoryId) {
       query = query.where('tags.category_id', '=', input.categoryId);
+    }
+
+    if (categoryIds.length > 0) {
+      query = query.where('tags.category_id', 'in', categoryIds);
     }
 
     if (!input.includeArchived) {
@@ -304,7 +328,11 @@ export class TagsRepository implements SyncedRepository<TagSyncData, Executor>, 
     }
 
     if (searchQuery) {
-      query = query.where('tags.label', 'like', `%${searchQuery}%`);
+      query = query.where(
+        'tags.label',
+        input.queryMode === 'exact' ? '=' : 'like',
+        input.queryMode === 'exact' ? searchQuery : `%${searchQuery}%`
+      );
     }
 
     const rows = await query.limit(limit).execute();

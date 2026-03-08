@@ -93,6 +93,13 @@ export type DeleteTagCategoryInput = {
   deletedAt: number;
 };
 
+export type SearchTagCategoriesInput = {
+  notebookId: string;
+  query: string;
+  exact?: boolean;
+  limit?: number;
+};
+
 const toTagCategory = (row: Selectable<TagCategoriesTable>): TagCategory => ({
   id: row.id,
   notebookId: row.notebook_id,
@@ -141,6 +148,16 @@ const tagCategorySyncDataSchema: z.ZodType<TagCategorySyncData> = z.object({
 
 const parseTagCategorySyncData = (id: string, data: unknown): TagCategorySyncData =>
   parseSyncDataOrThrow(tagCategorySyncDataSchema, 'tag category', id, data);
+
+const normalizeSearchQuery = (query: string): string => query.trim();
+
+const normalizeSearchLimit = (value: number | undefined): number => {
+  if (value === undefined) {
+    return 20;
+  }
+
+  return Math.max(1, Math.min(value, 100));
+};
 
 export class TagCategoriesRepository
   implements SyncedRepository<TagCategorySyncData, Executor>, Repository
@@ -200,6 +217,30 @@ export class TagCategoriesRepository
       .where('deleted_at', 'is', null)
       .orderBy('sort_order', 'asc')
       .orderBy('created_at', 'desc')
+      .execute();
+
+    return rows.map(toTagCategory);
+  }
+
+  async searchTagCategories(input: SearchTagCategoriesInput): Promise<TagCategory[]> {
+    const query = normalizeSearchQuery(input.query);
+    if (!query) {
+      return [];
+    }
+
+    const limit = normalizeSearchLimit(input.limit);
+    const operator = input.exact ? '=' : 'like';
+    const value = input.exact ? query : `%${query}%`;
+
+    const rows = await this.db
+      .selectFrom('tag_categories')
+      .selectAll()
+      .where('notebook_id', '=', input.notebookId)
+      .where('deleted_at', 'is', null)
+      .where('label', operator, value)
+      .orderBy('sort_order', 'asc')
+      .orderBy('created_at', 'desc')
+      .limit(limit)
       .execute();
 
     return rows.map(toTagCategory);

@@ -1,13 +1,9 @@
 import { ink } from 'ink-mde';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { useServices } from '@/fragments/_providers/DatabaseProvider';
-import { buildInkMdeTagPlugins } from '../_utils/buildInkMdeTagPlugins';
-import type { TagViewItem } from '@/repositories/TagsRepository';
+import { useEffect, useRef, useState } from 'react';
+import { useTagPlugin } from '../_editor/useTagPlugin';
 import type { Instance, Options } from 'ink-mde';
 
 type InkMdeEditorProps = {
-  notebookId: string;
-  resolvedTagsById: Map<string, TagViewItem>;
   value: string;
   placeholder?: string;
   onChange: (value: string) => void;
@@ -40,69 +36,17 @@ const editorOptions: Options = {
 
 const css = String.raw;
 
-export const InkMdeEditor = ({
-  notebookId,
-  resolvedTagsById,
-  value,
-  placeholder = '',
-  onChange,
-}: InkMdeEditorProps) => {
-  const services = useServices();
+export const InkMdeEditor = ({ value, placeholder = '', onChange }: InkMdeEditorProps) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const editorRef = useRef<Instance | null>(null);
   const onChangeRef = useRef(onChange);
-  const knownTagsRef = useRef(new Map(resolvedTagsById));
   const [initialValue] = useState(value);
 
   useEffect(() => {
     onChangeRef.current = onChange;
   }, [onChange]);
 
-  useEffect(() => {
-    knownTagsRef.current = new Map([...knownTagsRef.current, ...resolvedTagsById]);
-  }, [resolvedTagsById]);
-
-  const getTagById = useCallback((tagId: string) => knownTagsRef.current.get(tagId) ?? null, []);
-  const rememberTag = useCallback((tag: TagViewItem) => {
-    knownTagsRef.current.set(tag.id, tag);
-  }, []);
-  const searchTags = useCallback(
-    async (query: string) => {
-      if (!services) {
-        return [];
-      }
-
-      const tags = await services.tags.search({
-        notebookId,
-        query,
-        limit: 8,
-      });
-      tags.forEach(tag => {
-        knownTagsRef.current.set(tag.id, tag);
-      });
-      return tags;
-    },
-    [notebookId, services]
-  );
-  const resolveTag = useCallback(
-    async (reference: string) => {
-      if (!services) {
-        return null;
-      }
-
-      const tag = await services.tags.resolveReference({
-        notebookId,
-        reference,
-      });
-
-      if (tag) {
-        knownTagsRef.current.set(tag.id, tag);
-      }
-
-      return tag;
-    },
-    [notebookId, services]
-  );
+  const tagPlugin = useTagPlugin();
 
   useEffect(() => {
     const target = containerRef.current;
@@ -113,14 +57,12 @@ export const InkMdeEditor = ({
 
     let disposed = false;
 
-    const plugins = buildInkMdeTagPlugins({ getTagById, rememberTag, searchTags, resolveTag });
-
     void Promise.resolve(
       ink(target, {
         ...editorOptions,
         doc: initialValue,
         placeholder,
-        plugins,
+        plugins: [tagPlugin],
         hooks: {
           ...editorOptions.hooks,
           afterUpdate: (doc: string) => {
@@ -143,7 +85,7 @@ export const InkMdeEditor = ({
       editorRef.current = null;
       target.replaceChildren();
     };
-  }, [getTagById, initialValue, placeholder, rememberTag, resolveTag, searchTags]);
+  }, [initialValue, placeholder, tagPlugin]);
 
   const stylesheet = css`
     .irodori__ink-mde-editor {

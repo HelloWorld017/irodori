@@ -1,10 +1,14 @@
+import { useQueries } from '@tanstack/react-query';
+import { create, keyResolver, windowScheduler } from '@yornaath/batshit';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { BATCH_WINDOW_MS } from '@/constants/batch';
 import { useServices } from '@/fragments/_providers/DatabaseProvider';
 import { useShowToast } from '@/fragments/_providers/ToastProvider';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { normalizeEntryDraftData } from '@/services/EntryDraftsService';
 import { buildContext } from '@/utils/context';
-import { extractTagReferenceIds } from '../_utils';
+import { batchKey, queryKey } from '@/utils/queryKey';
+import { extractTagReferenceIds } from '../_utils/tagReferences';
 import type { StickerPickerValue } from '@/fragments/_components/StickerPicker';
 import type { EntryDraftCover, EntryDraftData } from '@/repositories/EntryDraftsRepository';
 import type { TagViewItem } from '@/repositories/TagsRepository';
@@ -19,30 +23,37 @@ type EntriesDetailProviderProps = {
   children: ReactNode;
 };
 
+type DraftDocumentState = Pick<EntryDraftData, 'title' | 'body' | 'date' | 'cover'>;
+
 const AUTOSAVE_DELAY = 800;
 const CONTENT_TAG_SYNC_DELAY = 200;
 
-const toUniqueTags = (tags: TagViewItem[]): TagViewItem[] => {
-  const tagsById = new Map<string, TagViewItem>();
+const toUniqueIds = (values: string[]): string[] => [...new Set(values)];
 
-  tags.forEach(tag => {
-    tagsById.set(tag.id, tag);
+const buildDocumentState = (draft: EntryDraftData): DraftDocumentState => ({
+  title: draft.title,
+  body: draft.body,
+  date: draft.date,
+  cover: draft.cover,
+});
+
+const buildDraftData = ({
+  documentState,
+  tagIds,
+  stickers,
+  excludedTagIds,
+}: {
+  documentState: DraftDocumentState;
+  tagIds: string[];
+  stickers: EntryDraftData['stickers'];
+  excludedTagIds: string[];
+}): EntryDraftData =>
+  normalizeEntryDraftData({
+    ...documentState,
+    tagIds,
+    stickers,
+    excludedTagIds,
   });
-
-  return [...tagsById.values()];
-};
-
-const toUniqueTagIds = (tagIds: string[]): string[] => [...new Set(tagIds)];
-
-const buildInitialTagState = (initialDraft: EntryDraftData) => {
-  const contentTagIds = new Set(extractTagReferenceIds(initialDraft.body));
-
-  return {
-    manualTags: initialDraft.tags.filter(tag => !contentTagIds.has(tag.id)),
-    contentTags: initialDraft.tags.filter(tag => contentTagIds.has(tag.id)),
-    excludedTagIds: initialDraft.excludedTagIds.filter(tagId => contentTagIds.has(tagId)),
-  };
-};
 
 const [EntriesDetailProvider, useEntriesDetail] = buildContext(
   ({ entryId, initialDraft, initialSavedAt }: EntriesDetailProviderProps) => {
@@ -52,245 +63,210 @@ const [EntriesDetailProvider, useEntriesDetail] = buildContext(
       () => normalizeEntryDraftData(initialDraft),
       [initialDraft]
     );
-    const initialTagState = useMemo(
-      () => buildInitialTagState(normalizedInitialDraft),
+
+    const initialDocumentState = useMemo(
+      () => buildDocumentState(normalizedInitialDraft),
       [normalizedInitialDraft]
     );
-    const initialResolvedDraft = useMemo(
-      () =>
-        normalizeEntryDraftData({
-          ...normalizedInitialDraft,
-          tags: toUniqueTags([
-            ...initialTagState.manualTags,
-            ...initialTagState.contentTags.filter(
-              tag => !initialTagState.excludedTagIds.includes(tag.id)
-            ),
-          ]),
-          excludedTagIds: initialTagState.excludedTagIds,
-        }),
-      [initialTagState, normalizedInitialDraft]
+
+    const initialContentTagIds = useMemo(
+      () => extractTagReferenceIds(normalizedInitialDraft.body),
+      [normalizedInitialDraft.body]
     );
-    const [draftState, setDraftState] = useState(normalizedInitialDraft);
-    const [manualTags, setManualTags] = useState(initialTagState.manualTags);
-    const [contentTags, setContentTags] = useState(initialTagState.contentTags);
-    const [excludedTagIds, setExcludedTagIds] = useState(initialTagState.excludedTagIds);
+
+    const initialEffectiveTagIds = useMemo(
+      () =>
+        toUniqueIds([
+          ...normalizedInitialDraft.tagIds,
+          ...initialContentTagIds.filter(
+            tagId => !normalizedInitialDraft.excludedTagIds.includes(tagId)
+          ),
+        ]),
+      [initialContentTagIds, normalizedInitialDraft.excludedTagIds, normalizedInitialDraft.tagIds]
+    );
+
+    const initialSnapshot = useMemo(
+      () =>
+        JSON.stringify(
+          buildDraftData({
+            documentState: initialDocumentState,
+            tagIds: initialEffectiveTagIds,
+            stickers: normalizedInitialDraft.stickers,
+            excludedTagIds: normalizedInitialDraft.excludedTagIds,
+          })
+        ),
+      [
+        initialDocumentState,
+        initialEffectiveTagIds,
+        normalizedInitialDraft.excludedTagIds,
+        normalizedInitialDraft.stickers,
+      ]
+    );
+
+    const [documentState, setDocumentState] = useState(initialDocumentState);
+    const [metadataTagIds, setMetadataTagIds] = useState(normalizedInitialDraft.tagIds);
+    const [excludedTagIds, setExcludedTagIds] = useState(normalizedInitialDraft.excludedTagIds);
+    const [stickers, setStickers] = useState(normalizedInitialDraft.stickers);
     const [saveState, setSaveState] = useState<DraftSaveState>(initialSavedAt ? 'saved' : 'idle');
     const [lastSavedAt, setLastSavedAt] = useState<number | null>(initialSavedAt);
-    const savedSnapshotRef = useRef(JSON.stringify(initialResolvedDraft));
-    const debouncedBody = useDebouncedValue(draftState.body, { delay: CONTENT_TAG_SYNC_DELAY });
-    const debouncedContentTagIds = useMemo(
-      () => extractTagReferenceIds(debouncedBody),
-      [debouncedBody]
+    const savedSnapshotRef = useRef(initialSnapshot);
+    const debouncedBody = useDebouncedValue(documentState.body, { delay: CONTENT_TAG_SYNC_DELAY });
+
+    const contentTagIds = useMemo(() => extractTagReferenceIds(debouncedBody), [debouncedBody]);
+    const effectiveTagIds = useMemo(
+      () =>
+        toUniqueIds([
+          ...metadataTagIds,
+          ...contentTagIds.filter(tagId => !excludedTagIds.includes(tagId)),
+        ]),
+      [contentTagIds, excludedTagIds, metadataTagIds]
     );
 
-    const visibleContentTags = useMemo(
-      () => contentTags.filter(tag => !excludedTagIds.includes(tag.id)),
-      [contentTags, excludedTagIds]
+    const resolveTag = useMemo(
+      () =>
+        services &&
+        create<TagViewItem[], string, TagViewItem | null>({
+          name: batchKey('entriesDetail', 'tags'),
+          fetcher: async (tagIds: string[]) => services.tags.listByIds([...new Set(tagIds)]),
+          resolver: keyResolver('id'),
+          scheduler: windowScheduler(BATCH_WINDOW_MS),
+        }),
+      [services]
     );
+
+    const resolvedTagIds = useMemo(
+      () => toUniqueIds([...metadataTagIds, ...contentTagIds, ...excludedTagIds]),
+      [contentTagIds, excludedTagIds, metadataTagIds]
+    );
+
+    const resolvedTagsById = useQueries({
+      queries: resolveTag
+        ? resolvedTagIds.map(tagId => ({
+            enabled: true,
+            queryKey: queryKey('entries', 'detail-tag', tagId),
+            queryFn: () => resolveTag.fetch(tagId),
+          }))
+        : [],
+      combine: results =>
+        new Map(results.map((result, index) => [resolvedTagIds[index], result.data ?? null])),
+    });
+
+    const effectiveTags = useMemo<TagViewItem[]>(
+      () => effectiveTagIds.map(tagId => resolvedTagsById.get(tagId)).filter(x => !!x),
+      [effectiveTagIds, resolvedTagsById]
+    );
+
     const draft = useMemo(
       () =>
-        normalizeEntryDraftData({
-          ...draftState,
-          tags: toUniqueTags([...manualTags, ...visibleContentTags]),
+        buildDraftData({
+          documentState,
+          tagIds: effectiveTagIds,
+          stickers,
           excludedTagIds,
         }),
-      [draftState, excludedTagIds, manualTags, visibleContentTags]
+      [documentState, effectiveTagIds, excludedTagIds, stickers]
     );
-    const resolvedTagsById = useMemo(
-      () => new Map(toUniqueTags([...contentTags, ...manualTags]).map(tag => [tag.id, tag])),
-      [contentTags, manualTags]
-    );
+
     const draftSnapshot = useMemo(() => JSON.stringify(draft), [draft]);
     const isDirty = draftSnapshot !== savedSnapshotRef.current;
-    const contentTagIdsRef = useRef(new Set(contentTags.map(tag => tag.id)));
-    const draftTagsRef = useRef(draft.tags);
 
-    useEffect(() => {
-      contentTagIdsRef.current = new Set(contentTags.map(tag => tag.id));
-    }, [contentTags]);
-
-    useEffect(() => {
-      draftTagsRef.current = draft.tags;
-    }, [draft.tags]);
-
-    const updateDraft = useCallback((updater: (current: EntryDraftData) => EntryDraftData) => {
-      setDraftState(current => normalizeEntryDraftData(updater(current)));
-    }, []);
+    const updateDocumentState = useCallback(
+      (updater: (current: DraftDocumentState) => DraftDocumentState) => {
+        setDocumentState(current => updater(current));
+      },
+      []
+    );
 
     const setTitle = useCallback(
       (title: string) => {
-        updateDraft(current => ({
+        updateDocumentState(current => ({
           ...current,
           title,
         }));
       },
-      [updateDraft]
+      [updateDocumentState]
     );
 
     const setBody = useCallback(
       (body: string) => {
-        updateDraft(current => ({
+        updateDocumentState(current => ({
           ...current,
           body,
         }));
       },
-      [updateDraft]
+      [updateDocumentState]
     );
 
     const setDate = useCallback(
       (date: number) => {
-        updateDraft(current => ({
+        updateDocumentState(current => ({
           ...current,
           date,
         }));
       },
-      [updateDraft]
+      [updateDocumentState]
     );
 
     const setCover = useCallback(
       (cover: EntryDraftCover | null) => {
-        updateDraft(current => ({
+        updateDocumentState(current => ({
           ...current,
           cover,
         }));
       },
-      [updateDraft]
+      [updateDocumentState]
     );
 
-    const appendTag = useCallback((tag: TagViewItem) => {
-      setManualTags(current => toUniqueTags([...current, tag]));
-      setExcludedTagIds(current => current.filter(tagId => tagId !== tag.id));
+    const appendTag = useCallback((tagId: string) => {
+      setMetadataTagIds(current => toUniqueIds([...current, tagId]));
+      setExcludedTagIds(current => current.filter(currentTagId => currentTagId !== tagId));
     }, []);
 
-    const removeTag = useCallback((tagId: string) => {
-      setManualTags(current => current.filter(tag => tag.id !== tagId));
-      setExcludedTagIds(current => {
-        if (!contentTagIdsRef.current.has(tagId)) {
-          return current.filter(currentTagId => currentTagId !== tagId);
-        }
-
-        return toUniqueTagIds([...current, tagId]);
-      });
-    }, []);
-
-    const replaceTagsInCategory = useCallback(
-      (categoryId: string, nextTags: TagViewItem[]) => {
-        const currentCategoryTagIds = new Set(
-          draftTagsRef.current.filter(tag => tag.categoryId === categoryId).map(tag => tag.id)
-        );
-        const nextTagIds = new Set(nextTags.map(tag => tag.id));
-
-        currentCategoryTagIds.forEach(tagId => {
-          if (!nextTagIds.has(tagId)) {
-            removeTag(tagId);
-          }
-        });
-
-        nextTags.forEach(tag => {
-          if (!currentCategoryTagIds.has(tag.id)) {
-            appendTag(tag);
-          }
-        });
+    const removeTag = useCallback(
+      (tagId: string) => {
+        setMetadataTagIds(current => current.filter(currentTagId => currentTagId !== tagId));
+        setExcludedTagIds(current => [
+          ...current,
+          ...(contentTagIds.includes(tagId) ? [tagId] : []),
+        ]);
       },
-      [appendTag, removeTag]
+      [contentTagIds]
     );
 
     const setStickerValue = useCallback(
       async (slot: number, value: StickerPickerValue) => {
-        if (value === null) {
-          updateDraft(current => ({
-            ...current,
-            stickers: current.stickers.filter(sticker => sticker.slot !== slot),
-          }));
+        if (!value) {
+          setStickers(stickers => stickers.filter(sticker => sticker.slot !== slot));
           return;
         }
 
-        if (value.kind === 'emoji') {
-          updateDraft(current => ({
-            ...current,
-            stickers: [
-              ...current.stickers.filter(sticker => sticker.slot !== slot),
-              {
-                slot,
-                kind: 'emoji',
-                emoji: value.emoji,
-              },
-            ],
-          }));
+        if (value?.kind === 'emoji') {
+          const sticker = await services?.stickers
+            .findOrCreateEmojiSticker({ emoji: value.emoji })
+            .catch(error => {
+              console.error('Failed to prepare emoji sticker', error);
+              showToast({
+                kind: 'error',
+                message: '선택한 이모지를 스티커로 준비하지 못했어요. 잠시 후 다시 시도해 주세요.',
+              });
+
+              return null;
+            });
+
+          setStickers(stickers => [
+            ...stickers.filter(sticker => sticker.slot !== slot),
+            ...(sticker ? [{ slot, stickerId: sticker.id }] : []),
+          ]);
           return;
         }
 
-        if (!services) {
-          return;
-        }
-
-        const sticker = await services.stickers.getById(value.stickerId);
-
-        if (!sticker) {
-          showToast({
-            kind: 'error',
-            message: '선택한 스티커를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.',
-          });
-          return;
-        }
-
-        updateDraft(current => ({
-          ...current,
-          stickers: [
-            ...current.stickers.filter(currentSticker => currentSticker.slot !== slot),
-            {
-              slot,
-              kind: 'sticker',
-              sticker,
-            },
-          ],
-        }));
+        setStickers(stickers => [
+          ...stickers.filter(sticker => sticker.slot !== slot),
+          { slot, stickerId: value.stickerId },
+        ]);
       },
-      [services, showToast, updateDraft]
+      [services, showToast]
     );
-
-    useEffect(() => {
-      setExcludedTagIds(current => current.filter(tagId => debouncedContentTagIds.includes(tagId)));
-
-      if (!services) {
-        setContentTags(current => current.filter(tag => debouncedContentTagIds.includes(tag.id)));
-        return;
-      }
-
-      if (debouncedContentTagIds.length === 0) {
-        setContentTags([]);
-        return;
-      }
-
-      let cancelled = false;
-
-      void services.tags
-        .listByIds(debouncedContentTagIds)
-        .then(tags => {
-          if (cancelled) {
-            return;
-          }
-
-          const tagsById = new Map(tags.map(tag => [tag.id, tag]));
-          setContentTags(
-            debouncedContentTagIds.flatMap(tagId => {
-              const tag = tagsById.get(tagId);
-              return tag ? [tag] : [];
-            })
-          );
-        })
-        .catch(error => {
-          if (cancelled) {
-            return;
-          }
-
-          console.error('Failed to resolve content tags', error);
-        });
-
-      return () => {
-        cancelled = true;
-      };
-    }, [debouncedContentTagIds, services]);
 
     useEffect(() => {
       if (!services || !isDirty) {
@@ -329,15 +305,17 @@ const [EntriesDetailProvider, useEntriesDetail] = buildContext(
     return {
       draft,
       isDirty,
-      resolvedTagsById,
       saveState: saveStateWithLastSavedAt,
+
+      effectiveTags,
+      resolvedTagsById,
+
       setTitle,
       setBody,
       setDate,
       setCover,
       appendTag,
       removeTag,
-      replaceTagsInCategory,
       setStickerValue,
     };
   }
@@ -347,16 +325,17 @@ export { EntriesDetailProvider };
 
 export const useEntriesDetailDraft = () => useEntriesDetail(state => state.draft);
 export const useEntriesDetailIsDirty = () => useEntriesDetail(state => state.isDirty);
+export const useEntriesDetailSaveState = () => useEntriesDetail(state => state.saveState);
+
+export const useEntriesDetailEffectiveTags = () => useEntriesDetail(state => state.effectiveTags);
 export const useEntriesDetailResolvedTagsById = () =>
   useEntriesDetail(state => state.resolvedTagsById);
-export const useEntriesDetailSaveState = () => useEntriesDetail(state => state.saveState);
+
 export const useSetEntriesDetailTitle = () => useEntriesDetail(state => state.setTitle);
 export const useSetEntriesDetailBody = () => useEntriesDetail(state => state.setBody);
 export const useSetEntriesDetailDate = () => useEntriesDetail(state => state.setDate);
 export const useSetEntriesDetailCover = () => useEntriesDetail(state => state.setCover);
 export const useAppendEntriesDetailTag = () => useEntriesDetail(state => state.appendTag);
 export const useRemoveEntriesDetailTag = () => useEntriesDetail(state => state.removeTag);
-export const useReplaceEntriesDetailTagsInCategory = () =>
-  useEntriesDetail(state => state.replaceTagsInCategory);
 export const useSetEntriesDetailStickerValue = () =>
   useEntriesDetail(state => state.setStickerValue);

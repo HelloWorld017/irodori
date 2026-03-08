@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { AssetImage } from '@/fragments/_components/AssetImage';
 import { Tag } from '@/fragments/_components/Tag';
 import { formatDate } from '@/utils/date';
-import { buildEntryMetadataTagSections } from '../_utils';
+import { buildEntryMetadataTagSections } from '../_utils/buildEntryMetadataTagSections';
 import type { TagCategory } from '@/repositories/TagCategoriesRepository';
 import type { EntryDetailItem } from '@/services/EntriesService';
 

@@ -1,21 +1,23 @@
-import {
-  type Completion,
-  type CompletionContext,
-  type CompletionResult,
-} from '@codemirror/autocomplete';
 import { EditorView, MatchDecorator, ViewPlugin, Decoration, WidgetType } from '@codemirror/view';
-import { createRoot, type Root } from 'react-dom/client';
+import { useEffect, useMemo, useRef } from 'react';
+import { createRoot } from 'react-dom/client';
 import { Tag } from '@/fragments/_components/Tag';
+import { useServices } from '@/fragments/_providers/DatabaseProvider';
+import { useLatestCallback } from '@/hooks/useLatestCallback';
+import { useEntriesNotebookId } from '../../_providers/EntriesProvider';
+import { useEntriesDetailResolvedTagsById } from '../_providers/EntriesDetailProvider';
 import {
   TAG_REFERENCE_CONTENT_REGEX,
   TAG_REFERENCE_INPUT_REGEX,
   isTagReferenceId,
   toTagReference,
-} from './tagReferences';
+} from '../_utils/tagReferences';
 import type { TagViewItem } from '@/repositories/TagsRepository';
+import type { Completion, CompletionContext, CompletionResult } from '@codemirror/autocomplete';
 import type { Options } from 'ink-mde';
+import type { Root } from 'react-dom/client';
 
-type BuildInkMdeTagPluginsInput = {
+type TagPluginProps = {
   getTagById: (tagId: string) => TagViewItem | null;
   rememberTag: (tag: TagViewItem) => void;
   searchTags: (query: string) => Promise<TagViewItem[]>;
@@ -71,7 +73,7 @@ class TagChipWidget extends WidgetType {
   }
 }
 
-const tagReferenceDecorator = (getTagById: BuildInkMdeTagPluginsInput['getTagById']) =>
+const tagReferenceDecorator = (getTagById: TagPluginProps['getTagById']) =>
   new MatchDecorator({
     regexp: new RegExp(TAG_REFERENCE_CONTENT_REGEX.source, 'g'),
     decoration: match => {
@@ -100,7 +102,7 @@ const buildCompletionResult = ({
   context: CompletionContext;
   query: string;
   tags: TagViewItem[];
-  rememberTag: BuildInkMdeTagPluginsInput['rememberTag'];
+  rememberTag: TagPluginProps['rememberTag'];
 }): CompletionResult | null => {
   if (tags.length === 0) {
     return null;
@@ -142,7 +144,7 @@ const buildCompletionResult = ({
 };
 
 const buildCompletionSource =
-  ({ searchTags, rememberTag }: Pick<BuildInkMdeTagPluginsInput, 'searchTags' | 'rememberTag'>) =>
+  ({ searchTags, rememberTag }: Pick<TagPluginProps, 'searchTags' | 'rememberTag'>) =>
   async (context: CompletionContext): Promise<CompletionResult | null> => {
     const match = context.matchBefore(TAG_REFERENCE_INPUT_REGEX);
 
@@ -154,6 +156,7 @@ const buildCompletionSource =
       .slice(2)
       .replace(/\]\]?$/, '')
       .trim();
+
     if (!query) {
       return null;
     }
@@ -169,7 +172,7 @@ const buildCompletionSource =
 const buildAutoResolveExtension = ({
   resolveTag,
   rememberTag,
-}: Pick<BuildInkMdeTagPluginsInput, 'resolveTag' | 'rememberTag'>) => {
+}: Pick<TagPluginProps, 'resolveTag' | 'rememberTag'>) => {
   const resolvedReferenceCache = new Map<string, Promise<TagViewItem | null>>();
 
   const resolveReference = (reference: string) => {
@@ -256,12 +259,12 @@ const buildAutoResolveExtension = ({
   });
 };
 
-export const buildInkMdeTagPlugins = ({
+const createTagPlugin = ({
   getTagById,
   rememberTag,
   searchTags,
   resolveTag,
-}: BuildInkMdeTagPluginsInput): NonNullable<Options['plugins']> => {
+}: TagPluginProps): NonNullable<Options['plugins']> => {
   const decorator = tagReferenceDecorator(getTagById);
   const tagDecorations = ViewPlugin.fromClass(
     class {
@@ -296,4 +299,50 @@ export const buildInkMdeTagPlugins = ({
       ],
     },
   ];
+};
+
+export const useTagPlugin = () => {
+  const services = useServices();
+  const notebookId = useEntriesNotebookId();
+  const resolvedTagsById = useEntriesDetailResolvedTagsById();
+  const knownTagsRef = useRef(new Map(resolvedTagsById));
+
+  useEffect(() => {
+    knownTagsRef.current = new Map([...knownTagsRef.current, ...resolvedTagsById]);
+  }, [resolvedTagsById]);
+
+  const getTagById = useLatestCallback((tagId: string) => knownTagsRef.current.get(tagId) ?? null);
+  const rememberTag = useLatestCallback((tag: TagViewItem) => {
+    knownTagsRef.current.set(tag.id, tag);
+  });
+
+  const searchTags = useLatestCallback(async (query: string) => {
+    if (!services) {
+      return [];
+    }
+
+    return services.tags.search({
+      notebookId,
+      query,
+      limit: 8,
+    });
+  });
+
+  const resolveTag = useLatestCallback(async (reference: string) => {
+    if (!services) {
+      return null;
+    }
+
+    return services.tags.resolveReference({
+      notebookId,
+      reference,
+    });
+  });
+
+  const tagPlugin = useMemo(
+    () => createTagPlugin({ getTagById, rememberTag, searchTags, resolveTag }),
+    [getTagById, rememberTag, searchTags, resolveTag]
+  );
+
+  return tagPlugin;
 };

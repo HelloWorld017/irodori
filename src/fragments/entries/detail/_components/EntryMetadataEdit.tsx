@@ -1,17 +1,17 @@
 import { useMemo, useState } from 'react';
-import { StickerPicker, type StickerPickerValue } from '@/fragments/_components/StickerPicker';
+import { StickerPicker } from '@/fragments/_components/StickerPicker';
 import { Tag } from '@/fragments/_components/Tag';
 import { TagsPicker } from '../../_components/TagsPicker';
 import { useEntriesNotebookId } from '../../_providers/EntriesProvider';
 import {
+  useAppendEntriesDetailTag,
   useEntriesDetailDraft,
+  useEntriesDetailEffectiveTags,
   useRemoveEntriesDetailTag,
-  useReplaceEntriesDetailTagsInCategory,
   useSetEntriesDetailDate,
   useSetEntriesDetailStickerValue,
 } from '../_providers/EntriesDetailProvider';
-import { buildEntryMetadataTagSections } from '../_utils';
-import type { EntryDraftSticker } from '@/repositories/EntryDraftsRepository';
+import { buildEntryMetadataTagSections } from '../_utils/buildEntryMetadataTagSections';
 import type { TagCategory } from '@/repositories/TagCategoriesRepository';
 
 const toDateInputValue = (value: number): string => {
@@ -30,17 +30,13 @@ const toDateFromInputValue = (value: string, fallback: number): number => {
   return Number.isFinite(nextValue) ? nextValue : fallback;
 };
 
-const toStickerPickerValue = (sticker: EntryDraftSticker | null): StickerPickerValue => {
-  if (!sticker) {
-    return null;
-  }
-
-  if (sticker.kind === 'emoji') {
-    return { kind: 'emoji', emoji: sticker.emoji };
-  }
-
-  return { kind: 'sticker', stickerId: sticker.sticker.id };
-};
+const toStickerPickerValue = (stickerId: string | null) =>
+  stickerId
+    ? {
+        kind: 'sticker' as const,
+        stickerId,
+      }
+    : null;
 
 const buildCategoryRuleLabel = ({
   minSelect,
@@ -65,15 +61,16 @@ const buildCategoryRuleLabel = ({
 export const EntryMetadataEdit = ({ tagCategories }: { tagCategories: TagCategory[] }) => {
   const notebookId = useEntriesNotebookId();
   const draft = useEntriesDetailDraft();
+  const effectiveTags = useEntriesDetailEffectiveTags();
   const setDate = useSetEntriesDetailDate();
+  const appendTag = useAppendEntriesDetailTag();
   const removeTag = useRemoveEntriesDetailTag();
-  const replaceTagsInCategory = useReplaceEntriesDetailTagsInCategory();
   const setStickerValue = useSetEntriesDetailStickerValue();
-  const [tagsDraftByCategory, setTagsDraftByCategory] = useState<Record<string, string>>({});
 
+  const [tagsDraftByCategory, setTagsDraftByCategory] = useState<Record<string, string>>({});
   const tagSections = useMemo(
-    () => buildEntryMetadataTagSections({ categories: tagCategories, tags: draft.tags }),
-    [draft.tags, tagCategories]
+    () => buildEntryMetadataTagSections({ categories: tagCategories, tags: effectiveTags }),
+    [effectiveTags, tagCategories]
   );
 
   return (
@@ -119,20 +116,14 @@ export const EntryMetadataEdit = ({ tagCategories }: { tagCategories: TagCategor
               }}
               allowCreateTag
               placeholder="태그 검색"
-              onChange={({ draft: nextDraftInput, tags }) => {
+              onChange={({ draft: nextDraftInput }) => {
                 setTagsDraftByCategory(current => ({
                   ...current,
                   [category.id]: nextDraftInput,
                 }));
-                replaceTagsInCategory(category.id, tags);
               }}
-              onSubmit={({ draft: nextDraftInput, tags }) => {
-                setTagsDraftByCategory(current => ({
-                  ...current,
-                  [category.id]: nextDraftInput,
-                }));
-                replaceTagsInCategory(category.id, tags);
-              }}
+              onAddTag={tagId => appendTag(tagId)}
+              onRemoveTag={tagId => removeTag(tagId)}
             />
           </section>
         );
@@ -149,14 +140,12 @@ export const EntryMetadataEdit = ({ tagCategories }: { tagCategories: TagCategor
         <div className="flex gap-3">
           {Array.from({ length: 3 }, (_, index) => {
             const slot = index + 1;
-            const value = toStickerPickerValue(
-              draft.stickers.find(sticker => sticker.slot === slot) ?? null
-            );
+            const stickerRef = draft.stickers.find(sticker => sticker.slot === slot) ?? null;
 
             return (
               <StickerPicker
                 key={slot}
-                value={value}
+                value={toStickerPickerValue(stickerRef?.stickerId ?? null)}
                 onChange={nextValue => void setStickerValue(slot, nextValue)}
               />
             );
