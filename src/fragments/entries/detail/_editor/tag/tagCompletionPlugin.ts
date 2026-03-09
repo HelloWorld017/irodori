@@ -35,7 +35,6 @@ const buildCompletionResult = ({
     filter: false,
     options: tags.map<Completion>(tag => ({
       label: tag.label,
-      detail: tag.id,
       type: 'text',
       boost: isTagReferenceId(query) && tag.id === query ? 100 : undefined,
       section: '태그',
