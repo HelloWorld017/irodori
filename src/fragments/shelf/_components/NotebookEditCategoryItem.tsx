@@ -5,6 +5,7 @@ import { IconPicker } from '@/fragments/_components/IconPicker';
 import { Tag } from '@/fragments/_components/Tag';
 import { Toggle } from '@/fragments/_components/Toggle';
 import { IconPencil, IconTrash } from '@/fragments/_icons';
+import { useConfirm } from '@/fragments/_providers/AlertProvider';
 import { useServices } from '@/fragments/_providers/DatabaseProvider';
 import { useShowToast } from '@/fragments/_providers/ToastProvider';
 import { anyParams, queryKey } from '@/utils/queryKey';
@@ -31,6 +32,7 @@ export const NotebookEditCategoryItem = ({
   categoriesQueryKey,
 }: NotebookEditCategoryItemProps) => {
   const services = useServices();
+  const confirm = useConfirm();
   const showToast = useShowToast();
   const queryClient = useQueryClient();
 
@@ -212,12 +214,20 @@ export const NotebookEditCategoryItem = ({
     );
   };
 
-  const handleRemove = () => {
+  const handleRemove = async () => {
     if (isPending) {
       return;
     }
 
-    if (!window.confirm(`"${category.label}" 카테고리를 삭제할까요?`)) {
+    const accepted = await confirm({
+      title: '카테고리를 삭제할까요?',
+      message: `"${category.label}" 카테고리는 되돌릴 수 없어요.`,
+      kind: 'warning',
+      confirmLabel: '삭제하기',
+      cancelLabel: '취소',
+    });
+
+    if (!accepted) {
       return;
     }
 
@@ -391,7 +401,9 @@ export const NotebookEditCategoryItem = ({
         </button>
         <button
           type="button"
-          onClick={handleRemove}
+          onClick={() => {
+            void handleRemove();
+          }}
           disabled={isPending}
           className="flex items-center gap-1 rounded-lg bg-base-background px-3 py-1.5 text-sm
             font-medium text-secondary transition hover:bg-elevated-background hover:text-primary

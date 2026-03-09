@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react';
 import { buildContext } from '@/utils/context';
 import type { Notebook } from '@/repositories/NotebooksRepository';
 
-export type ShelfModalKind = 'create' | 'edit' | 'delete' | null;
+export type ShelfModalKind = 'create' | 'edit' | null;
 
 const [ShelfProvider, useShelf] = buildContext(() => {
   const [modalKind, setModalKind] = useState<ShelfModalKind>(null);
@@ -18,11 +18,6 @@ const [ShelfProvider, useShelf] = buildContext(() => {
     setModalKind('edit');
   }, []);
 
-  const openDeleteModal = useCallback((notebook: Notebook) => {
-    setSelectedNotebook(notebook);
-    setModalKind('delete');
-  }, []);
-
   const closeModal = useCallback(() => {
     setModalKind(null);
     setSelectedNotebook(null);
@@ -33,7 +28,6 @@ const [ShelfProvider, useShelf] = buildContext(() => {
     selectedNotebook,
     openCreateModal,
     openEditModal,
-    openDeleteModal,
     closeModal,
   };
 });
@@ -43,5 +37,4 @@ export const useShelfModalKind = () => useShelf(state => state.modalKind);
 export const useSelectedNotebook = () => useShelf(state => state.selectedNotebook);
 export const useOpenCreateModal = () => useShelf(state => state.openCreateModal);
 export const useOpenEditModal = () => useShelf(state => state.openEditModal);
-export const useOpenDeleteModal = () => useShelf(state => state.openDeleteModal);
 export const useCloseShelfModal = () => useShelf(state => state.closeModal);

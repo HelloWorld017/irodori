@@ -1,11 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence } from 'motion/react';
 import { COLORS_PRESET } from '@/constants/colors';
+import { useConfirm } from '@/fragments/_providers/AlertProvider';
 import { useServices } from '@/fragments/_providers/DatabaseProvider';
 import { useShowToast } from '@/fragments/_providers/ToastProvider';
 import { useEnsureDatabase } from '@/hooks/useEnsureDatabase';
 import { queryKey } from '@/utils/queryKey';
-import { DeleteNotebookModal } from './_components/DeleteNotebookModal';
 import { NotebookEdit } from './_components/NotebookEdit';
 import { NotebookList } from './_components/NotebookList';
 import { ShelfHeader } from './_components/ShelfHeader';
@@ -13,7 +13,6 @@ import {
   ShelfProvider,
   useCloseShelfModal,
   useOpenCreateModal,
-  useOpenDeleteModal,
   useOpenEditModal,
   useSelectedNotebook,
   useShelfModalKind,
@@ -21,6 +20,7 @@ import {
 
 const ShelfView = () => {
   const services = useServices();
+  const confirm = useConfirm();
   const showToast = useShowToast();
   const queryClient = useQueryClient();
   useEnsureDatabase();
@@ -29,7 +29,6 @@ const ShelfView = () => {
   const selectedNotebook = useSelectedNotebook();
   const openCreateModal = useOpenCreateModal();
   const openEditModal = useOpenEditModal();
-  const openDeleteModal = useOpenDeleteModal();
   const closeModal = useCloseShelfModal();
 
   const notebooksQueryKey = queryKey('shelf', 'notebooks');
@@ -105,6 +104,26 @@ const ShelfView = () => {
 
   const notebooks = notebooksQuery.data ?? [];
 
+  const handleDeleteNotebook = async (notebook: (typeof notebooks)[number]) => {
+    if (removeNotebookMutation.isPending) {
+      return;
+    }
+
+    const accepted = await confirm({
+      title: '일기장을 삭제할까요?',
+      message: `${notebook.title} 일기장은 목록에서 사라지며, 되돌릴 수 없어요.`,
+      kind: 'warning',
+      confirmLabel: '삭제하기',
+      cancelLabel: '취소',
+    });
+
+    if (!accepted) {
+      return;
+    }
+
+    removeNotebookMutation.mutate({ id: notebook.id });
+  };
+
   return (
     <main
       className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-12 px-5 py-8 sm:px-8
@@ -137,7 +156,9 @@ const ShelfView = () => {
           notebooks={notebooks}
           onCreateNotebook={openCreateModal}
           onEditNotebook={openEditModal}
-          onDeleteNotebook={openDeleteModal}
+          onDeleteNotebook={notebook => {
+            void handleDeleteNotebook(notebook);
+          }}
         />
       ) : null}
 
@@ -173,17 +194,6 @@ const ShelfView = () => {
           />
         ) : null}
       </AnimatePresence>
-
-      {modalKind === 'delete' && selectedNotebook ? (
-        <DeleteNotebookModal
-          notebook={selectedNotebook}
-          pending={removeNotebookMutation.isPending}
-          onClose={handleCloseModal}
-          onConfirm={() => {
-            removeNotebookMutation.mutate({ id: selectedNotebook.id });
-          }}
-        />
-      ) : null}
     </main>
   );
 };
