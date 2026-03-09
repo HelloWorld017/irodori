@@ -1,4 +1,4 @@
-import { useQueries } from '@tanstack/react-query';
+import { useQueries, useQueryClient } from '@tanstack/react-query';
 import { create, keyResolver, windowScheduler } from '@yornaath/batshit';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { BATCH_WINDOW_MS } from '@/constants/batch';
@@ -268,6 +268,7 @@ const [EntriesDetailProvider, useEntriesDetail] = buildContext(
       [services, showToast]
     );
 
+    const queryClient = useQueryClient();
     useEffect(() => {
       if (!services || !isDirty) {
         return;
@@ -279,6 +280,7 @@ const [EntriesDetailProvider, useEntriesDetail] = buildContext(
         void services.entryDrafts
           .save({ entryId, data: draft })
           .then(savedDraft => {
+            queryClient.removeQueries({ queryKey: queryKey('entries', 'draft', entryId) });
             savedSnapshotRef.current = JSON.stringify(normalizeEntryDraftData(savedDraft.data));
             setLastSavedAt(savedDraft.updatedAt);
             setSaveState('saved');
@@ -292,7 +294,7 @@ const [EntriesDetailProvider, useEntriesDetail] = buildContext(
       return () => {
         window.clearTimeout(timeoutId);
       };
-    }, [draft, entryId, isDirty, services]);
+    }, [draft, entryId, isDirty, queryClient, services]);
 
     const saveStateWithLastSavedAt = useMemo(
       () => ({

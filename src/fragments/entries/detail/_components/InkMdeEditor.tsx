@@ -1,8 +1,8 @@
-import { autocompletion } from '@codemirror/autocomplete';
-import { drawSelection } from '@codemirror/view';
+import { acceptCompletion, autocompletion } from '@codemirror/autocomplete';
+import { drawSelection, keymap } from '@codemirror/view';
 import { ink } from 'ink-mde';
 import { useEffect, useRef, useState } from 'react';
-import { useTagPlugin } from '../_editor/useTagPlugin';
+import { useTagPlugin } from '../_editor/tag';
 import type { Instance, Options } from 'ink-mde';
 
 type InkMdeEditorProps = {
@@ -59,7 +59,7 @@ export const InkMdeEditor = ({ value, placeholder = '', onChange }: InkMdeEditor
 
     let disposed = false;
 
-    const plugins = [...tagPlugin, { type: 'default', value: drawSelection() }] as const;
+    const plugins = [...tagPlugin] as const;
     const completion = autocompletion({
       defaultKeymap: true,
       icons: false,
@@ -75,7 +75,15 @@ export const InkMdeEditor = ({ value, placeholder = '', onChange }: InkMdeEditor
         ...editorOptions,
         doc: initialValue,
         placeholder,
-        plugins: [...plugins, { type: 'default', value: completion }],
+        plugins: [
+          ...plugins,
+          { type: 'default', value: completion },
+          { type: 'default', value: drawSelection() },
+          {
+            type: 'default',
+            value: [keymap.of([{ key: 'Tab', run: acceptCompletion }])],
+          },
+        ],
         hooks: {
           ...editorOptions.hooks,
           afterUpdate: (doc: string) => {

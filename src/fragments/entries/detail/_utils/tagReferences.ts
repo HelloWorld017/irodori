@@ -1,6 +1,7 @@
 export const TAG_REFERENCE_CONTENT_REGEX = /\[\[([^\r\n\\\]]+)\]\]/g;
-
 export const TAG_REFERENCE_INPUT_REGEX = /\[\[([^\r\n\\\]]*)\]?\]?$/;
+export const TAG_REFERENCE_ID_REGEX =
+  /\[\[([0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})\]\]/g;
 
 export const isTagReferenceId = (value: string): boolean =>
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
