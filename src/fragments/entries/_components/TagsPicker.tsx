@@ -63,9 +63,8 @@ export const TagsPicker = ({
   const queryClient = useQueryClient();
 
   const tagCategoriesQuery = useQuery({
-    enabled: services !== null,
     queryKey: queryKey('common', 'search-tag-categories', notebookId),
-    queryFn: () => services!.tagCategories.listByNotebookId(notebookId),
+    queryFn: () => services.tagCategories.listByNotebookId(notebookId),
   });
 
   const selectedCategory = useMemo(() => {
@@ -82,7 +81,7 @@ export const TagsPicker = ({
   const debouncedDraft = useDebouncedValue(trimmedDraft, { delay: 200 });
 
   const tagsQuery = useQuery({
-    enabled: services !== null && debouncedDraft !== '',
+    enabled: debouncedDraft !== '',
     queryKey: queryKey('common', 'search-tags', {
       notebookId,
       categoryId: tagsCategoryId ?? null,
@@ -90,7 +89,7 @@ export const TagsPicker = ({
       limit: searchLimit,
     }),
     queryFn: () =>
-      services!.tags.search({
+      services.tags.search({
         notebookId,
         categoryId: tagsCategoryId,
         query: debouncedDraft,

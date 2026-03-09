@@ -34,9 +34,9 @@ export const StickerPicker = ({
   const [tab, setTab] = useState<StickerPickerTab>(value?.kind === 'emoji' ? 'emoji' : 'sticker');
   const selectedStickerId = value?.kind === 'sticker' ? value.stickerId : null;
   const selectedStickerQuery = useQuery({
-    enabled: services !== null && selectedStickerId !== null,
+    enabled: selectedStickerId !== null,
     queryKey: queryKey('common', 'sticker-picker-selected', selectedStickerId),
-    queryFn: () => services!.stickers.getById(selectedStickerId!),
+    queryFn: () => services.stickers.getById(selectedStickerId!),
   });
 
   const displayedSticker = selectedStickerQuery.data ?? null;

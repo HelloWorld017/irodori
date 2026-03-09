@@ -76,9 +76,8 @@ export const StickerPickerStickerPanel = ({
   const scrollElementRef = useRef<HTMLDivElement>(null);
 
   const stickersQuery = useQuery({
-    enabled: services !== null,
     queryKey: queryKey('common', 'sticker-picker-list'),
-    queryFn: () => services!.stickers.list(),
+    queryFn: () => services.stickers.list(),
   });
 
   const uploadedStickers = useMemo(

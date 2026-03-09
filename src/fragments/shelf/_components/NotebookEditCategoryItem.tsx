@@ -54,9 +54,8 @@ export const NotebookEditCategoryItem = ({
   });
 
   const categoryTagsQuery = useQuery({
-    enabled: services !== null,
     queryKey: categoryTagsQueryKey,
-    queryFn: () => services!.tags.listByCategoryId(category.id),
+    queryFn: () => services.tags.listByCategoryId(category.id),
   });
 
   const invalidateQueries = async () => {

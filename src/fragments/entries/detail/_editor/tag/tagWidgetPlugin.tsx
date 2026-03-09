@@ -1,7 +1,7 @@
 import { Decoration, MatchDecorator, ViewPlugin, WidgetType, EditorView } from '@codemirror/view';
 import { createRoot } from 'react-dom/client';
 import { Tag } from '@/fragments/_components/Tag';
-import { TAG_REFERENCE_CONTENT_REGEX, TAG_REFERENCE_ID_REGEX } from '../../_utils/tagReferences';
+import { TAG_REFERENCE_ID_REGEX } from '../../_utils/tagReferences';
 import type { TagPluginProps } from './types';
 import type { TagViewItem } from '@/repositories/TagsRepository';
 import type { Options as InkMde } from 'ink-mde';

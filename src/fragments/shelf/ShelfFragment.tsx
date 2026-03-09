@@ -33,7 +33,6 @@ const ShelfView = () => {
 
   const notebooksQuery = useQuery({
     queryKey: queryKey('shelf', 'notebooks'),
-    enabled: services !== null,
     queryFn: () => services.notebooks.list(),
   });
 

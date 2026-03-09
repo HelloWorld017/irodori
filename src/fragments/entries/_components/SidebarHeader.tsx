@@ -18,7 +18,7 @@ export const SidebarHeader = () => {
   const { data: entriesCount } = useQuery({
     enabled: !!services,
     queryKey: queryKey('entries', 'count', notebookId),
-    queryFn: () => services!.entries.countByNotebookId(notebookId),
+    queryFn: () => services.entries.countByNotebookId(notebookId),
   });
 
   const createEntryMutation = useMutation({

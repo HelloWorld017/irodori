@@ -33,10 +33,10 @@ export const EntriesFinder = ({ className }: { className?: string }) => {
 
   const entriesQuery = useInfiniteQuery({
     queryKey: queryKey('entries', 'list', listQueryParams),
-    enabled: services !== null && Boolean(notebookId),
+    enabled: Boolean(notebookId),
     initialPageParam: undefined as EntryListCursor | undefined,
     queryFn: ({ pageParam }) =>
-      services!.entries.list({
+      services.entries.list({
         notebookId,
         cursor: pageParam,
         limit: ENTRY_PAGE_SIZE,

@@ -10,7 +10,7 @@ const [EntriesProvider, useEntries] = buildContext(() => {
   const { data: notebook } = useQuery({
     enabled: !!services,
     queryKey: queryKey('entries', 'notebook', notebookId),
-    queryFn: () => services!.notebooks.getById(notebookId),
+    queryFn: () => services.notebooks.getById(notebookId),
   });
 
   return {

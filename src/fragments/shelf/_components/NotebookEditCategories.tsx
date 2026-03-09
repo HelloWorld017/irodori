@@ -61,9 +61,8 @@ export const NotebookEditCategories = ({ notebookId, className }: NotebookEditCa
   });
 
   const categoriesQuery = useQuery({
-    enabled: services !== null,
     queryKey: categoriesQueryKey,
-    queryFn: () => services!.tagCategories.listByNotebookId(notebookId),
+    queryFn: () => services.tagCategories.listByNotebookId(notebookId),
   });
 
   return (
