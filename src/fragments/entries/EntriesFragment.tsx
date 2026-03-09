@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import { useLocation } from 'wouter';
-import { useEnsureDatabase } from '@/hooks/useEnsureDatabase';
 import { buildRoute } from '@/utils/route';
 import { Sidebar } from './_components/Sidebar';
 import { EntriesProvider, useEntriesNotebook } from './_providers/EntriesProvider';
@@ -16,8 +15,6 @@ const EntriesView = ({ children }: { children: ReactNode }) => {
       navigate(buildRoute('shelf'));
     }
   }, [navigate, notebook]);
-
-  useEnsureDatabase();
 
   return (
     <div className="flex min-h-screen w-full">

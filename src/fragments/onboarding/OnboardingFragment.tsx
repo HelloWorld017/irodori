@@ -3,17 +3,15 @@ import { match } from 'ts-pattern';
 import { useLocation } from 'wouter';
 import ImageLogo from '@/assets/images/logo.svg';
 import { useInitializeDatabase, useRepositories } from '@/fragments/_providers/DatabaseProvider';
-import { useShowToast } from '@/fragments/_providers/ToastProvider';
 import { buildRoute } from '@/utils/route';
 
-type OnboardingStatus = 'idle' | 'starting' | 'ready' | 'error';
+type OnboardingStatus = 'idle' | 'starting' | 'ready';
 
 const getButtonLabel = (status: OnboardingStatus): string =>
   match(status)
     .with('idle', () => '시작하기')
     .with('starting', () => '시작 중...')
     .with('ready', () => '준비 완료')
-    .with('error', () => '다시 시도하기')
     .exhaustive();
 
 type OnboardingViewProps = {
@@ -74,7 +72,6 @@ const OnboardingView = ({ buttonLabel, disabled, onStart }: OnboardingViewProps)
 export const OnboardingFragment = () => {
   const [status, setStatus] = useState<OnboardingStatus>('idle');
   const initialize = useInitializeDatabase();
-  const showToast = useShowToast();
 
   const handleStart = useCallback(async () => {
     if (status === 'starting' || status === 'ready') {
@@ -82,19 +79,9 @@ export const OnboardingFragment = () => {
     }
 
     setStatus('starting');
-
-    try {
-      const success = await initialize();
-      setStatus(success ? 'ready' : 'idle');
-    } catch (e) {
-      console.error('Failed to initialize database', e);
-      setStatus('error');
-      showToast({
-        kind: 'error',
-        message: '초기화 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요.',
-      });
-    }
-  }, [initialize, showToast, status]);
+    const success = await initialize();
+    setStatus(success ? 'ready' : 'idle');
+  }, [initialize, status]);
 
   const repositories = useRepositories();
   const [, navigate] = useLocation();

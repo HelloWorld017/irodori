@@ -1,10 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence } from 'motion/react';
 import { COLORS_PRESET } from '@/constants/colors';
+import { AsyncBoundary } from '@/fragments/_components/AsyncBoundary';
 import { useConfirm } from '@/fragments/_providers/AlertProvider';
 import { useServices } from '@/fragments/_providers/DatabaseProvider';
 import { useShowToast } from '@/fragments/_providers/ToastProvider';
-import { useEnsureDatabase } from '@/hooks/useEnsureDatabase';
 import { queryKey } from '@/utils/queryKey';
 import { NotebookEdit } from './_components/NotebookEdit';
 import { NotebookList } from './_components/NotebookList';
@@ -17,13 +17,13 @@ import {
   useSelectedNotebook,
   useShelfModalKind,
 } from './_providers/ShelfProvider';
+import type { Notebook } from '@/repositories/NotebooksRepository';
 
 const ShelfView = () => {
   const services = useServices();
   const confirm = useConfirm();
   const showToast = useShowToast();
   const queryClient = useQueryClient();
-  useEnsureDatabase();
 
   const modalKind = useShelfModalKind();
   const selectedNotebook = useSelectedNotebook();
@@ -31,18 +31,18 @@ const ShelfView = () => {
   const openEditModal = useOpenEditModal();
   const closeModal = useCloseShelfModal();
 
-  const notebooksQueryKey = queryKey('shelf', 'notebooks');
   const notebooksQuery = useQuery({
-    queryKey: notebooksQueryKey,
+    queryKey: queryKey('shelf', 'notebooks'),
     enabled: services !== null,
-    queryFn: () => services!.notebooks.list(),
+    queryFn: () => services.notebooks.list(),
   });
 
-  const invalidateNotebooks = () => queryClient.invalidateQueries({ queryKey: notebooksQueryKey });
+  const invalidateNotebooks = () =>
+    queryClient.invalidateQueries({ queryKey: queryKey('shelf', 'notebooks') });
 
   const createNotebookMutation = useMutation({
     mutationFn: (input: { title: string; description: string; color: string }) =>
-      services!.notebooks.create(input),
+      services.notebooks.create(input),
     onSuccess: async () => {
       await invalidateNotebooks();
       closeModal();
@@ -59,7 +59,7 @@ const ShelfView = () => {
 
   const updateNotebookMutation = useMutation({
     mutationFn: (input: { id: string; title: string; description: string; color: string }) =>
-      services!.notebooks.update(input),
+      services.notebooks.update(input),
     onSuccess: async () => {
       await invalidateNotebooks();
       closeModal();
@@ -75,7 +75,7 @@ const ShelfView = () => {
   });
 
   const removeNotebookMutation = useMutation({
-    mutationFn: (input: { id: string }) => services!.notebooks.remove(input),
+    mutationFn: (input: { id: string }) => services.notebooks.remove(input),
     onSuccess: async () => {
       await invalidateNotebooks();
       closeModal();
@@ -102,9 +102,7 @@ const ShelfView = () => {
     closeModal();
   };
 
-  const notebooks = notebooksQuery.data ?? [];
-
-  const handleDeleteNotebook = async (notebook: (typeof notebooks)[number]) => {
+  const handleDeleteNotebook = async (notebook: Notebook) => {
     if (removeNotebookMutation.isPending) {
       return;
     }
@@ -129,38 +127,22 @@ const ShelfView = () => {
       className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-12 px-5 py-8 sm:px-8
         sm:py-10"
     >
-      <ShelfHeader notebookCount={notebooks.length} />
-
-      {notebooksQuery.isPending ? (
-        <section className="rounded-2xl bg-elevated-background p-6 ring-1 ring-line">
-          <p className="text-sm font-medium text-secondary">일기장을 불러오는 중이에요...</p>
-        </section>
-      ) : null}
-
-      {notebooksQuery.isError ? (
-        <section className="rounded-2xl bg-elevated-background p-6 ring-1 ring-line">
-          <p className="text-sm text-secondary">일기장을 불러오지 못했어요.</p>
-          <button
-            type="button"
-            onClick={() => notebooksQuery.refetch()}
-            className="mt-4 rounded-lg bg-highlight px-3 py-2 text-sm font-medium
-              text-highlight-foreground transition hover:bg-highlight-hover"
-          >
-            다시 시도
-          </button>
-        </section>
-      ) : null}
-
-      {notebooksQuery.isSuccess ? (
-        <NotebookList
-          notebooks={notebooks}
-          onCreateNotebook={openCreateModal}
-          onEditNotebook={openEditModal}
-          onDeleteNotebook={notebook => {
-            void handleDeleteNotebook(notebook);
-          }}
-        />
-      ) : null}
+      <ShelfHeader notebookCount={notebooksQuery.data?.length ?? null} />
+      <AsyncBoundary>
+        {{
+          default: (
+            <NotebookList
+              onCreateNotebook={openCreateModal}
+              onEditNotebook={openEditModal}
+              onDeleteNotebook={notebook => {
+                void handleDeleteNotebook(notebook);
+              }}
+            />
+          ),
+          loading: '일기장을 불러오는 중이에요...',
+          error: '일기장을 불러오지 못했어요.',
+        }}
+      </AsyncBoundary>
 
       <AnimatePresence>
         {modalKind === 'create' ? (

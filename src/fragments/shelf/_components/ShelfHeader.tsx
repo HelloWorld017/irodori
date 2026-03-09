@@ -1,5 +1,5 @@
 type ShelfHeaderProps = {
-  notebookCount: number;
+  notebookCount: number | null;
 };
 
 export const ShelfHeader = ({ notebookCount }: ShelfHeaderProps) => (
@@ -10,9 +10,10 @@ export const ShelfHeader = ({ notebookCount }: ShelfHeaderProps) => (
           내 일기장
         </h1>
         <p className="text-sm text-secondary sm:text-[0.95rem]">
-          {notebookCount > 0
-            ? `${notebookCount}개의 일기장이 정리되어 있어요.`
-            : '첫 일기장을 만들고 오늘의 기록을 시작해 보세요.'}
+          {notebookCount !== null &&
+            (notebookCount > 0
+              ? `${notebookCount}개의 일기장이 정리되어 있어요.`
+              : '첫 일기장을 만들고 오늘의 기록을 시작해 보세요.')}
         </p>
       </div>
     </div>

@@ -1,7 +1,9 @@
-import { useQuery } from '@tanstack/react-query';
+import { useSuspenseQuery } from '@tanstack/react-query';
+import { AsyncBoundary } from '@/fragments/_components/AsyncBoundary';
 import { useServices } from '@/fragments/_providers/DatabaseProvider';
 import { useRouteParams } from '@/hooks/useRouteParams';
 import { toEntryDraftData } from '@/services/EntryDraftsService';
+import { createTaggedError, isTaggedError } from '@/utils/error';
 import { queryKey } from '@/utils/queryKey';
 import { EntriesDetailEditView } from './_components/EntriesDetailEditView';
 import { EntriesDetailReadView } from './_components/EntriesDetailReadView';
@@ -12,37 +14,25 @@ type EntriesDetailFragmentProps = {
   edit?: boolean;
 };
 
-export const EntriesDetailFragment = ({ edit = false }: EntriesDetailFragmentProps) => {
+const EntriesDetailFragmentInner = ({ edit = false }: EntriesDetailFragmentProps) => {
   const services = useServices();
   const { entryId } = useRouteParams<'entriesDetail'>();
 
-  const detailQuery = useQuery({
-    enabled: services !== null,
+  const detailQuery = useSuspenseQuery({
     queryKey: queryKey('entriesDetail', 'detail', entryId),
-    queryFn: () => services!.entries.getDetailById(entryId),
+    queryFn: () => services.entries.getDetailById(entryId),
   });
 
-  const draftQuery = useQuery({
-    enabled: edit && services !== null,
+  const draftQuery = useSuspenseQuery({
     queryKey: queryKey('entriesDetail', 'draft', entryId),
-    queryFn: () => services!.entryDrafts.getByEntryId(entryId),
+    queryFn: () => services.entryDrafts.getByEntryId(entryId),
   });
 
-  const tagCategoriesQuery = useQuery({
-    enabled: services !== null && detailQuery.data !== undefined && detailQuery.data !== null,
+  const tagCategoriesQuery = useSuspenseQuery({
     queryKey: queryKey('common', 'search-tag-categories', detailQuery.data?.notebookId ?? null),
-    queryFn: () => services!.tagCategories.listByNotebookId(detailQuery.data!.notebookId),
+    queryFn: () =>
+      detailQuery.data && services.tagCategories.listByNotebookId(detailQuery.data.notebookId),
   });
-
-  if (detailQuery.isPending || tagCategoriesQuery.isPending || (edit && draftQuery.isPending)) {
-    return (
-      <section
-        className="rounded-[1.75rem] border border-line bg-elevated-background p-8 shadow-elevated"
-      >
-        <p className="text-sm text-secondary">일기를 불러오는 중이에요...</p>
-      </section>
-    );
-  }
 
   if (detailQuery.isError || tagCategoriesQuery.isError || (edit && draftQuery.isError)) {
     return (
@@ -57,13 +47,7 @@ export const EntriesDetailFragment = ({ edit = false }: EntriesDetailFragmentPro
   }
 
   if (!detailQuery.data) {
-    return (
-      <section
-        className="rounded-[1.75rem] border border-line bg-elevated-background p-8 shadow-elevated"
-      >
-        <p className="text-sm text-secondary">선택한 일기를 찾지 못했어요.</p>
-      </section>
-    );
+    throw createTaggedError('entry-not-found', '선택한 일기를 찾지 못했어요.');
   }
 
   const tagCategories: TagCategory[] | null = tagCategoriesQuery.data ?? [];
@@ -84,3 +68,16 @@ export const EntriesDetailFragment = ({ edit = false }: EntriesDetailFragmentPro
     </EntriesDetailProvider>
   );
 };
+
+export const EntriesDetailFragment = (props: EntriesDetailFragmentProps) => (
+  <AsyncBoundary>
+    {{
+      error: ({ error }) =>
+        isTaggedError('entry-not-found', error)
+          ? error.message
+          : '일기를 불러오지 못했어요. 잠시 후 다시 시도해주세요.',
+      loading: '일기를 불러오는 중이에요...',
+      default: <EntriesDetailFragmentInner {...props} />,
+    }}
+  </AsyncBoundary>
+);

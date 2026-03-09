@@ -1,4 +1,4 @@
-import { useQueries, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useSuspenseQueries } from '@tanstack/react-query';
 import { create, keyResolver, windowScheduler } from '@yornaath/batshit';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { BATCH_WINDOW_MS } from '@/constants/batch';
@@ -139,7 +139,7 @@ const [EntriesDetailProvider, useEntriesDetail] = buildContext(
       [contentTagIds, excludedTagIds, metadataTagIds]
     );
 
-    const resolvedTagsById = useQueries({
+    const resolvedTagsById = useSuspenseQueries({
       queries: resolveTag
         ? resolvedTagIds.map(tagId => ({
             enabled: true,

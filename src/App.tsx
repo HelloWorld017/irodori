@@ -16,11 +16,11 @@ import { EntriesDetailFragment } from './fragments/entries/detail';
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <DatabaseProvider>
-      <StickerProvider>
-        <AlertProvider>
-          <ToastProvider>
+  <ToastProvider>
+    <AlertProvider>
+      <QueryClientProvider client={queryClient}>
+        <DatabaseProvider>
+          <StickerProvider>
             <Switch>
               <Route path={getRoute('onboarding')} component={OnboardingFragment} />
               <Route path={getRoute('shelf')} component={ShelfFragment} />
@@ -38,13 +38,13 @@ const App = () => (
                 </EntriesFragment>
               </Route>
             </Switch>
-            <ToastList />
-            <AlertList />
-          </ToastProvider>
-        </AlertProvider>
-      </StickerProvider>
-    </DatabaseProvider>
-  </QueryClientProvider>
+          </StickerProvider>
+        </DatabaseProvider>
+      </QueryClientProvider>
+      <ToastList />
+      <AlertList />
+    </AlertProvider>
+  </ToastProvider>
 );
 
 export default App;
