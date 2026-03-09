@@ -18,19 +18,19 @@ export const EntriesDetailFragment = ({ edit = false }: EntriesDetailFragmentPro
 
   const detailQuery = useQuery({
     enabled: services !== null,
-    queryKey: queryKey('entries', 'detail', entryId),
+    queryKey: queryKey('entriesDetail', 'detail', entryId),
     queryFn: () => services!.entries.getDetailById(entryId),
   });
 
   const draftQuery = useQuery({
     enabled: edit && services !== null,
-    queryKey: queryKey('entries', 'draft', entryId),
+    queryKey: queryKey('entriesDetail', 'draft', entryId),
     queryFn: () => services!.entryDrafts.getByEntryId(entryId),
   });
 
   const tagCategoriesQuery = useQuery({
     enabled: services !== null && detailQuery.data !== undefined && detailQuery.data !== null,
-    queryKey: queryKey('entries', 'search-tag-categories', detailQuery.data?.notebookId ?? null),
+    queryKey: queryKey('common', 'search-tag-categories', detailQuery.data?.notebookId ?? null),
     queryFn: () => services!.tagCategories.listByNotebookId(detailQuery.data!.notebookId),
   });
 

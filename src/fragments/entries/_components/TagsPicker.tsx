@@ -64,7 +64,7 @@ export const TagsPicker = ({
 
   const tagCategoriesQuery = useQuery({
     enabled: services !== null,
-    queryKey: queryKey('entries', 'search-tag-categories', notebookId),
+    queryKey: queryKey('common', 'search-tag-categories', notebookId),
     queryFn: () => services!.tagCategories.listByNotebookId(notebookId),
   });
 
@@ -83,7 +83,7 @@ export const TagsPicker = ({
 
   const tagsQuery = useQuery({
     enabled: services !== null && debouncedDraft !== '',
-    queryKey: queryKey('entries', 'search-tags', {
+    queryKey: queryKey('common', 'search-tags', {
       notebookId,
       categoryId: tagsCategoryId ?? null,
       query: debouncedDraft,
@@ -136,7 +136,7 @@ export const TagsPicker = ({
     },
     onSuccess: async createdTag => {
       await queryClient.invalidateQueries({
-        queryKey: queryKey('entries', 'search-tags', anyParams),
+        queryKey: queryKey('common', 'search-tags', anyParams),
       });
 
       onAddTag?.(createdTag.id);

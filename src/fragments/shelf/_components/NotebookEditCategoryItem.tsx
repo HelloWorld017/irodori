@@ -62,10 +62,10 @@ export const NotebookEditCategoryItem = ({
       queryClient.invalidateQueries({ queryKey: categoriesQueryKey }),
       queryClient.invalidateQueries({ queryKey: categoryTagsQueryKey }),
       queryClient.invalidateQueries({
-        queryKey: queryKey('entries', 'search-tag-categories', notebookId),
+        queryKey: queryKey('common', 'search-tag-categories', notebookId),
       }),
       queryClient.invalidateQueries({
-        queryKey: queryKey('entries', 'search-tags', anyParams),
+        queryKey: queryKey('common', 'search-tags', anyParams),
       }),
     ]);
   };

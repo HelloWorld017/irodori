@@ -84,10 +84,10 @@ export const EntriesDetailEditView = ({
     },
     onSuccess: async () => {
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: queryKey('entries', 'detail', entry.id) }),
+        queryClient.invalidateQueries({ queryKey: queryKey('entriesDetail', 'detail', entry.id) }),
         queryClient.invalidateQueries({ queryKey: queryKey('entries', 'list', anyParams) }),
       ]);
-      queryClient.removeQueries({ queryKey: queryKey('entries', 'draft', entry.id) });
+      queryClient.removeQueries({ queryKey: queryKey('entriesDetail', 'draft', entry.id) });
       showToast({ kind: 'success', message: '일기를 저장했어요.' });
       navigate(buildRoute('entriesDetail', { notebookId, entryId: entry.id }), { replace: true });
     },

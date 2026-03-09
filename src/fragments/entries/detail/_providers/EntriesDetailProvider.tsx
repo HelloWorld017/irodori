@@ -126,7 +126,7 @@ const [EntriesDetailProvider, useEntriesDetail] = buildContext(
       () =>
         services &&
         create<TagViewItem[], string, TagViewItem | null>({
-          name: batchKey('entriesDetail', 'tags'),
+          name: batchKey('common', 'tags'),
           fetcher: async (tagIds: string[]) => services.tags.listByIds([...new Set(tagIds)]),
           resolver: keyResolver('id'),
           scheduler: windowScheduler(BATCH_WINDOW_MS),
@@ -143,7 +143,7 @@ const [EntriesDetailProvider, useEntriesDetail] = buildContext(
       queries: resolveTag
         ? resolvedTagIds.map(tagId => ({
             enabled: true,
-            queryKey: queryKey('entries', 'detail-tag', tagId),
+            queryKey: queryKey('entriesDetail', 'detail-tag', tagId),
             queryFn: () => resolveTag.fetch(tagId),
           }))
         : [],
@@ -280,7 +280,7 @@ const [EntriesDetailProvider, useEntriesDetail] = buildContext(
         void services.entryDrafts
           .save({ entryId, data: draft })
           .then(savedDraft => {
-            queryClient.removeQueries({ queryKey: queryKey('entries', 'draft', entryId) });
+            queryClient.removeQueries({ queryKey: queryKey('entriesDetail', 'draft', entryId) });
             savedSnapshotRef.current = JSON.stringify(normalizeEntryDraftData(savedDraft.data));
             setLastSavedAt(savedDraft.updatedAt);
             setSaveState('saved');

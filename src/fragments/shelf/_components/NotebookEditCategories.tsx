@@ -22,10 +22,10 @@ export const NotebookEditCategories = ({ notebookId, className }: NotebookEditCa
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: categoriesQueryKey }),
       queryClient.invalidateQueries({
-        queryKey: queryKey('entries', 'search-tag-categories', notebookId),
+        queryKey: queryKey('common', 'search-tag-categories', notebookId),
       }),
       queryClient.invalidateQueries({
-        queryKey: queryKey('entries', 'search-tags', anyParams),
+        queryKey: queryKey('common', 'search-tags', anyParams),
       }),
     ]);
   };
