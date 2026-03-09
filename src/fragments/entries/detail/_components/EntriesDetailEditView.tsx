@@ -5,7 +5,7 @@ import { useClxDB, useRepositories, useServices } from '@/fragments/_providers/D
 import { useShowToast } from '@/fragments/_providers/ToastProvider';
 import { uploadAssetImage } from '@/utils/assets';
 import { formatDate } from '@/utils/date';
-import { queryKey } from '@/utils/queryKey';
+import { anyParams, queryKey } from '@/utils/queryKey';
 import { buildRoute } from '@/utils/route';
 import { useEntriesNotebookId } from '../../_providers/EntriesProvider';
 import {
@@ -85,7 +85,7 @@ export const EntriesDetailEditView = ({
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: queryKey('entries', 'detail', entry.id) }),
-        queryClient.invalidateQueries({ queryKey: queryKey('entries', 'list') }),
+        queryClient.invalidateQueries({ queryKey: queryKey('entries', 'list', anyParams) }),
       ]);
       queryClient.removeQueries({ queryKey: queryKey('entries', 'draft', entry.id) });
       showToast({ kind: 'success', message: '일기를 저장했어요.' });

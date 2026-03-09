@@ -4,7 +4,7 @@ import { IconPlus } from '@/fragments/_icons';
 import { useServices } from '@/fragments/_providers/DatabaseProvider';
 import { useShowToast } from '@/fragments/_providers/ToastProvider';
 import { classes } from '@/utils/classes';
-import { queryKey } from '@/utils/queryKey';
+import { anyParams, queryKey } from '@/utils/queryKey';
 import { NotebookEditCategoryItem } from './NotebookEditCategoryItem';
 
 type NotebookEditCategoriesProps = {
@@ -24,7 +24,9 @@ export const NotebookEditCategories = ({ notebookId, className }: NotebookEditCa
       queryClient.invalidateQueries({
         queryKey: queryKey('entries', 'search-tag-categories', notebookId),
       }),
-      queryClient.invalidateQueries({ queryKey: queryKey('entries', 'search-tags') }),
+      queryClient.invalidateQueries({
+        queryKey: queryKey('entries', 'search-tags', anyParams),
+      }),
     ]);
   };
 

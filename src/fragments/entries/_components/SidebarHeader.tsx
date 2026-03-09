@@ -3,7 +3,7 @@ import { useLocation } from 'wouter';
 import { IconChevronLeft, IconSquarePlus } from '@/fragments/_icons';
 import { useServices } from '@/fragments/_providers/DatabaseProvider';
 import { useShowToast } from '@/fragments/_providers/ToastProvider';
-import { queryKey } from '@/utils/queryKey';
+import { anyParams, queryKey } from '@/utils/queryKey';
 import { buildRoute } from '@/utils/route';
 import { useEntriesNotebook, useEntriesNotebookId } from '../_providers/EntriesProvider';
 
@@ -34,7 +34,7 @@ export const SidebarHeader = () => {
     },
     onSuccess: async entry => {
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: queryKey('entries', 'list') }),
+        queryClient.invalidateQueries({ queryKey: queryKey('entries', 'list', anyParams) }),
         queryClient.invalidateQueries({ queryKey: queryKey('entries', 'count', notebookId) }),
       ]);
 

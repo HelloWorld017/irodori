@@ -7,7 +7,7 @@ import { Toggle } from '@/fragments/_components/Toggle';
 import { IconPencil, IconTrash } from '@/fragments/_icons';
 import { useServices } from '@/fragments/_providers/DatabaseProvider';
 import { useShowToast } from '@/fragments/_providers/ToastProvider';
-import { queryKey } from '@/utils/queryKey';
+import { anyParams, queryKey } from '@/utils/queryKey';
 import type { TagCategory } from '@/repositories/TagCategoriesRepository';
 
 type NotebookEditCategoryItemProps = {
@@ -64,7 +64,9 @@ export const NotebookEditCategoryItem = ({
       queryClient.invalidateQueries({
         queryKey: queryKey('entries', 'search-tag-categories', notebookId),
       }),
-      queryClient.invalidateQueries({ queryKey: queryKey('entries', 'search-tags') }),
+      queryClient.invalidateQueries({
+        queryKey: queryKey('entries', 'search-tags', anyParams),
+      }),
     ]);
   };
 

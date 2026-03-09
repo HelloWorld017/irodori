@@ -6,7 +6,7 @@ import { useServices } from '@/fragments/_providers/DatabaseProvider';
 import { useShowToast } from '@/fragments/_providers/ToastProvider';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { classes } from '@/utils/classes';
-import { queryKey } from '@/utils/queryKey';
+import { anyParams, queryKey } from '@/utils/queryKey';
 import type { EntriesSearchCriteria } from '../_types/EntriesSearchCriteria';
 import type { TagViewItem as TagModel } from '@/repositories/TagsRepository';
 import type { ReactNode } from 'react';
@@ -135,7 +135,10 @@ export const TagsPicker = ({
       });
     },
     onSuccess: async createdTag => {
-      await queryClient.invalidateQueries({ queryKey: queryKey('entries', 'search-tags') });
+      await queryClient.invalidateQueries({
+        queryKey: queryKey('entries', 'search-tags', anyParams),
+      });
+
       onAddTag?.(createdTag.id);
       onChange?.({
         draft: '',
