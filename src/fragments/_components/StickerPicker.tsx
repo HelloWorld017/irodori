@@ -1,4 +1,4 @@
-import { Popover, PopoverButton, PopoverPanel } from '@headlessui/react';
+import { Popover, PopoverButton } from '@headlessui/react';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { StickerPickerStickerPanel } from '@/fragments/_components/StickerPickerStickerPanel';
@@ -7,6 +7,7 @@ import { useServices } from '@/fragments/_providers/DatabaseProvider';
 import { StickerProvider } from '@/fragments/_providers/StickerProvider';
 import { classes } from '@/utils/classes';
 import { queryKey } from '@/utils/queryKey';
+import { AnimatedPopoverPanel } from './AnimatedPopoverPanel';
 import { AssetImage } from './AssetImage';
 import { StickerPickerEmojiPanel } from './StickerPickerEmojiPanel';
 
@@ -44,7 +45,7 @@ export const StickerPicker = ({
 
   return (
     <Popover className={classes('relative', className)}>
-      {({ close }) => (
+      {({ open, close }) => (
         <>
           <PopoverButton
             type="button"
@@ -71,7 +72,8 @@ export const StickerPicker = ({
             ) : null}
           </PopoverButton>
 
-          <PopoverPanel
+          <AnimatedPopoverPanel
+            open={open}
             anchor={{ to: 'bottom start', gap: 8 }}
             className="z-40 w-95 max-w-[calc(100vw-2rem)] rounded-2xl border border-line
               bg-base-background p-3 shadow-elevated"
@@ -156,7 +158,7 @@ export const StickerPicker = ({
                 />
               )}
             </StickerProvider>
-          </PopoverPanel>
+          </AnimatedPopoverPanel>
         </>
       )}
     </Popover>

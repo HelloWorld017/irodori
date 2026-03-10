@@ -1,6 +1,7 @@
-import { Popover, PopoverButton, PopoverPanel } from '@headlessui/react';
+import { Popover, PopoverButton } from '@headlessui/react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRef, useState } from 'react';
+import { AnimatedPopoverPanel } from '@/fragments/_components/AnimatedPopoverPanel';
 import { IconChevronDown } from '@/fragments/_icons';
 import { useConfirm } from '@/fragments/_providers/AlertProvider';
 import { useClxDB, useServices } from '@/fragments/_providers/DatabaseProvider';
@@ -231,7 +232,7 @@ export const EntriesDetailEditView = ({
             </button>
 
             <Popover className="relative flex">
-              {({ close }) => (
+              {({ open, close }) => (
                 <>
                   <PopoverButton
                     type="button"
@@ -245,10 +246,11 @@ export const EntriesDetailEditView = ({
                     <IconChevronDown />
                   </PopoverButton>
 
-                  <PopoverPanel
+                  <AnimatedPopoverPanel
+                    open={open}
                     anchor={{ to: 'bottom end', gap: 8 }}
-                    className="z-30 w-56 rounded-xl border border-line bg-base-background p-1
-                      shadow-elevated"
+                    className="z-30 w-36 rounded-xl border border-line bg-base-background p-1
+                      font-medium shadow-elevated"
                   >
                     <button
                       type="button"
@@ -261,7 +263,7 @@ export const EntriesDetailEditView = ({
                         transition hover:bg-elevated-background hover:text-primary
                         disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                      임시저장을 지우고 돌아가기
+                      임시저장 삭제
                     </button>
 
                     <button
@@ -277,7 +279,7 @@ export const EntriesDetailEditView = ({
                     >
                       일기 삭제
                     </button>
-                  </PopoverPanel>
+                  </AnimatedPopoverPanel>
                 </>
               )}
             </Popover>

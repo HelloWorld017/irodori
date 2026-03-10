@@ -15,8 +15,8 @@ const AsyncBoundaryDefaultError = ({ reset, message }: AsyncBoundaryDefaultError
   };
 
   return (
-    <section className="p-6">
-      <p className="text-sm text-secondary">{message}</p>
+    <section className="flex flex-col items-center gap-4 p-6 py-12">
+      <p className="text-center text-sm text-secondary">{message}</p>
       <button
         type="button"
         onClick={() => onReset()}
@@ -30,8 +30,8 @@ const AsyncBoundaryDefaultError = ({ reset, message }: AsyncBoundaryDefaultError
 };
 
 const AsyncBoundaryDefaultLoading = ({ message }: { message: string }) => (
-  <section className="p-6">
-    <p className="text-sm text-secondary">{message}</p>
+  <section className="p-6 py-12">
+    <p className="text-center text-sm text-secondary">{message}</p>
   </section>
 );
 
