@@ -1,5 +1,5 @@
-import { useLocation } from 'wouter';
 import { IconPencil } from '@/fragments/_icons';
+import { useNavigate } from '@/fragments/_providers/RouterProvider';
 import { buildRoute } from '@/utils/route';
 import { useEntriesNotebookId } from '../../_providers/EntriesProvider';
 import { EntryHeader } from './EntryHeader';
@@ -15,7 +15,7 @@ export const EntriesDetailReadView = ({
   tagCategories: TagCategory[];
 }) => {
   const notebookId = useEntriesNotebookId();
-  const [, navigate] = useLocation();
+  const navigate = useNavigate();
 
   return (
     <div className="space-y-6">

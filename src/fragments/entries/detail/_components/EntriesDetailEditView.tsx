@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRef, useState } from 'react';
-import { useLocation } from 'wouter';
 import { useClxDB, useRepositories, useServices } from '@/fragments/_providers/DatabaseProvider';
+import { useNavigate } from '@/fragments/_providers/RouterProvider';
 import { useShowToast } from '@/fragments/_providers/ToastProvider';
 import { uploadAssetImage } from '@/utils/assets';
 import { formatDate } from '@/utils/date';
@@ -64,7 +64,7 @@ export const EntriesDetailEditView = ({
   const showToast = useShowToast();
   const queryClient = useQueryClient();
   const notebookId = useEntriesNotebookId();
-  const [, navigate] = useLocation();
+  const navigate = useNavigate();
   const draft = useEntriesDetailDraft();
   const isDirty = useEntriesDetailIsDirty();
   const { saveState, lastSavedAt } = useEntriesDetailSaveState();

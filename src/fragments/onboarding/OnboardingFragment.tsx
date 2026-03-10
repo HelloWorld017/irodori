@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import { match } from 'ts-pattern';
-import { useLocation } from 'wouter';
 import ImageLogo from '@/assets/images/logo.svg';
 import { useInitializeDatabase, useRepositories } from '@/fragments/_providers/DatabaseProvider';
 import { buildRoute } from '@/utils/route';
+import { useNavigate } from '../_providers/RouterProvider';
 
 type OnboardingStatus = 'idle' | 'starting' | 'ready';
 
@@ -84,7 +84,7 @@ export const OnboardingFragment = () => {
   }, [initialize, status]);
 
   const repositories = useRepositories();
-  const [, navigate] = useLocation();
+  const navigate = useNavigate();
   useEffect(() => {
     if (repositories) {
       navigate(buildRoute('shelf'), { replace: true });

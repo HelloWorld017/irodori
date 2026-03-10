@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useLocation } from 'wouter';
 import { IconChevronLeft, IconSquarePlus } from '@/fragments/_icons';
 import { useServices } from '@/fragments/_providers/DatabaseProvider';
+import { useNavigate } from '@/fragments/_providers/RouterProvider';
 import { useShowToast } from '@/fragments/_providers/ToastProvider';
 import { anyParams, queryKey } from '@/utils/queryKey';
 import { buildRoute } from '@/utils/route';
@@ -11,7 +11,7 @@ export const SidebarHeader = () => {
   const services = useServices();
   const showToast = useShowToast();
   const queryClient = useQueryClient();
-  const [, navigate] = useLocation();
+  const navigate = useNavigate();
   const notebook = useEntriesNotebook();
   const notebookId = useEntriesNotebookId();
 

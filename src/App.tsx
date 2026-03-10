@@ -1,4 +1,3 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Route, Switch } from 'wouter';
 import { AlertList } from '@/fragments/_components/AlertList';
 import { ToastList } from '@/fragments/_components/ToastList';
@@ -10,41 +9,46 @@ import { EntriesFragment } from '@/fragments/entries';
 import { OnboardingFragment } from '@/fragments/onboarding';
 import { ShelfFragment } from '@/fragments/shelf';
 import { getRoute } from '@/utils/route';
+import { QueryProvider } from './fragments/_providers/QueryProvider';
+import { RouterProvider } from './fragments/_providers/RouterProvider';
 import { EntriesDefaultFragment } from './fragments/entries/default';
 import { EntriesDetailFragment } from './fragments/entries/detail';
+import type { ReactNode } from 'react';
 
-const queryClient = new QueryClient();
-
-const App = () => (
+const AppFrame = ({ children }: { children: ReactNode }) => (
   <ToastProvider>
     <AlertProvider>
-      <QueryClientProvider client={queryClient}>
-        <DatabaseProvider>
-          <StickerProvider>
-            <Switch>
-              <Route path={getRoute('onboarding')} component={OnboardingFragment} />
-              <Route path={getRoute('shelf')} component={ShelfFragment} />
-              <Route path={getRoute('entries', true)}>
-                <EntriesFragment>
-                  <Switch>
-                    <Route path={getRoute('entriesDetail')}>
-                      <EntriesDetailFragment />
-                    </Route>
-                    <Route path={getRoute('entriesEdit')}>
-                      <EntriesDetailFragment edit />
-                    </Route>
-                    <Route component={EntriesDefaultFragment} />
-                  </Switch>
-                </EntriesFragment>
-              </Route>
-            </Switch>
-          </StickerProvider>
-        </DatabaseProvider>
-      </QueryClientProvider>
+      <QueryProvider>
+        <RouterProvider>
+          <DatabaseProvider>
+            <StickerProvider>{children}</StickerProvider>
+          </DatabaseProvider>
+        </RouterProvider>
+      </QueryProvider>
       <ToastList />
       <AlertList />
     </AlertProvider>
   </ToastProvider>
 );
 
-export default App;
+export const App = () => (
+  <AppFrame>
+    <Switch>
+      <Route path={getRoute('onboarding')} component={OnboardingFragment} />
+      <Route path={getRoute('shelf')} component={ShelfFragment} />
+      <Route path={getRoute('entries', true)}>
+        <EntriesFragment>
+          <Switch>
+            <Route path={getRoute('entriesDetail')}>
+              <EntriesDetailFragment />
+            </Route>
+            <Route path={getRoute('entriesEdit')}>
+              <EntriesDetailFragment edit />
+            </Route>
+            <Route component={EntriesDefaultFragment} />
+          </Switch>
+        </EntriesFragment>
+      </Route>
+    </Switch>
+  </AppFrame>
+);

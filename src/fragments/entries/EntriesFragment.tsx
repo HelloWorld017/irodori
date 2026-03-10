@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
-import { useLocation } from 'wouter';
 import { buildRoute } from '@/utils/route';
+import { useNavigate } from '../_providers/RouterProvider';
 import { Sidebar } from './_components/Sidebar';
 import { EntriesProvider, useEntriesNotebook } from './_providers/EntriesProvider';
 import { NotebookThemeProvider } from './_providers/NotebookThemeProvider';
@@ -8,7 +8,7 @@ import type { ReactNode } from 'react';
 
 const EntriesView = ({ children }: { children: ReactNode }) => {
   const notebook = useEntriesNotebook();
-  const [, navigate] = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (notebook === null) {

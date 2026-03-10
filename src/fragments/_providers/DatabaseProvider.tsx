@@ -1,17 +1,17 @@
 import { useCallback, useEffect, useEffectEvent, useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
-import { useLocation } from 'wouter';
 import { buildContext } from '@/utils/context';
 import { initDatabase } from '@/utils/database';
 import { createTaggedError, isTaggedError } from '@/utils/error';
 import { buildRoute } from '@/utils/route';
+import { useNavigate } from './RouterProvider';
 import { useShowToast } from './ToastProvider';
 import type { Repositories } from '@/repositories';
 import type { Services } from '@/services';
 import type { ClxDBWithUI } from 'clxdb/ui';
 import type { ReactNode } from 'react';
 
-const [DatabaseProviderInternal, useDatabase] = buildContext(() => {
+const [DatabaseContextProvider, useDatabase] = buildContext(() => {
   const [clxDB, setClxDB] = useState<ClxDBWithUI | null>(null);
   const [repositories, setRepositories] = useState<Repositories | null>(null);
   const [services, setServices] = useState<Services | null>(null);
@@ -57,7 +57,7 @@ const DatabaseError = ({ error, resetErrorBoundary }: DatabaseErrorProps) => {
     throw error;
   }
 
-  const [, navigate] = useLocation();
+  const navigate = useNavigate();
   const initialize = useInitializeDatabase();
   const onInitialize = useEffectEvent(async () => {
     const result = await initialize();
@@ -85,9 +85,9 @@ const assertsInitialized = <T,>(value: T | null | undefined): T => {
 };
 
 export const DatabaseProvider = ({ children }: { children: ReactNode }) => (
-  <DatabaseProviderInternal>
+  <DatabaseContextProvider>
     <ErrorBoundary FallbackComponent={DatabaseError}>{children}</ErrorBoundary>
-  </DatabaseProviderInternal>
+  </DatabaseContextProvider>
 );
 
 export const useInitializeDatabase = () => useDatabase(state => state.initialize);

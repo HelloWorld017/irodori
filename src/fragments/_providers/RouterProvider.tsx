@@ -1,0 +1,64 @@
+import { startTransition, useCallback, useMemo } from 'react';
+import { Router, useLocation } from 'wouter';
+import { useHistoryState } from 'wouter/use-browser-location';
+import { z } from 'zod';
+import { buildContext } from '@/utils/context';
+import { buildRoute } from '@/utils/route';
+import type { ReactNode } from 'react';
+import type { AroundNavHandler } from 'wouter';
+
+const historyStateSchema = z.object({ length: z.int().positive() });
+
+const [RouterContextProvider, useRouterContext] = buildContext(
+  ({ historyLength }: { historyLength: number }) => {
+    const [, navigate] = useLocation();
+    const historyBack = useCallback(() => {
+      if (historyLength > 0) {
+        history.back();
+      }
+
+      navigate(buildRoute('shelf'), { replace: true });
+    }, [historyLength, navigate]);
+
+    return {
+      historyBack,
+      navigate,
+    };
+  }
+);
+
+export const RouterProvider = ({ children }: { children: ReactNode }) => {
+  const historyState = useHistoryState<unknown>();
+  const historyLength = useMemo(
+    () => historyStateSchema.safeParse(historyState).data?.length ?? 0,
+    [historyState]
+  );
+
+  const aroundNav = useCallback<AroundNavHandler>(
+    (navigate, to, options) => {
+      const nextHistoryLength = historyLength + (options?.replace ? 0 : 1);
+      const nextHistoryState = z
+        .looseObject({})
+        .catch({})
+        .transform(state => ({ ...state, length: nextHistoryLength }))
+        .parse(options?.state);
+
+      startTransition(() => {
+        navigate(to, {
+          ...options,
+          state: nextHistoryState,
+        });
+      });
+    },
+    [historyLength]
+  );
+
+  return (
+    <Router aroundNav={aroundNav}>
+      <RouterContextProvider historyLength={historyLength}>{children}</RouterContextProvider>
+    </Router>
+  );
+};
+
+export const useNavigate = () => useRouterContext(state => state.navigate);
+export const useHistoryBack = () => useRouterContext(state => state.historyBack);
