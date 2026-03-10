@@ -31,12 +31,8 @@ export const NotebookEditCategories = ({ notebookId, className }: NotebookEditCa
   };
 
   const createCategoryMutation = useMutation({
-    mutationFn: async () => {
-      if (!services) {
-        throw new Error('Services are not initialized.');
-      }
-
-      return services.tagCategories.create({
+    mutationFn: async () =>
+      services.tagCategories.create({
         notebookId,
         label: '새 카테고리',
         icon: null,
@@ -45,8 +41,7 @@ export const NotebookEditCategories = ({ notebookId, className }: NotebookEditCa
         minSelect: 0,
         maxSelect: null,
         required: false,
-      });
-    },
+      }),
     onSuccess: async () => {
       await invalidateCategories();
       showToast({ kind: 'success', message: '빈 태그 카테고리를 추가했어요.' });

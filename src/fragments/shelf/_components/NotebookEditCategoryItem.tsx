@@ -72,12 +72,8 @@ export const NotebookEditCategoryItem = ({
   };
 
   const updateCategoryMutation = useMutation({
-    mutationFn: async (input: CategoryUpdateDraft) => {
-      if (!services) {
-        throw new Error('Services are not initialized.');
-      }
-
-      return services.tagCategories.update({
+    mutationFn: async (input: CategoryUpdateDraft) =>
+      services.tagCategories.update({
         id: category.id,
         label: input.label,
         icon: input.icon,
@@ -87,18 +83,11 @@ export const NotebookEditCategoryItem = ({
         minSelect: input.minSelect,
         maxSelect: input.maxSelect,
         required: category.required,
-      });
-    },
+      }),
   });
 
   const removeCategoryMutation = useMutation({
-    mutationFn: async () => {
-      if (!services) {
-        throw new Error('Services are not initialized.');
-      }
-
-      await services.tagCategories.remove({ id: category.id });
-    },
+    mutationFn: async () => services.tagCategories.remove({ id: category.id }),
   });
 
   const isPending = updateCategoryMutation.isPending || removeCategoryMutation.isPending;

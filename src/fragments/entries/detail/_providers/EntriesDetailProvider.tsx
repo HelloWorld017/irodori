@@ -270,7 +270,7 @@ const [EntriesDetailProvider, useEntriesDetail] = buildContext(
 
     const queryClient = useQueryClient();
     useEffect(() => {
-      if (!services || !isDirty) {
+      if (!isDirty) {
         return;
       }
 

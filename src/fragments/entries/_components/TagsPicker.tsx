@@ -120,10 +120,6 @@ export const TagsPicker = ({
 
   const createTagMutation = useMutation({
     mutationFn: async (label: string) => {
-      if (!services) {
-        throw new Error('Services are not initialized.');
-      }
-
       if (!tagsCategoryId) {
         throw new Error('tagsCategoryId is required to create a tag.');
       }

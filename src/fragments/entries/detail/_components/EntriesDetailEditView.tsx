@@ -79,13 +79,7 @@ export const EntriesDetailEditView = ({
   const [isUploadingCover, setIsUploadingCover] = useState(false);
 
   const publishMutation = useMutation({
-    mutationFn: async () => {
-      if (!services) {
-        throw new Error('Services are not initialized.');
-      }
-
-      return services.entryDrafts.publish({ entryId: entry.id, data: draft });
-    },
+    mutationFn: async () => services.entryDrafts.publish({ entryId: entry.id, data: draft }),
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: queryKey('entriesDetail', 'detail', entry.id) }),
@@ -112,13 +106,7 @@ export const EntriesDetailEditView = ({
   );
 
   const clearDraftAndBackMutation = useMutation({
-    mutationFn: async () => {
-      if (!services) {
-        throw new Error('Services are not initialized.');
-      }
-
-      await services.entryDrafts.clear({ entryId: entry.id });
-    },
+    mutationFn: async () => services.entryDrafts.clear({ entryId: entry.id }),
     onSuccess: () => {
       queryClient.removeQueries({ queryKey: queryKey('entriesDetail', 'draft', entry.id) });
       showToast({ kind: 'success', message: '임시저장을 지우고 돌아갔어요.' });
@@ -135,10 +123,6 @@ export const EntriesDetailEditView = ({
 
   const removeEntryMutation = useMutation({
     mutationFn: async () => {
-      if (!services) {
-        throw new Error('Services are not initialized.');
-      }
-
       await services.entryDrafts.clear({ entryId: entry.id });
       await services.entries.remove({ id: entry.id });
     },
@@ -170,7 +154,7 @@ export const EntriesDetailEditView = ({
     const file = event.target.files?.[0];
     event.target.value = '';
 
-    if (!file || !clxDB || !repositories || !services) {
+    if (!file) {
       return;
     }
 

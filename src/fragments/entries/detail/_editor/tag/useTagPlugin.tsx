@@ -23,28 +23,20 @@ export const useTagPlugin = () => {
     knownTagsRef.current.set(tag.id, tag);
   });
 
-  const searchTags = useLatestCallback(async (query: string) => {
-    if (!services) {
-      return [];
-    }
-
-    return services.tags.search({
+  const searchTags = useLatestCallback(async (query: string) =>
+    services.tags.search({
       notebookId,
       query,
       limit: 8,
-    });
-  });
+    })
+  );
 
-  const resolveTag = useLatestCallback(async (reference: string) => {
-    if (!services) {
-      return null;
-    }
-
-    return services.tags.resolveReference({
+  const resolveTag = useLatestCallback(async (reference: string) =>
+    services.tags.resolveReference({
       notebookId,
       reference,
-    });
-  });
+    })
+  );
 
   const tagPlugin = useMemo(() => {
     const props = {

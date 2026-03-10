@@ -8,7 +8,6 @@ const [EntriesProvider, useEntries] = buildContext(() => {
   const services = useServices();
   const { notebookId } = useRouteParams<'entries'>();
   const { data: notebook } = useQuery({
-    enabled: !!services,
     queryKey: queryKey('entries', 'notebook', notebookId),
     queryFn: () => services.notebooks.getById(notebookId),
   });

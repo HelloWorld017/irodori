@@ -17,22 +17,16 @@ export const SidebarHeader = () => {
   const historyBack = useHistoryBack();
 
   const { data: entriesCount } = useQuery({
-    enabled: !!services,
     queryKey: queryKey('entries', 'count', notebookId),
     queryFn: () => services.entries.countByNotebookId(notebookId),
   });
 
   const createEntryMutation = useMutation({
-    mutationFn: async () => {
-      if (!services) {
-        throw new Error('Services are not initialized.');
-      }
-
-      return services.entries.create({
+    mutationFn: async () =>
+      services.entries.create({
         notebookId,
         title: '새 일기',
-      });
-    },
+      }),
     onSuccess: async entry => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: queryKey('entries', 'list', anyParams) }),
