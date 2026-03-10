@@ -1,6 +1,6 @@
 import { useQueryClient, useSuspenseQueries } from '@tanstack/react-query';
 import { create, keyResolver, windowScheduler } from '@yornaath/batshit';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { BATCH_WINDOW_MS } from '@/constants/batch';
 import { useServices } from '@/fragments/_providers/DatabaseProvider';
 import { useShowToast } from '@/fragments/_providers/ToastProvider';
@@ -139,16 +139,19 @@ const [EntriesDetailProvider, useEntriesDetail] = buildContext(
       [contentTagIds, excludedTagIds, metadataTagIds]
     );
 
+    const resolvedTagIdsDeferred = useDeferredValue(resolvedTagIds);
     const resolvedTagsById = useSuspenseQueries({
       queries: resolveTag
-        ? resolvedTagIds.map(tagId => ({
+        ? resolvedTagIdsDeferred.map(tagId => ({
             enabled: true,
             queryKey: queryKey('entriesDetail', 'detail-tag', tagId),
             queryFn: () => resolveTag.fetch(tagId),
           }))
         : [],
       combine: results =>
-        new Map(results.map((result, index) => [resolvedTagIds[index], result.data ?? null])),
+        new Map(
+          results.map((result, index) => [resolvedTagIdsDeferred[index], result.data ?? null])
+        ),
     });
 
     const effectiveTags = useMemo<TagViewItem[]>(
