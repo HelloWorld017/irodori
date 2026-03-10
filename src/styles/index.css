@@ -26,6 +26,8 @@
   --color-backdrop: rgb(from var(--color-default-900) r g b / 0.4);
 
   /* Semantic Colors */
+  --color-danger-foreground: var(--color-rose-200);
+  --color-danger: var(--color-rose-500);
   --color-error-foreground: var(--color-rose-200);
   --color-error: var(--color-rose-500);
   --color-success-foreground: var(--color-emerald-200);

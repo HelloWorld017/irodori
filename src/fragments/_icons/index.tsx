@@ -1,6 +1,7 @@
 import {
   BookPlus,
   Calendar,
+  ChevronDown,
   ChevronLeft,
   Delete,
   Pencil,
@@ -26,6 +27,7 @@ const wrapLucideComponent = <TProps,>(LucideIcon: ComponentType<TProps>) => {
 
 export const IconBookPlus = wrapLucideComponent(BookPlus);
 export const IconCalendar = wrapLucideComponent(Calendar);
+export const IconChevronDown = wrapLucideComponent(ChevronDown);
 export const IconChevronLeft = wrapLucideComponent(ChevronLeft);
 export const IconDelete = wrapLucideComponent(Delete);
 export const IconPencil = wrapLucideComponent(Pencil);

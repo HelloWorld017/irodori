@@ -1,5 +1,8 @@
+import { Popover, PopoverButton, PopoverPanel } from '@headlessui/react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRef, useState } from 'react';
+import { IconChevronDown } from '@/fragments/_icons';
+import { useConfirm } from '@/fragments/_providers/AlertProvider';
 import { useClxDB, useRepositories, useServices } from '@/fragments/_providers/DatabaseProvider';
 import { useNavigate } from '@/fragments/_providers/RouterProvider';
 import { useShowToast } from '@/fragments/_providers/ToastProvider';
@@ -71,6 +74,7 @@ export const EntriesDetailEditView = ({
   const setTitle = useSetEntriesDetailTitle();
   const setBody = useSetEntriesDetailBody();
   const setCover = useSetEntriesDetailCover();
+  const confirm = useConfirm();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [isUploadingCover, setIsUploadingCover] = useState(false);
 
@@ -107,6 +111,61 @@ export const EntriesDetailEditView = ({
     publishMutation.isPending
   );
 
+  const clearDraftAndBackMutation = useMutation({
+    mutationFn: async () => {
+      if (!services) {
+        throw new Error('Services are not initialized.');
+      }
+
+      await services.entryDrafts.clear({ entryId: entry.id });
+    },
+    onSuccess: () => {
+      queryClient.removeQueries({ queryKey: queryKey('entriesDetail', 'draft', entry.id) });
+      showToast({ kind: 'success', message: '임시저장을 지우고 돌아갔어요.' });
+      navigate(buildRoute('entriesDetail', { notebookId, entryId: entry.id }), { replace: true });
+    },
+    onError: error => {
+      console.error('Failed to clear entry draft', error);
+      showToast({
+        kind: 'error',
+        message: '임시저장을 지우지 못했어요. 잠시 후 다시 시도해 주세요.',
+      });
+    },
+  });
+
+  const removeEntryMutation = useMutation({
+    mutationFn: async () => {
+      if (!services) {
+        throw new Error('Services are not initialized.');
+      }
+
+      await services.entryDrafts.clear({ entryId: entry.id });
+      await services.entries.remove({ id: entry.id });
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKey('entries', 'list', anyParams) }),
+        queryClient.invalidateQueries({ queryKey: queryKey('entries', 'count', notebookId) }),
+      ]);
+      queryClient.removeQueries({ queryKey: queryKey('entriesDetail', 'detail', entry.id) });
+      queryClient.removeQueries({ queryKey: queryKey('entriesDetail', 'draft', entry.id) });
+      showToast({ kind: 'success', message: '일기를 삭제했어요.' });
+      navigate(buildRoute('entries', { notebookId }), { replace: true });
+    },
+    onError: error => {
+      console.error('Failed to remove entry', error);
+      showToast({
+        kind: 'error',
+        message: '일기를 삭제하지 못했어요. 잠시 후 다시 시도해 주세요.',
+      });
+    },
+  });
+
+  const isActionPending =
+    publishMutation.isPending ||
+    clearDraftAndBackMutation.isPending ||
+    removeEntryMutation.isPending;
+
   const handleCoverFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     event.target.value = '';
@@ -139,27 +198,112 @@ export const EntriesDetailEditView = ({
     }
   };
 
+  const handleClearDraftAndBack = () => {
+    if (isActionPending) {
+      return;
+    }
+
+    clearDraftAndBackMutation.mutate();
+  };
+
+  const handleDeleteEntry = async () => {
+    if (isActionPending) {
+      return;
+    }
+
+    const accepted = await confirm({
+      title: '일기를 삭제할까요?',
+      message: `"${draft.title}" 일기는 삭제되며, 되돌릴 수 없어요.`,
+      kind: 'warning',
+      confirmLabel: '삭제하기',
+      cancelLabel: '취소',
+    });
+
+    if (!accepted) {
+      return;
+    }
+
+    removeEntryMutation.mutate();
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-secondary">{statusLabel}</p>
         <div className="flex gap-3">
-          <button
-            type="button"
-            onClick={() =>
-              navigate(buildRoute('entriesDetail', { notebookId, entryId: entry.id }), {
-                replace: true,
-              })
-            }
-            className="rounded-xl border border-line bg-base-background px-4 py-2 text-sm
-              font-medium text-secondary transition hover:bg-elevated-background hover:text-primary"
-          >
-            돌아가기
-          </button>
+          <div className="flex">
+            <button
+              type="button"
+              onClick={() =>
+                navigate(buildRoute('entriesDetail', { notebookId, entryId: entry.id }), {
+                  replace: true,
+                })
+              }
+              disabled={isActionPending}
+              className="rounded-xl rounded-r-none border border-line bg-base-background px-4 py-2
+                text-sm font-medium text-secondary transition hover:bg-elevated-background
+                hover:text-primary disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              돌아가기
+            </button>
+
+            <Popover className="relative flex">
+              {({ close }) => (
+                <>
+                  <PopoverButton
+                    type="button"
+                    disabled={isActionPending}
+                    className="flex items-center justify-center rounded-xl rounded-l-none border
+                      border-l-0 border-line bg-base-background px-3 py-2 text-secondary transition
+                      hover:bg-elevated-background hover:text-primary disabled:cursor-not-allowed
+                      disabled:opacity-60"
+                    aria-label="더 보기"
+                  >
+                    <IconChevronDown />
+                  </PopoverButton>
+
+                  <PopoverPanel
+                    anchor={{ to: 'bottom end', gap: 8 }}
+                    className="z-30 w-56 rounded-xl border border-line bg-base-background p-1
+                      shadow-elevated"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => {
+                        close();
+                        handleClearDraftAndBack();
+                      }}
+                      disabled={isActionPending}
+                      className="w-full rounded-lg px-3 py-2 text-left text-sm text-secondary
+                        transition hover:bg-elevated-background hover:text-primary
+                        disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      임시저장을 지우고 돌아가기
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        close();
+                        void handleDeleteEntry();
+                      }}
+                      disabled={isActionPending}
+                      className="w-full rounded-lg px-3 py-2 text-left text-sm text-danger
+                        transition hover:bg-danger-foreground/20 disabled:cursor-not-allowed
+                        disabled:opacity-60"
+                    >
+                      일기 삭제
+                    </button>
+                  </PopoverPanel>
+                </>
+              )}
+            </Popover>
+          </div>
+
           <button
             type="button"
             onClick={() => publishMutation.mutate()}
-            disabled={publishMutation.isPending}
+            disabled={isActionPending}
             className="rounded-xl bg-highlight px-4 py-2 text-sm font-medium
               text-highlight-foreground transition hover:bg-highlight-hover
               disabled:cursor-not-allowed disabled:opacity-60"
