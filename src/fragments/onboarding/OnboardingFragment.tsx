@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import { match } from 'ts-pattern';
 import ImageLogo from '@/assets/images/logo.svg';
-import { useInitializeDatabase, useRepositories } from '@/fragments/_providers/DatabaseProvider';
+import {
+  useInitializeDatabase,
+  useIsDatabaseInitialized,
+} from '@/fragments/_providers/DatabaseProvider';
 import { buildRoute } from '@/utils/route';
 import { useNavigate } from '../_providers/RouterProvider';
 
@@ -83,13 +86,13 @@ export const OnboardingFragment = () => {
     setStatus(success ? 'ready' : 'idle');
   }, [initialize, status]);
 
-  const repositories = useRepositories();
+  const isInitialized = useIsDatabaseInitialized();
   const navigate = useNavigate();
   useEffect(() => {
-    if (repositories) {
+    if (isInitialized) {
       navigate(buildRoute('shelf'), { replace: true });
     }
-  }, [repositories, navigate]);
+  }, [isInitialized, navigate]);
 
   return (
     <OnboardingView

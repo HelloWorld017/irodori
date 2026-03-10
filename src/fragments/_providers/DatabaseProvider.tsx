@@ -91,6 +91,7 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => (
 );
 
 export const useInitializeDatabase = () => useDatabase(state => state.initialize);
+export const useIsDatabaseInitialized = () => !!useDatabase(state => state.repositories);
 export const useClxDB = () => {
   const clxdb = useDatabase(state => state.clxDB);
   return assertsInitialized(clxdb);

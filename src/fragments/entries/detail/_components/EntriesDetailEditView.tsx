@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRef, useState } from 'react';
 import { IconChevronDown } from '@/fragments/_icons';
 import { useConfirm } from '@/fragments/_providers/AlertProvider';
-import { useClxDB, useRepositories, useServices } from '@/fragments/_providers/DatabaseProvider';
+import { useClxDB, useServices } from '@/fragments/_providers/DatabaseProvider';
 import { useNavigate } from '@/fragments/_providers/RouterProvider';
 import { useShowToast } from '@/fragments/_providers/ToastProvider';
 import { uploadAssetImage } from '@/utils/assets';
@@ -62,7 +62,6 @@ export const EntriesDetailEditView = ({
   tagCategories: TagCategory[];
 }) => {
   const services = useServices();
-  const repositories = useRepositories();
   const clxDB = useClxDB();
   const showToast = useShowToast();
   const queryClient = useQueryClient();
@@ -161,7 +160,7 @@ export const EntriesDetailEditView = ({
     setIsUploadingCover(true);
 
     try {
-      const asset = await uploadAssetImage({ clxDB, repositories, services, file });
+      const asset = await uploadAssetImage({ clxDB, services, file });
       setCover({
         id: asset.id,
         blobDigest: asset.blobDigest,
