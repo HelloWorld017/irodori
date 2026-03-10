@@ -43,9 +43,10 @@ export const EntriesDetailReadView = ({
       />
 
       <div
-        className="m-auto grid max-w-360 gap-6 lg:grid-cols-[minmax(0,1.8fr)_minmax(18rem,0.6fr)]"
+        className="m-auto grid max-w-360 gap-4 lg:grid-cols-[minmax(0,1.8fr)_minmax(18rem,0.6fr)]
+          lg:gap-6"
       >
-        <section className="rounded-[1.75rem] p-6">
+        <section className="rounded-[1.75rem] p-2">
           <div className="space-y-4">
             <p className="text-sm font-medium text-secondary">본문</p>
             {entry.body.trim() ? (
@@ -58,7 +59,11 @@ export const EntriesDetailReadView = ({
           </div>
         </section>
 
-        <EntryMetadataRead entry={entry} tagCategories={tagCategories} />
+        <EntryMetadataRead
+          className="space-y-5 rounded-[1.75rem] p-2"
+          entry={entry}
+          tagCategories={tagCategories}
+        />
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { IconChevronLeft, IconSquarePlus } from '@/fragments/_icons';
 import { useServices } from '@/fragments/_providers/DatabaseProvider';
-import { useNavigate } from '@/fragments/_providers/RouterProvider';
+import { useHistoryBack, useNavigate } from '@/fragments/_providers/RouterProvider';
 import { useShowToast } from '@/fragments/_providers/ToastProvider';
 import { anyParams, queryKey } from '@/utils/queryKey';
 import { buildRoute } from '@/utils/route';
@@ -14,6 +14,7 @@ export const SidebarHeader = () => {
   const navigate = useNavigate();
   const notebook = useEntriesNotebook();
   const notebookId = useEntriesNotebookId();
+  const historyBack = useHistoryBack();
 
   const { data: entriesCount } = useQuery({
     enabled: !!services,
@@ -65,7 +66,7 @@ export const SidebarHeader = () => {
         <div className="flex items-center gap-4">
           <button
             type="button"
-            onClick={() => window.history.back()}
+            onClick={historyBack}
             className="-ml-2 rounded-full p-2 text-2xl text-secondary transition
               hover:bg-elevated-background-hover hover:text-primary"
             aria-label="뒤로가기"

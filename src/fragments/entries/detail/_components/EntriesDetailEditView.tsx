@@ -207,9 +207,10 @@ export const EntriesDetailEditView = ({
         }
       />
       <div
-        className="m-auto grid max-w-360 gap-6 lg:grid-cols-[minmax(0,1.8fr)_minmax(18rem,0.6fr)]"
+        className="m-auto grid max-w-360 gap-4 lg:grid-cols-[minmax(0,1.8fr)_minmax(18rem,0.6fr)]
+          lg:gap-6"
       >
-        <section className="space-y-4 rounded-[1.75rem] p-6">
+        <section className="space-y-4 rounded-[1.75rem] p-2">
           <div className="space-y-1">
             <p className="text-sm font-medium text-secondary">본문</p>
           </div>
@@ -221,7 +222,10 @@ export const EntriesDetailEditView = ({
           />
         </section>
 
-        <EntryMetadataEdit tagCategories={tagCategories} />
+        <EntryMetadataEdit
+          className="space-y-5 rounded-[1.75rem] p-2"
+          tagCategories={tagCategories}
+        />
       </div>
     </div>
   );

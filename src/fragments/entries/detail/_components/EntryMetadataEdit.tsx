@@ -58,7 +58,12 @@ const buildCategoryRuleLabel = ({
   return parts.length > 0 ? parts.join(' · ') : null;
 };
 
-export const EntryMetadataEdit = ({ tagCategories }: { tagCategories: TagCategory[] }) => {
+type EntryMetadataEditProps = {
+  className?: string;
+  tagCategories: TagCategory[];
+};
+
+export const EntryMetadataEdit = ({ className, tagCategories }: EntryMetadataEditProps) => {
   const notebookId = useEntriesNotebookId();
   const draft = useEntriesDetailDraft();
   const effectiveTags = useEntriesDetailEffectiveTags();
@@ -74,7 +79,7 @@ export const EntryMetadataEdit = ({ tagCategories }: { tagCategories: TagCategor
   );
 
   return (
-    <aside className="space-y-5 rounded-[1.75rem] p-6">
+    <aside className={className}>
       <section className="space-y-2">
         <p className="text-sm font-medium text-secondary">날짜</p>
         <input

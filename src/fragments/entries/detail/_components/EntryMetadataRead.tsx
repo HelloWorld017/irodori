@@ -6,13 +6,13 @@ import { buildEntryMetadataTagSections } from '../_utils/buildEntryMetadataTagSe
 import type { TagCategory } from '@/repositories/TagCategoriesRepository';
 import type { EntryDetailItem } from '@/services/EntriesService';
 
-export const EntryMetadataRead = ({
-  entry,
-  tagCategories,
-}: {
+type EntryMetadataReadProps = {
+  className?: string;
   entry: EntryDetailItem;
   tagCategories: TagCategory[];
-}) => {
+};
+
+export const EntryMetadataRead = ({ className, entry, tagCategories }: EntryMetadataReadProps) => {
   const tagSections = useMemo(
     () =>
       tagCategories
@@ -27,7 +27,7 @@ export const EntryMetadataRead = ({
   );
 
   return (
-    <aside className="space-y-5 rounded-[1.75rem] p-6">
+    <aside className={className}>
       <section className="space-y-2">
         <p className="text-sm font-medium text-secondary">날짜</p>
         <time dateTime={new Date(entry.date).toISOString()} className="text-base text-primary">
