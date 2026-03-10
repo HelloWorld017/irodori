@@ -1,5 +1,6 @@
-import { motion } from 'motion/react';
+import { DialogTitle } from '@headlessui/react';
 import { useState } from 'react';
+import { AnimatedModal } from '@/fragments/_components/AnimatedModal';
 import { classes } from '@/utils/classes';
 import { NotebookEditCategories } from './NotebookEditCategories';
 import { NotebookEditDetail } from './NotebookEditDetail';
@@ -33,23 +34,18 @@ export const NotebookEdit = ({
   const isCreateMode = mode === 'create';
 
   return (
-    <motion.div
-      className="fixed inset-0 z-40 flex items-center justify-center px-4 py-8"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
+    <AnimatedModal
+      onClose={onClose}
+      className="relative flex h-full max-h-144 w-full max-w-192 flex-col rounded-2xl
+        bg-base-background shadow-elevated ring-1 ring-line"
+      animate={false}
     >
-      <button type="button" className="absolute inset-0 bg-backdrop" onClick={() => onClose()} />
-
-      <section
-        className="relative flex h-full max-h-144 w-full max-w-192 flex-col rounded-2xl
-          bg-base-background shadow-elevated ring-1 ring-line"
-      >
+      <section className="flex h-full flex-col">
         <header className="flex flex-none items-start justify-between gap-4 p-8 pb-0">
           <div className="space-y-1">
-            <h2 className="text-lg font-semibold text-primary">
+            <DialogTitle as="h2" className="text-lg font-semibold text-primary">
               {isCreateMode ? '새 일기장 만들기' : '일기장 수정하기'}
-            </h2>
+            </DialogTitle>
           </div>
           <button
             type="button"
@@ -107,6 +103,6 @@ export const NotebookEdit = ({
           ) : null}
         </div>
       </section>
-    </motion.div>
+    </AnimatedModal>
   );
 };
