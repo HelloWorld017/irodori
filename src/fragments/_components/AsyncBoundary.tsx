@@ -1,6 +1,9 @@
 import { useQueryErrorResetBoundary } from '@tanstack/react-query';
-import { Suspense, type ReactNode } from 'react';
+import { Suspense, useCallback, useMemo } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
+import { AnimateView } from './AnimateView';
+import type { AnimateViewName } from './AnimateView';
+import type { ReactNode } from 'react';
 
 type AsyncBoundaryDefaultErrorProps = {
   message: string;
@@ -36,6 +39,8 @@ const AsyncBoundaryDefaultLoading = ({ message }: { message: string }) => (
 );
 
 type AsyncBoundaryProps = {
+  animateView?: boolean;
+  animateViewName?: AnimateViewName;
   children: {
     default: ReactNode;
     loading: string | ReactNode;
@@ -46,32 +51,48 @@ type AsyncBoundaryProps = {
   };
 };
 
-export const AsyncBoundary = ({ children }: AsyncBoundaryProps) => {
-  const errorFallback = ({
-    error,
-    resetErrorBoundary,
-  }: {
-    error: unknown;
-    resetErrorBoundary: () => void;
-  }) => {
+export const AsyncBoundary = ({ children, animateView, animateViewName }: AsyncBoundaryProps) => {
+  const errorFallback = useCallback(
+    ({ error, resetErrorBoundary }: { error: unknown; resetErrorBoundary: () => void }) => {
+      const node =
+        typeof children.error === 'function'
+          ? children.error({ error, reset: resetErrorBoundary })
+          : children.error;
+
+      const nodeWithDefault =
+        typeof node === 'string' ? (
+          <AsyncBoundaryDefaultError message={node} reset={resetErrorBoundary} />
+        ) : (
+          node
+        );
+
+      const nodeWithTransition = animateView ? (
+        <AnimateView name={animateViewName}>{nodeWithDefault}</AnimateView>
+      ) : (
+        nodeWithDefault
+      );
+
+      return nodeWithTransition;
+    },
+    [children, animateView, animateViewName]
+  );
+
+  const fallback = useMemo(() => {
     const node =
-      typeof children.error === 'function'
-        ? children.error({ error, reset: resetErrorBoundary })
-        : children.error;
+      typeof children.loading === 'string' ? (
+        <AsyncBoundaryDefaultLoading message={children.loading} />
+      ) : (
+        children.loading
+      );
 
-    if (typeof node === 'string') {
-      return <AsyncBoundaryDefaultError message={node} reset={resetErrorBoundary} />;
-    }
-
-    return node;
-  };
-
-  const fallback =
-    typeof children.loading === 'string' ? (
-      <AsyncBoundaryDefaultLoading message={children.loading} />
+    const nodeWithTransition = animateView ? (
+      <AnimateView name={animateViewName}>{node}</AnimateView>
     ) : (
-      children.loading
+      node
     );
+
+    return nodeWithTransition;
+  }, [children, animateView, animateViewName]);
 
   return (
     <ErrorBoundary fallbackRender={errorFallback}>

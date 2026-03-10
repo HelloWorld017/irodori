@@ -1,3 +1,4 @@
+import { MotionConfig } from 'motion/react';
 import { Route, Switch } from 'wouter';
 import { AlertList } from '@/fragments/_components/AlertList';
 import { ToastList } from '@/fragments/_components/ToastList';
@@ -16,19 +17,21 @@ import { EntriesDetailFragment } from './fragments/entries/detail';
 import type { ReactNode } from 'react';
 
 const AppFrame = ({ children }: { children: ReactNode }) => (
-  <ToastProvider>
-    <AlertProvider>
-      <QueryProvider>
-        <RouterProvider>
-          <DatabaseProvider>
-            <StickerProvider>{children}</StickerProvider>
-          </DatabaseProvider>
-        </RouterProvider>
-      </QueryProvider>
-      <ToastList />
-      <AlertList />
-    </AlertProvider>
-  </ToastProvider>
+  <MotionConfig transition={{ type: 'spring', visualDuration: 0.2, bounce: 0.1 }}>
+    <ToastProvider>
+      <AlertProvider>
+        <QueryProvider>
+          <RouterProvider>
+            <DatabaseProvider>
+              <StickerProvider>{children}</StickerProvider>
+            </DatabaseProvider>
+          </RouterProvider>
+        </QueryProvider>
+        <ToastList />
+        <AlertList />
+      </AlertProvider>
+    </ToastProvider>
+  </MotionConfig>
 );
 
 export const App = () => (

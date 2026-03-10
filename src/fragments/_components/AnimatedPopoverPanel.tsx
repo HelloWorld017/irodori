@@ -17,13 +17,11 @@ export const AnimatedPopoverPanel = (props: AnimatedPopoverPanelProps) => {
         opacity: 1,
         y: 0,
         scale: 1,
-        transition: { duration: 0.2, ease: 'easeOut' },
       }}
       exit={{
         opacity: 0,
         y: 4,
         scale: 0.98,
-        transition: { duration: 0.2, ease: 'easeOut' },
       }}
     />
   );

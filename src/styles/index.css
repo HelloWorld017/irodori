@@ -50,11 +50,32 @@
 
   /* Shadows */
   --shadow-elevated: 0 24px 60px -20px oklch(from var(--color-default-800) l c h / 0.45);
+
+  /* Animations */
+  --animate-fade-in: fade-in 0.35s cubic-bezier(0.33, 1, 0.68, 1) forwards;
+  --animate-fade-in-view: fade-in 0.5s cubic-bezier(0.33, 1, 0.68, 1) forwards;
+  --animate-fade-out: fade-out 0.35s cubic-bezier(0.33, 1, 0.68, 1) forwards;
+  --animate-fade-out-view: fade-out 0.5s cubic-bezier(0.33, 1, 0.68, 1) forwards;
+
+  @keyframes fade-in {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+  }
+
+  @keyframes fade-out {
+    0% { opacity: 1; }
+    100% { opacity: 0; }
+  }
 }
 
 @layer base {
-  html {
+  :root {
     background: var(--color-base-background);
+    view-transition-name: none;
+  }
+
+  ::view-transition {
+    pointer-events: none;
   }
 
   button:where(:not([disabled])) {

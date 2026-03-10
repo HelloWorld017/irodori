@@ -1,4 +1,5 @@
 import { useSuspenseQuery } from '@tanstack/react-query';
+import { AnimateView } from '@/fragments/_components/AnimateView';
 import { AsyncBoundary } from '@/fragments/_components/AsyncBoundary';
 import { useServices } from '@/fragments/_providers/DatabaseProvider';
 import { useRouteParams } from '@/hooks/useRouteParams';
@@ -69,15 +70,20 @@ const EntriesDetailFragmentInner = ({ edit = false }: EntriesDetailFragmentProps
   );
 };
 
-export const EntriesDetailFragment = (props: EntriesDetailFragmentProps) => (
-  <AsyncBoundary>
-    {{
-      error: ({ error }) =>
-        isTaggedError('entry-not-found', error)
-          ? error.message
-          : '일기를 불러오지 못했어요. 잠시 후 다시 시도해주세요.',
-      loading: '일기를 불러오는 중이에요...',
-      default: <EntriesDetailFragmentInner {...props} />,
-    }}
-  </AsyncBoundary>
-);
+export const EntriesDetailFragment = (props: EntriesDetailFragmentProps) => {
+  const { entryId } = useRouteParams<'entriesDetail'>();
+  return (
+    <AnimateView key={`${entryId}_${props.edit ? 'edit' : 'read'}`}>
+      <AsyncBoundary animateView>
+        {{
+          error: ({ error }) =>
+            isTaggedError('entry-not-found', error)
+              ? error.message
+              : '일기를 불러오지 못했어요. 잠시 후 다시 시도해주세요.',
+          loading: '일기를 불러오는 중이에요...',
+          default: <EntriesDetailFragmentInner {...props} />,
+        }}
+      </AsyncBoundary>
+    </AnimateView>
+  );
+};

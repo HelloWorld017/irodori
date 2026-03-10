@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence } from 'motion/react';
 import { COLORS_PRESET } from '@/constants/colors';
+import { AnimateView } from '@/fragments/_components/AnimateView';
 import { AsyncBoundary } from '@/fragments/_components/AsyncBoundary';
 import { useConfirm } from '@/fragments/_providers/AlertProvider';
 import { useServices } from '@/fragments/_providers/DatabaseProvider';
@@ -180,7 +181,9 @@ const ShelfView = () => {
 };
 
 export const ShelfFragment = () => (
-  <ShelfProvider>
-    <ShelfView />
-  </ShelfProvider>
+  <AnimateView>
+    <ShelfProvider>
+      <ShelfView />
+    </ShelfProvider>
+  </AnimateView>
 );

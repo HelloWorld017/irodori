@@ -1,6 +1,6 @@
 import { LRUCache } from 'lru-cache';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useClxDB } from '@/fragments/_providers/DatabaseProvider';
+import { useClxDBWithoutCheck } from '@/fragments/_providers/DatabaseProvider';
 import { buildContext } from '@/utils/context';
 
 type StickerProviderProps = {
@@ -18,7 +18,7 @@ const DEFAULT_STICKER_CACHE_MAX = 300;
 
 const [StickerProvider, useSticker] = buildContext<StickerContextValue, StickerProviderProps>(
   ({ cacheMax = DEFAULT_STICKER_CACHE_MAX }) => {
-    const clxDB = useClxDB();
+    const clxDB = useClxDBWithoutCheck();
     const [imageState, setImageState] = useState<StickerImageState>(new Map());
     const inFlightLoadMapRef = useRef(new Map<string, Promise<string | null>>());
     const isMountedRef = useRef(true);

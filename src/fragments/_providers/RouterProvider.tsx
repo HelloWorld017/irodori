@@ -1,6 +1,6 @@
-import { startTransition, useCallback, useMemo } from 'react';
+import { startTransition, useCallback, useDeferredValue, useMemo } from 'react';
 import { Router, useLocation } from 'wouter';
-import { useHistoryState } from 'wouter/use-browser-location';
+import { useSearch, useBrowserLocation, useHistoryState } from 'wouter/use-browser-location';
 import { z } from 'zod';
 import { buildContext } from '@/utils/context';
 import { buildRoute } from '@/utils/route';
@@ -26,6 +26,16 @@ const [RouterContextProvider, useRouterContext] = buildContext(
     };
   }
 );
+
+const useBrowserLocationDeferred = () => {
+  const location = useBrowserLocation();
+  return useDeferredValue(location);
+};
+
+const useBrowserSearchDeferred = () => {
+  const search = useSearch();
+  return useDeferredValue(search);
+};
 
 export const RouterProvider = ({ children }: { children: ReactNode }) => {
   const historyState = useHistoryState<unknown>();
@@ -54,7 +64,11 @@ export const RouterProvider = ({ children }: { children: ReactNode }) => {
   );
 
   return (
-    <Router aroundNav={aroundNav}>
+    <Router
+      aroundNav={aroundNav}
+      hook={useBrowserLocationDeferred}
+      searchHook={useBrowserSearchDeferred}
+    >
       <RouterContextProvider historyLength={historyLength}>{children}</RouterContextProvider>
     </Router>
   );

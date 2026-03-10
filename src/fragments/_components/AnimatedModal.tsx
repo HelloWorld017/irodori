@@ -41,8 +41,8 @@ export const AnimatedModal = ({
         as={motion.div}
         className={classes('fixed inset-0 bg-backdrop', backdropClassName)}
         initial={{ opacity: 0 }}
-        animate={{ opacity: 1, transition: { duration: 0.2, ease: 'easeOut' } }}
-        exit={{ opacity: 0, transition: { duration: 0.2, ease: 'easeOut' } }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
       />
 
       <div
@@ -59,13 +59,11 @@ export const AnimatedModal = ({
             opacity: 1,
             y: 0,
             scale: 1,
-            transition: { duration: 0.2, ease: 'easeOut' },
           }}
           exit={{
             opacity: 0,
             y: 8,
             scale: 0.98,
-            transition: { duration: 0.2, ease: 'easeOut' },
           }}
         >
           {children}

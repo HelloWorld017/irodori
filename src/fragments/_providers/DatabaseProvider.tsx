@@ -92,17 +92,20 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => (
 
 export const useInitializeDatabase = () => useDatabase(state => state.initialize);
 export const useIsDatabaseInitialized = () => !!useDatabase(state => state.repositories);
+export const useClxDBWithoutCheck = () => useDatabase(state => state.clxDB);
 export const useClxDB = () => {
-  const clxdb = useDatabase(state => state.clxDB);
+  const clxdb = useClxDBWithoutCheck();
   return assertsInitialized(clxdb);
 };
 
+export const useRepositoriesWithoutCheck = () => useDatabase(state => state.repositories);
 export const useRepositories = () => {
-  const repositories = useDatabase(state => state.repositories);
+  const repositories = useRepositoriesWithoutCheck();
   return assertsInitialized(repositories);
 };
 
+export const useServicesWithoutCheck = () => useDatabase(state => state.services);
 export const useServices = () => {
-  const services = useDatabase(state => state.services);
+  const services = useServicesWithoutCheck();
   return assertsInitialized(services);
 };

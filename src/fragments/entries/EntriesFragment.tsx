@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { buildRoute } from '@/utils/route';
+import { AnimateView } from '../_components/AnimateView';
 import { useNavigate } from '../_providers/RouterProvider';
 import { Sidebar } from './_components/Sidebar';
 import { EntriesProvider, useEntriesNotebook } from './_providers/EntriesProvider';
@@ -25,9 +26,11 @@ const EntriesView = ({ children }: { children: ReactNode }) => {
 };
 
 export const EntriesFragment = ({ children }: { children: ReactNode }) => (
-  <EntriesProvider>
-    <NotebookThemeProvider>
-      <EntriesView>{children}</EntriesView>
-    </NotebookThemeProvider>
-  </EntriesProvider>
+  <AnimateView>
+    <EntriesProvider>
+      <NotebookThemeProvider>
+        <EntriesView>{children}</EntriesView>
+      </NotebookThemeProvider>
+    </EntriesProvider>
+  </AnimateView>
 );

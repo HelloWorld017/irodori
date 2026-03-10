@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
 import { match } from 'ts-pattern';
 import ImageLogo from '@/assets/images/logo.svg';
+import { AnimateView } from '@/fragments/_components/AnimateView';
 import {
   useInitializeDatabase,
   useIsDatabaseInitialized,
 } from '@/fragments/_providers/DatabaseProvider';
+import { useNavigate } from '@/fragments/_providers/RouterProvider';
 import { buildRoute } from '@/utils/route';
-import { useNavigate } from '../_providers/RouterProvider';
 
 type OnboardingStatus = 'idle' | 'starting' | 'ready';
 
@@ -95,10 +96,12 @@ export const OnboardingFragment = () => {
   }, [isInitialized, navigate]);
 
   return (
-    <OnboardingView
-      buttonLabel={getButtonLabel(status)}
-      disabled={status === 'starting'}
-      onStart={handleStart}
-    />
+    <AnimateView>
+      <OnboardingView
+        buttonLabel={getButtonLabel(status)}
+        disabled={status === 'starting'}
+        onStart={handleStart}
+      />
+    </AnimateView>
   );
 };

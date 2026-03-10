@@ -20,6 +20,7 @@
     "types": [
       "node",
       "react",
+      "react/canary",
       "react-dom",
       "vite/client"
     ],
