@@ -12,8 +12,8 @@ type AnimateViewProps = {
 export const AnimateView = ({ name, animateUpdate, children }: AnimateViewProps) => (
   <ViewTransition
     name={name && `__app_${name}`}
-    enter="animate-fade-in-view"
-    exit="animate-fade-out-view"
+    enter="animate-fade-in-lg"
+    exit="animate-fade-out-lg"
     update={!animateUpdate ? 'none' : undefined}
   >
     {children}

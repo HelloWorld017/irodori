@@ -61,7 +61,7 @@ export const StickerPicker = ({
             aria-label="스티커 선택"
           >
             {emoji ? (
-              <span className="text-[1.5rem] leading-none">{emoji}</span>
+              <span className="font-emoji text-[1.5rem] leading-none">{emoji}</span>
             ) : displayedSticker?.blobDigest ? (
               <AssetImage
                 blobDigest={displayedSticker.blobDigest}

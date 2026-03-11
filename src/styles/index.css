@@ -1,6 +1,16 @@
 @import 'tailwindcss';
 @import 'pretendard-jp/dist/web/static/pretendard-jp.css';
 
+@font-face {
+  font-family: 'TossFace';
+  src: url('@/assets/fonts/tossface.woff2');
+}
+
+@font-face {
+  font-family: 'EmojiMart';
+  src: url('@/assets/fonts/tossface.woff2');
+}
+
 @theme {
   /* Default Palette */
   --color-default-900: #211a13;
@@ -47,15 +57,16 @@
 
   /* Fonts */
   --font-sans: 'Avenir Next', 'SUIT Variable', 'Pretendard JP', 'Noto Sans KR', sans-serif;
+  --font-emoji: 'TossFace', var(--font-sans);
 
   /* Shadows */
   --shadow-elevated: 0 24px 60px -20px oklch(from var(--color-default-800) l c h / 0.45);
 
   /* Animations */
   --animate-fade-in: fade-in 0.35s cubic-bezier(0.33, 1, 0.68, 1) forwards;
-  --animate-fade-in-view: fade-in 0.5s cubic-bezier(0.33, 1, 0.68, 1) forwards;
+  --animate-fade-in-lg: fade-in 0.5s cubic-bezier(0.33, 1, 0.68, 1) forwards;
   --animate-fade-out: fade-out 0.35s cubic-bezier(0.33, 1, 0.68, 1) forwards;
-  --animate-fade-out-view: fade-out 0.5s cubic-bezier(0.33, 1, 0.68, 1) forwards;
+  --animate-fade-out-lg: fade-out 0.5s cubic-bezier(0.33, 1, 0.68, 1) forwards;
 
   @keyframes fade-in {
     0% { opacity: 0; }

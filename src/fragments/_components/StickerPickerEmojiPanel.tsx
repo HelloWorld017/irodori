@@ -14,6 +14,7 @@ export const StickerPickerEmojiPanel = ({ onSelect }: EmojiPickerPanelProps) => 
   });
 
   const stylesheet = '.irodori__sticker-picker em-emoji-picker { --shadow: none; }';
+
   return (
     <div className="irodori__sticker-picker mt-3 flex flex-col items-center">
       <style>{stylesheet}</style>

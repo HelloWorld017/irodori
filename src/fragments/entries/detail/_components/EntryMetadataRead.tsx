@@ -70,7 +70,7 @@ export const EntryMetadataRead = ({ className, entry, tagCategories }: EntryMeta
                 title={sticker.label}
               >
                 {sticker.kind === 'emoji' && sticker.emoji ? (
-                  <span className="text-3xl leading-none">{sticker.emoji}</span>
+                  <span className="font-emoji text-3xl leading-none">{sticker.emoji}</span>
                 ) : (
                   <AssetImage
                     blobDigest={sticker.blobDigest}

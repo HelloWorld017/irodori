@@ -73,8 +73,14 @@ export const uploadAssetImage = async ({
   file,
 }: UploadAssetImageInput): Promise<Asset> => {
   if (!file.type.startsWith('image/')) {
-    throw new Error('Only image files can be uploaded as entry assets.');
+    throw new Error('Only image files can be uploaded as an image asset.');
   }
+
+  const { width, height, blurhash } = await resolveImageMetadata(file).catch(() => ({
+    width: null,
+    height: null,
+    blurhash: null,
+  }));
 
   const now = Date.now();
   const blobDigest = await clxDB.blobs.putBlob(file, {
@@ -84,12 +90,6 @@ export const uploadAssetImage = async ({
   });
 
   try {
-    const { width, height, blurhash } = await resolveImageMetadata(file).catch(() => ({
-      width: null,
-      height: null,
-      blurhash: null,
-    }));
-
     return await services.assets.createUploaded({
       blobDigest,
       blurhash,

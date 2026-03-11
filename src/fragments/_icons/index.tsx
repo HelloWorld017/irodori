@@ -12,6 +12,7 @@ import {
   X,
 } from 'lucide-react';
 import { DynamicIcon as LucideDynamicIcon } from 'lucide-react/dynamic';
+import { classes } from '@/utils/classes';
 import type { ComponentProps, ComponentType, ReactNode } from 'react';
 
 const wrapLucideComponent = <TProps,>(LucideIcon: ComponentType<TProps>) => {
@@ -41,4 +42,14 @@ type DynamicIconType = (
   props: Omit<ComponentProps<typeof LucideDynamicIcon>, 'name'> & { name: string }
 ) => ReactNode;
 
-export const DynamicIcon = wrapLucideComponent(LucideDynamicIcon) as DynamicIconType;
+export const DynamicIcon = (({ className, ...props }: ComponentProps<typeof LucideDynamicIcon>) => (
+  <span className="flex h-[1em] w-[1em] items-center justify-center">
+    <LucideDynamicIcon
+      width="1em"
+      height="1em"
+      stroke="currentColor"
+      className={classes('animate-fade-in-lg', className)}
+      {...props}
+    />
+  </span>
+)) as DynamicIconType;
