@@ -22,6 +22,7 @@ export const StickerPickerEmojiPanel = ({ onSelect }: EmojiPickerPanelProps) => 
       --rgb-background: from var(--color-base-background) r g b;
       --rgb-accent: from var(--color-highlight) r g b;
       --rgb-input: from var(--color-elevated-background) r g b;
+      --color-border: var(--color-elevated-background);
     }
   `;
 

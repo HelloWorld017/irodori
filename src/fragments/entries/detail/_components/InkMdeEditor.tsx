@@ -1,5 +1,5 @@
 import { acceptCompletion, autocompletion } from '@codemirror/autocomplete';
-import { drawSelection, keymap } from '@codemirror/view';
+import { drawSelection, EditorView, keymap } from '@codemirror/view';
 import { ink } from 'ink-mde';
 import { useEffect, useRef, useState } from 'react';
 import { useLatestCallback } from '@/hooks/useLatestCallback';
@@ -87,7 +87,7 @@ export const InkMdeEditor = ({ value, placeholder = '', onChange }: InkMdeEditor
                   value: [keymap.of([{ key: 'Tab', run: acceptCompletion }])],
                 },
               ] as const)
-            : []),
+            : ([{ type: 'default', value: EditorView.editable.of(false) }] as const)),
         ],
         hooks: {
           ...editorOptions.hooks,
