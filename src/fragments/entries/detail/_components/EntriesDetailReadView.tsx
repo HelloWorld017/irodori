@@ -4,6 +4,7 @@ import { buildRoute } from '@/utils/route';
 import { useEntriesNotebookId } from '../../_providers/EntriesProvider';
 import { EntryHeader } from './EntryHeader';
 import { EntryMetadataRead } from './EntryMetadataRead';
+import { InkMdeEditor } from './InkMdeEditor';
 import type { TagCategory } from '@/repositories/TagCategoriesRepository';
 import type { EntryDetailItem } from '@/services/EntriesService';
 
@@ -51,7 +52,7 @@ export const EntriesDetailReadView = ({
             <p className="text-sm font-medium text-secondary">본문</p>
             {entry.body.trim() ? (
               <article className="text-[15px] leading-7 whitespace-pre-wrap text-primary">
-                {entry.body}
+                <InkMdeEditor value={entry.body} />
               </article>
             ) : (
               <p className="text-sm text-tertiary">아직 작성된 본문이 없어요.</p>

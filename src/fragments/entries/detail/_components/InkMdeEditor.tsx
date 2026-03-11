@@ -2,16 +2,17 @@ import { acceptCompletion, autocompletion } from '@codemirror/autocomplete';
 import { drawSelection, keymap } from '@codemirror/view';
 import { ink } from 'ink-mde';
 import { useEffect, useRef, useState } from 'react';
+import { useLatestCallback } from '@/hooks/useLatestCallback';
 import { useTagPlugin } from '../_editor/tag';
 import type { Instance, Options } from 'ink-mde';
 
 type InkMdeEditorProps = {
   value: string;
   placeholder?: string;
-  onChange: (value: string) => void;
+  onChange?: (value: string) => void;
 };
 
-const editorOptions: Options = {
+const editorOptions = {
   files: {
     clipboard: false,
     dragAndDrop: false,
@@ -29,24 +30,20 @@ const editorOptions: Options = {
     autocomplete: false,
     images: false,
     lists: true,
-    readonly: false,
     spellcheck: false,
     toolbar: false,
   },
   search: true,
-};
+} satisfies Options;
 
 const css = String.raw;
 
 export const InkMdeEditor = ({ value, placeholder = '', onChange }: InkMdeEditorProps) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const editorRef = useRef<Instance | null>(null);
-  const onChangeRef = useRef(onChange);
+  const onChangeLatest = useLatestCallback(onChange ?? (() => {}));
   const [initialValue] = useState(value);
-
-  useEffect(() => {
-    onChangeRef.current = onChange;
-  }, [onChange]);
+  const isReadOnly = !!onChange;
 
   const tagPlugin = useTagPlugin();
 
@@ -73,6 +70,10 @@ export const InkMdeEditor = ({ value, placeholder = '', onChange }: InkMdeEditor
     void Promise.resolve(
       ink(target, {
         ...editorOptions,
+        interface: {
+          ...editorOptions.interface,
+          readonly: isReadOnly,
+        },
         doc: initialValue,
         placeholder,
         plugins: [
@@ -87,7 +88,7 @@ export const InkMdeEditor = ({ value, placeholder = '', onChange }: InkMdeEditor
         hooks: {
           ...editorOptions.hooks,
           afterUpdate: (doc: string) => {
-            onChangeRef.current(doc);
+            onChangeLatest(doc);
           },
         },
       })
@@ -106,7 +107,7 @@ export const InkMdeEditor = ({ value, placeholder = '', onChange }: InkMdeEditor
       editorRef.current = null;
       target.replaceChildren();
     };
-  }, [initialValue, placeholder, tagPlugin]);
+  }, [initialValue, isReadOnly, onChangeLatest, placeholder, tagPlugin]);
 
   const stylesheet = css`
     .irodori__ink-mde-editor {

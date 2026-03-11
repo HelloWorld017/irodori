@@ -19,7 +19,7 @@ import {
   useSetEntriesDetailBody,
   useSetEntriesDetailCover,
   useSetEntriesDetailTitle,
-} from '../_providers/EntriesDetailProvider';
+} from '../_providers/EntriesDetailEditProvider';
 import { EntryHeader } from './EntryHeader';
 import { EntryMetadataEdit } from './EntryMetadataEdit';
 import { InkMdeEditor } from './InkMdeEditor';

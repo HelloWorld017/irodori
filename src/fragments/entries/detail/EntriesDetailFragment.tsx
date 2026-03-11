@@ -8,7 +8,7 @@ import { createTaggedError, isTaggedError } from '@/utils/error';
 import { queryKey } from '@/utils/queryKey';
 import { EntriesDetailEditView } from './_components/EntriesDetailEditView';
 import { EntriesDetailReadView } from './_components/EntriesDetailReadView';
-import { EntriesDetailProvider } from './_providers/EntriesDetailProvider';
+import { EntriesDetailEditProvider } from './_providers/EntriesDetailEditProvider';
 import type { TagCategory } from '@/repositories/TagCategoriesRepository';
 
 type EntriesDetailFragmentProps = {
@@ -60,13 +60,13 @@ const EntriesDetailFragmentInner = ({ edit = false }: EntriesDetailFragmentProps
   const initialSavedAt = draftQuery.data?.updatedAt ?? null;
 
   return (
-    <EntriesDetailProvider
+    <EntriesDetailEditProvider
       entryId={detailQuery.data.id}
       initialDraft={initialDraft}
       initialSavedAt={initialSavedAt}
     >
       <EntriesDetailEditView entry={detailQuery.data} tagCategories={tagCategories} />
-    </EntriesDetailProvider>
+    </EntriesDetailEditProvider>
   );
 };
 

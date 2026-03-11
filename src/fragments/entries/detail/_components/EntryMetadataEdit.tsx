@@ -10,7 +10,7 @@ import {
   useRemoveEntriesDetailTag,
   useSetEntriesDetailDate,
   useSetEntriesDetailStickerValue,
-} from '../_providers/EntriesDetailProvider';
+} from '../_providers/EntriesDetailEditProvider';
 import { buildEntryMetadataTagSections } from '../_utils/buildEntryMetadataTagSections';
 import type { TagCategory } from '@/repositories/TagCategoriesRepository';
 
@@ -66,8 +66,8 @@ type EntryMetadataEditProps = {
 export const EntryMetadataEdit = ({ className, tagCategories }: EntryMetadataEditProps) => {
   const notebookId = useEntriesNotebookId();
   const draft = useEntriesDetailDraft();
-  const effectiveTags = useEntriesDetailEffectiveTags();
   const setDate = useSetEntriesDetailDate();
+  const effectiveTags = useEntriesDetailEffectiveTags();
   const appendTag = useAppendEntriesDetailTag();
   const removeTag = useRemoveEntriesDetailTag();
   const setStickerValue = useSetEntriesDetailStickerValue();

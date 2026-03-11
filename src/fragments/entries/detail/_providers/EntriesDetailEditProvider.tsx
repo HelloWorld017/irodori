@@ -55,7 +55,7 @@ const buildDraftData = ({
     excludedTagIds,
   });
 
-const [EntriesDetailProvider, useEntriesDetail] = buildContext(
+const [EntriesDetailEditProvider, useEntriesDetailEdit] = buildContext(
   ({ entryId, initialDraft, initialSavedAt }: EntriesDetailProviderProps) => {
     const services = useServices();
     const showToast = useShowToast();
@@ -326,21 +326,23 @@ const [EntriesDetailProvider, useEntriesDetail] = buildContext(
   }
 );
 
-export { EntriesDetailProvider };
+export { EntriesDetailEditProvider };
 
-export const useEntriesDetailDraft = () => useEntriesDetail(state => state.draft);
-export const useEntriesDetailIsDirty = () => useEntriesDetail(state => state.isDirty);
-export const useEntriesDetailSaveState = () => useEntriesDetail(state => state.saveState);
+export const useEntriesDetailDraft = () => useEntriesDetailEdit(state => state.draft);
+export const useEntriesDetailIsDirty = () => useEntriesDetailEdit(state => state.isDirty);
+export const useEntriesDetailSaveState = () => useEntriesDetailEdit(state => state.saveState);
 
-export const useEntriesDetailEffectiveTags = () => useEntriesDetail(state => state.effectiveTags);
+export const useEntriesDetailEffectiveTags = () =>
+  useEntriesDetailEdit(state => state.effectiveTags);
+
 export const useEntriesDetailResolvedTagsById = () =>
-  useEntriesDetail(state => state.resolvedTagsById);
+  useEntriesDetailEdit(state => state.resolvedTagsById);
 
-export const useSetEntriesDetailTitle = () => useEntriesDetail(state => state.setTitle);
-export const useSetEntriesDetailBody = () => useEntriesDetail(state => state.setBody);
-export const useSetEntriesDetailDate = () => useEntriesDetail(state => state.setDate);
-export const useSetEntriesDetailCover = () => useEntriesDetail(state => state.setCover);
-export const useAppendEntriesDetailTag = () => useEntriesDetail(state => state.appendTag);
-export const useRemoveEntriesDetailTag = () => useEntriesDetail(state => state.removeTag);
+export const useSetEntriesDetailTitle = () => useEntriesDetailEdit(state => state.setTitle);
+export const useSetEntriesDetailBody = () => useEntriesDetailEdit(state => state.setBody);
+export const useSetEntriesDetailDate = () => useEntriesDetailEdit(state => state.setDate);
+export const useSetEntriesDetailCover = () => useEntriesDetailEdit(state => state.setCover);
+export const useAppendEntriesDetailTag = () => useEntriesDetailEdit(state => state.appendTag);
+export const useRemoveEntriesDetailTag = () => useEntriesDetailEdit(state => state.removeTag);
 export const useSetEntriesDetailStickerValue = () =>
-  useEntriesDetail(state => state.setStickerValue);
+  useEntriesDetailEdit(state => state.setStickerValue);
