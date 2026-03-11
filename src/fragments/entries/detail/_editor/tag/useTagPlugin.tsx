@@ -2,23 +2,30 @@ import { useEffect, useMemo, useRef } from 'react';
 import { useServices } from '@/fragments/_providers/DatabaseProvider';
 import { useLatestCallback } from '@/hooks/useLatestCallback';
 import { useEntriesNotebookId } from '../../../_providers/EntriesProvider';
-import { useEntriesDetailResolvedTagsById } from '../../_providers/EntriesDetailProvider';
+import { useTagsFetcher } from '../../_hooks';
+import { useEntriesDetailEntry } from '../../_providers/EntriesDetailProvider';
 import { createTagCompletionPlugin } from './tagCompletionPlugin';
 import { createTagResolutionPlugin } from './tagResolutionPlugin';
 import { createTagWidgetPlugin } from './tagWidgetPlugin';
 import type { TagViewItem } from '@/repositories/TagsRepository';
 
+const isPromise = <T,>(value: T | Promise<T>): value is Promise<T> =>
+  typeof value === 'object' && value !== null && 'then' in value;
+
 export const useTagPlugin = () => {
   const services = useServices();
   const notebookId = useEntriesNotebookId();
-  const resolvedTagsById = useEntriesDetailResolvedTagsById();
-  const knownTagsRef = useRef(new Map(resolvedTagsById));
+  const entry = useEntriesDetailEntry();
+  const { fetchTag: baseFetchTag } = useTagsFetcher();
+  const knownTagsRef = useRef(new Map(entry.tags.map(tag => [tag.id, tag])));
 
   useEffect(() => {
-    knownTagsRef.current = new Map([...knownTagsRef.current, ...resolvedTagsById]);
-  }, [resolvedTagsById]);
+    knownTagsRef.current = new Map([
+      ...entry.tags.map(tag => [tag.id, tag] as const),
+      ...knownTagsRef.current,
+    ]);
+  }, [entry.tags]);
 
-  const getTagById = useLatestCallback((tagId: string) => knownTagsRef.current.get(tagId) ?? null);
   const rememberTag = useLatestCallback((tag: TagViewItem) => {
     knownTagsRef.current.set(tag.id, tag);
   });
@@ -38,9 +45,38 @@ export const useTagPlugin = () => {
     })
   );
 
+  const fetchTag = useLatestCallback((tagId: string) => {
+    const knownTag = knownTagsRef.current.get(tagId);
+    if (knownTag) {
+      return knownTag;
+    }
+
+    const fetchedTag = baseFetchTag(tagId);
+    if (isPromise(fetchedTag)) {
+      return fetchedTag
+        .then(tag => {
+          if (tag) {
+            rememberTag(tag);
+          }
+
+          return tag;
+        })
+        .catch(error => {
+          console.error('Failed to fetch tag for markup widget', error);
+          return null;
+        });
+    }
+
+    if (fetchedTag) {
+      rememberTag(fetchedTag);
+    }
+
+    return fetchedTag;
+  });
+
   const tagPlugin = useMemo(() => {
     const props = {
-      getTagById,
+      fetchTag,
       rememberTag,
       searchTags,
       resolveTag,
@@ -51,7 +87,7 @@ export const useTagPlugin = () => {
       ...createTagResolutionPlugin(props),
       ...createTagWidgetPlugin(props),
     ];
-  }, [getTagById, rememberTag, searchTags, resolveTag]);
+  }, [fetchTag, rememberTag, searchTags, resolveTag]);
 
   return tagPlugin;
 };

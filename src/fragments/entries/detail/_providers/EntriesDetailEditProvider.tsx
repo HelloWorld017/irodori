@@ -1,13 +1,12 @@
-import { useQueryClient, useSuspenseQueries } from '@tanstack/react-query';
-import { create, keyResolver, windowScheduler } from '@yornaath/batshit';
-import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
-import { BATCH_WINDOW_MS } from '@/constants/batch';
+import { useQueryClient } from '@tanstack/react-query';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useServices } from '@/fragments/_providers/DatabaseProvider';
 import { useShowToast } from '@/fragments/_providers/ToastProvider';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { normalizeEntryDraftData } from '@/services/EntryDraftsService';
 import { buildContext } from '@/utils/context';
-import { batchKey, queryKey } from '@/utils/queryKey';
+import { queryKey } from '@/utils/queryKey';
+import { useTagsFetcher } from '../_hooks';
 import { extractTagReferenceIds } from '../_utils/tagReferences';
 import type { StickerPickerValue } from '@/fragments/_components/StickerPicker';
 import type { EntryDraftCover, EntryDraftData } from '@/repositories/EntryDraftsRepository';
@@ -122,37 +121,12 @@ const [EntriesDetailEditProvider, useEntriesDetailEdit] = buildContext(
       [contentTagIds, excludedTagIds, metadataTagIds]
     );
 
-    const resolveTag = useMemo(
-      () =>
-        services &&
-        create<TagViewItem[], string, TagViewItem | null>({
-          name: batchKey('common', 'tags'),
-          fetcher: async (tagIds: string[]) => services.tags.listByIds([...new Set(tagIds)]),
-          resolver: keyResolver('id'),
-          scheduler: windowScheduler(BATCH_WINDOW_MS),
-        }),
-      [services]
-    );
-
     const resolvedTagIds = useMemo(
       () => toUniqueIds([...metadataTagIds, ...contentTagIds, ...excludedTagIds]),
       [contentTagIds, excludedTagIds, metadataTagIds]
     );
 
-    const resolvedTagIdsDeferred = useDeferredValue(resolvedTagIds);
-    const resolvedTagsById = useSuspenseQueries({
-      queries: resolveTag
-        ? resolvedTagIdsDeferred.map(tagId => ({
-            enabled: true,
-            queryKey: queryKey('entriesDetail', 'detail-tag', tagId),
-            queryFn: () => resolveTag.fetch(tagId),
-          }))
-        : [],
-      combine: results =>
-        new Map(
-          results.map((result, index) => [resolvedTagIdsDeferred[index], result.data ?? null])
-        ),
-    });
+    const { resolvedTagsById } = useTagsFetcher({ tagIds: resolvedTagIds });
 
     const effectiveTags = useMemo<TagViewItem[]>(
       () => effectiveTagIds.map(tagId => resolvedTagsById.get(tagId)).filter(x => !!x),
@@ -313,7 +287,6 @@ const [EntriesDetailEditProvider, useEntriesDetailEdit] = buildContext(
       saveState: saveStateWithLastSavedAt,
 
       effectiveTags,
-      resolvedTagsById,
 
       setTitle,
       setBody,
@@ -334,9 +307,6 @@ export const useEntriesDetailSaveState = () => useEntriesDetailEdit(state => sta
 
 export const useEntriesDetailEffectiveTags = () =>
   useEntriesDetailEdit(state => state.effectiveTags);
-
-export const useEntriesDetailResolvedTagsById = () =>
-  useEntriesDetailEdit(state => state.resolvedTagsById);
 
 export const useSetEntriesDetailTitle = () => useEntriesDetailEdit(state => state.setTitle);
 export const useSetEntriesDetailBody = () => useEntriesDetailEdit(state => state.setBody);

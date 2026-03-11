@@ -1,30 +1,31 @@
 import { Decoration, MatchDecorator, ViewPlugin, WidgetType, EditorView } from '@codemirror/view';
+import { Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Tag } from '@/fragments/_components/Tag';
 import { TAG_REFERENCE_ID_REGEX } from '../../_utils/tagReferences';
+import { TagMarkup } from './TagMarkup';
 import type { TagPluginProps } from './types';
-import type { TagViewItem } from '@/repositories/TagsRepository';
 import type { Options as InkMde } from 'ink-mde';
 import type { Root } from 'react-dom/client';
 
 type WidgetState = { root: Root; element: HTMLElement; refs: number };
 
+const EmptyTag = () => (
+  <span className="inline-flex h-7 w-18 rounded-full bg-elevated-background" />
+);
+
 class TagChipWidget extends WidgetType {
-  private tag: TagViewItem;
+  private tagId: string;
+  private fetchTag: TagPluginProps['fetchTag'];
   private state: WidgetState | null = null;
 
-  constructor(tag: TagViewItem) {
+  constructor(tagId: string, fetchTag: TagPluginProps['fetchTag']) {
     super();
-    this.tag = tag;
+    this.tagId = tagId;
+    this.fetchTag = fetchTag;
   }
 
   eq(widget: WidgetType): boolean {
-    const isEqual =
-      widget instanceof TagChipWidget &&
-      widget.tag.id === this.tag.id &&
-      widget.tag.label === this.tag.label &&
-      widget.tag.color === this.tag.color &&
-      widget.tag.icon === this.tag.icon;
+    const isEqual = widget instanceof TagChipWidget && widget.tagId === this.tagId;
 
     if (!isEqual) {
       return false;
@@ -80,7 +81,11 @@ class TagChipWidget extends WidgetType {
       return false;
     }
 
-    this.state.root.render(<Tag {...this.tag} />);
+    this.state.root.render(
+      <Suspense fallback={<EmptyTag />}>
+        <TagMarkup uuid={this.tagId} fetchTag={this.fetchTag} />
+      </Suspense>
+    );
     return true;
   }
 
@@ -102,7 +107,7 @@ class TagChipWidget extends WidgetType {
   }
 }
 
-const tagReferenceDecorator = (getTagById: TagPluginProps['getTagById']) =>
+const tagReferenceDecorator = (fetchTag: TagPluginProps['fetchTag']) =>
   new MatchDecorator({
     regexp: new RegExp(TAG_REFERENCE_ID_REGEX.source, 'g'),
     decoration: match => {
@@ -111,22 +116,17 @@ const tagReferenceDecorator = (getTagById: TagPluginProps['getTagById']) =>
         return null;
       }
 
-      const tag = getTagById(tagId);
-      if (!tag) {
-        return null;
-      }
-
       return Decoration.replace({
-        widget: new TagChipWidget(tag),
+        widget: new TagChipWidget(tagId, fetchTag),
         inclusive: false,
       });
     },
   });
 
 export const createTagWidgetPlugin = ({
-  getTagById,
-}: Pick<TagPluginProps, 'getTagById'>): InkMde.Plugin[] => {
-  const decorator = tagReferenceDecorator(getTagById);
+  fetchTag,
+}: Pick<TagPluginProps, 'fetchTag'>): InkMde.Plugin[] => {
+  const decorator = tagReferenceDecorator(fetchTag);
   const tagDecorations = ViewPlugin.fromClass(
     class {
       decorations = Decoration.none;

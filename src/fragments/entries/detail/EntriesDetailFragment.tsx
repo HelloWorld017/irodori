@@ -9,6 +9,7 @@ import { queryKey } from '@/utils/queryKey';
 import { EntriesDetailEditView } from './_components/EntriesDetailEditView';
 import { EntriesDetailReadView } from './_components/EntriesDetailReadView';
 import { EntriesDetailEditProvider } from './_providers/EntriesDetailEditProvider';
+import { EntriesDetailProvider } from './_providers/EntriesDetailProvider';
 import type { TagCategory } from '@/repositories/TagCategoriesRepository';
 
 type EntriesDetailFragmentProps = {
@@ -53,20 +54,26 @@ const EntriesDetailFragmentInner = ({ edit = false }: EntriesDetailFragmentProps
 
   const tagCategories: TagCategory[] | null = tagCategoriesQuery.data ?? [];
   if (!edit) {
-    return <EntriesDetailReadView entry={detailQuery.data} tagCategories={tagCategories} />;
+    return (
+      <EntriesDetailProvider entry={detailQuery.data}>
+        <EntriesDetailReadView entry={detailQuery.data} tagCategories={tagCategories} />
+      </EntriesDetailProvider>
+    );
   }
 
   const initialDraft = draftQuery.data?.data ?? toEntryDraftData(detailQuery.data);
   const initialSavedAt = draftQuery.data?.updatedAt ?? null;
 
   return (
-    <EntriesDetailEditProvider
-      entryId={detailQuery.data.id}
-      initialDraft={initialDraft}
-      initialSavedAt={initialSavedAt}
-    >
-      <EntriesDetailEditView entry={detailQuery.data} tagCategories={tagCategories} />
-    </EntriesDetailEditProvider>
+    <EntriesDetailProvider entry={detailQuery.data}>
+      <EntriesDetailEditProvider
+        entryId={detailQuery.data.id}
+        initialDraft={initialDraft}
+        initialSavedAt={initialSavedAt}
+      >
+        <EntriesDetailEditView entry={detailQuery.data} tagCategories={tagCategories} />
+      </EntriesDetailEditProvider>
+    </EntriesDetailProvider>
   );
 };
 
