@@ -1,6 +1,6 @@
 import { use, useMemo } from 'react';
 import { Tag } from '@/fragments/_components/Tag';
-import type { TagPluginProps } from './types';
+import type { TagPluginProps } from '../_types/TagPluginProps';
 
 const isPromise = <T,>(value: T | Promise<T>): value is Promise<T> =>
   typeof value === 'object' && value !== null && 'then' in value;

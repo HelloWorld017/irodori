@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useServices } from '@/fragments/_providers/DatabaseProvider';
+import { useEntriesNotebookId } from '@/fragments/entries/_providers/EntriesProvider';
+import { useTagsFetcher } from '@/fragments/entries/detail/_hooks/useTagsFetcher';
+import { useEntriesDetailEntry } from '@/fragments/entries/detail/_providers/EntriesDetailProvider';
 import { useLatestCallback } from '@/hooks/useLatestCallback';
-import { useEntriesNotebookId } from '../../../_providers/EntriesProvider';
-import { useTagsFetcher } from '../../_hooks/useTagsFetcher';
-import { useEntriesDetailEntry } from '../../_providers/EntriesDetailProvider';
-import { createTagCompletionPlugin } from './tagCompletionPlugin';
-import { createTagResolutionPlugin } from './tagResolutionPlugin';
-import { createTagWidgetPlugin } from './tagWidgetPlugin';
+import { createTagCompletionPlugin } from '../_plugins/tagCompletionPlugin';
+import { createTagResolutionPlugin } from '../_plugins/tagResolutionPlugin';
+import { createTagWidgetPlugin } from '../_plugins/tagWidgetPlugin';
 import type { TagViewItem } from '@/repositories/TagsRepository';
 
 const isPromise = <T,>(value: T | Promise<T>): value is Promise<T> =>

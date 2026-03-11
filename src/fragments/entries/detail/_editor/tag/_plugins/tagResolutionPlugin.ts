@@ -3,8 +3,8 @@ import {
   isTagReferenceId,
   TAG_REFERENCE_CONTENT_REGEX,
   toTagReference,
-} from '../../_utils/tagReferences';
-import type { TagPluginProps } from './types';
+} from '@/fragments/entries/detail/_utils/tagReferences';
+import type { TagPluginProps } from '../_types/TagPluginProps';
 import type { TagViewItem } from '@/repositories/TagsRepository';
 import type { Options as InkMde } from 'ink-mde';
 

@@ -2,9 +2,9 @@ import { Decoration, MatchDecorator, ViewPlugin, WidgetType, EditorView } from '
 import { Suspense } from 'react';
 import { flushSync } from 'react-dom';
 import { createRoot } from 'react-dom/client';
-import { TAG_REFERENCE_ID_REGEX } from '../../_utils/tagReferences';
-import { TagMarkup } from './TagMarkup';
-import type { TagPluginProps } from './types';
+import { TAG_REFERENCE_ID_REGEX } from '@/fragments/entries/detail/_utils/tagReferences';
+import { TagMarkup } from '../_components/TagMarkup';
+import type { TagPluginProps } from '../_types/TagPluginProps';
 import type { Options as InkMde } from 'ink-mde';
 import type { Root } from 'react-dom/client';
 

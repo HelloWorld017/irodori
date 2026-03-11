@@ -1,1 +1,1 @@
-export * from './useTagPlugin';
+export * from './_hooks/useTagPlugin';
