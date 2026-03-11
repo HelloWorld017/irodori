@@ -7,13 +7,23 @@ type EmojiPickerPanelProps = {
   onSelect: (emoji: string) => void;
 };
 
+const css = String.raw;
+
 export const StickerPickerEmojiPanel = ({ onSelect }: EmojiPickerPanelProps) => {
   const emojiQuery = useQuery({
     queryKey: queryKey('common', 'emoji'),
     queryFn: () => fetchEmojiData(),
   });
 
-  const stylesheet = '.irodori__sticker-picker em-emoji-picker { --shadow: none; }';
+  const stylesheet = css`
+    .irodori__sticker-picker em-emoji-picker {
+      --shadow: none;
+      --rgb-color: from var(--color-primary) r g b;
+      --rgb-background: from var(--color-base-background) r g b;
+      --rgb-accent: from var(--color-highlight) r g b;
+      --rgb-input: from var(--color-elevated-background) r g b;
+    }
+  `;
 
   return (
     <div className="irodori__sticker-picker mt-3 flex flex-col items-center">
