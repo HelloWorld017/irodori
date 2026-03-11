@@ -325,7 +325,7 @@ export const TagsPicker = ({
       <div
         className={classes(
           `flex min-h-11 items-center gap-2 rounded-2xl border border-line bg-base-background p-2
-          px-4`,
+          px-2.5`,
           inputClassName
         )}
       >
