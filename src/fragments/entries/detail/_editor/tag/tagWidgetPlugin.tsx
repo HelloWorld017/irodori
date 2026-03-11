@@ -1,5 +1,6 @@
 import { Decoration, MatchDecorator, ViewPlugin, WidgetType, EditorView } from '@codemirror/view';
 import { Suspense } from 'react';
+import { flushSync } from 'react-dom';
 import { createRoot } from 'react-dom/client';
 import { TAG_REFERENCE_ID_REGEX } from '../../_utils/tagReferences';
 import { TagMarkup } from './TagMarkup';
@@ -81,11 +82,13 @@ class TagChipWidget extends WidgetType {
       return false;
     }
 
-    this.state.root.render(
-      <Suspense fallback={<EmptyTag />}>
-        <TagMarkup uuid={this.tagId} fetchTag={this.fetchTag} />
-      </Suspense>
-    );
+    flushSync(() => {
+      this.state?.root.render(
+        <Suspense fallback={<EmptyTag />}>
+          <TagMarkup uuid={this.tagId} fetchTag={this.fetchTag} />
+        </Suspense>
+      );
+    });
     return true;
   }
 

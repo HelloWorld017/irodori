@@ -1,4 +1,4 @@
-import { use } from 'react';
+import { use, useMemo } from 'react';
 import { Tag } from '@/fragments/_components/Tag';
 import type { TagPluginProps } from './types';
 
@@ -11,7 +11,7 @@ type TagMarkupProps = {
 };
 
 export const TagMarkup = ({ uuid, fetchTag }: TagMarkupProps) => {
-  const result = fetchTag(uuid);
+  const result = useMemo(() => fetchTag(uuid), [uuid, fetchTag]);
   const tag = isPromise(result) ? use(result) : result;
 
   if (!tag) {

@@ -43,7 +43,7 @@ export const InkMdeEditor = ({ value, placeholder = '', onChange }: InkMdeEditor
   const editorRef = useRef<Instance | null>(null);
   const onChangeLatest = useLatestCallback(onChange ?? (() => {}));
   const [initialValue] = useState(value);
-  const isReadOnly = !!onChange;
+  const isReadOnly = !onChange;
 
   const tagPlugin = useTagPlugin();
 
@@ -78,12 +78,16 @@ export const InkMdeEditor = ({ value, placeholder = '', onChange }: InkMdeEditor
         placeholder,
         plugins: [
           ...plugins,
-          { type: 'default', value: completion },
-          { type: 'default', value: drawSelection() },
-          {
-            type: 'default',
-            value: [keymap.of([{ key: 'Tab', run: acceptCompletion }])],
-          },
+          ...(!isReadOnly
+            ? ([
+                { type: 'default', value: drawSelection() },
+                { type: 'default', value: completion },
+                {
+                  type: 'default',
+                  value: [keymap.of([{ key: 'Tab', run: acceptCompletion }])],
+                },
+              ] as const)
+            : []),
         ],
         hooks: {
           ...editorOptions.hooks,

@@ -1,12 +1,12 @@
-import { useQueryClient } from '@tanstack/react-query';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useQueryClient, useSuspenseQueries } from '@tanstack/react-query';
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { useServices } from '@/fragments/_providers/DatabaseProvider';
 import { useShowToast } from '@/fragments/_providers/ToastProvider';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { normalizeEntryDraftData } from '@/services/EntryDraftsService';
 import { buildContext } from '@/utils/context';
 import { queryKey } from '@/utils/queryKey';
-import { useTagsFetcher } from '../_hooks';
+import { useTagsFetcher } from '../_hooks/useTagsFetcher';
 import { extractTagReferenceIds } from '../_utils/tagReferences';
 import type { StickerPickerValue } from '@/fragments/_components/StickerPicker';
 import type { EntryDraftCover, EntryDraftData } from '@/repositories/EntryDraftsRepository';
@@ -111,6 +111,8 @@ const [EntriesDetailEditProvider, useEntriesDetailEdit] = buildContext(
     const savedSnapshotRef = useRef(initialSnapshot);
     const debouncedBody = useDebouncedValue(documentState.body, { delay: CONTENT_TAG_SYNC_DELAY });
 
+    const { getTagQueryOptions } = useTagsFetcher();
+
     const contentTagIds = useMemo(() => extractTagReferenceIds(debouncedBody), [debouncedBody]);
     const effectiveTagIds = useMemo(
       () =>
@@ -126,7 +128,17 @@ const [EntriesDetailEditProvider, useEntriesDetailEdit] = buildContext(
       [contentTagIds, excludedTagIds, metadataTagIds]
     );
 
-    const { resolvedTagsById } = useTagsFetcher({ tagIds: resolvedTagIds });
+    const resolvedTagIdsDeferred = useDeferredValue(resolvedTagIds);
+    const resolvedTagsById = useSuspenseQueries({
+      queries: resolvedTagIdsDeferred.map(tagId => ({
+        enabled: true,
+        ...getTagQueryOptions(tagId),
+      })),
+      combine: results =>
+        new Map(
+          results.map((result, index) => [resolvedTagIdsDeferred[index], result.data ?? null])
+        ),
+    });
 
     const effectiveTags = useMemo<TagViewItem[]>(
       () => effectiveTagIds.map(tagId => resolvedTagsById.get(tagId)).filter(x => !!x),

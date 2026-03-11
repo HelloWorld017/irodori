@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import { useServices } from '@/fragments/_providers/DatabaseProvider';
 import { useLatestCallback } from '@/hooks/useLatestCallback';
 import { useEntriesNotebookId } from '../../../_providers/EntriesProvider';
-import { useTagsFetcher } from '../../_hooks';
+import { useTagsFetcher } from '../../_hooks/useTagsFetcher';
 import { useEntriesDetailEntry } from '../../_providers/EntriesDetailProvider';
 import { createTagCompletionPlugin } from './tagCompletionPlugin';
 import { createTagResolutionPlugin } from './tagResolutionPlugin';

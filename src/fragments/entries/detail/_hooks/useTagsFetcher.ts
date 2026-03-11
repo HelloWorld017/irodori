@@ -1,19 +1,13 @@
-import { useQueryClient, useSuspenseQueries } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { create, keyResolver, windowScheduler } from '@yornaath/batshit';
-import { useDeferredValue, useMemo } from 'react';
+import { useMemo } from 'react';
 import { BATCH_WINDOW_MS } from '@/constants/batch';
 import { useServices } from '@/fragments/_providers/DatabaseProvider';
 import { batchKey, queryKey } from '@/utils/queryKey';
 import { useEntriesDetailEntry } from '../_providers/EntriesDetailProvider';
 import type { TagViewItem } from '@/repositories/TagsRepository';
 
-type UseTagsFetcherInput = {
-  tagIds?: string[];
-};
-
-const toUniqueIds = (values: string[]): string[] => [...new Set(values)];
-
-export const useTagsFetcher = ({ tagIds = [] }: UseTagsFetcherInput = {}) => {
+export const useTagsFetcher = () => {
   const services = useServices();
   const queryClient = useQueryClient();
   const entry = useEntriesDetailEntry();
@@ -21,10 +15,8 @@ export const useTagsFetcher = ({ tagIds = [] }: UseTagsFetcherInput = {}) => {
     () => new Map(entry.tags.map(tag => [tag.id, tag] as const)),
     [entry.tags]
   );
-  const resolvedTagIds = useMemo(() => toUniqueIds(tagIds), [tagIds]);
-  const resolvedTagIdsDeferred = useDeferredValue(resolvedTagIds);
 
-  const resolveTag = useMemo(
+  const fetchTag = useMemo(
     () =>
       create<TagViewItem[], string, TagViewItem | null>({
         name: batchKey('common', 'tags'),
@@ -39,22 +31,13 @@ export const useTagsFetcher = ({ tagIds = [] }: UseTagsFetcherInput = {}) => {
   const getTagQueryOptions = useMemo(
     () => (tagId: string) => ({
       queryKey: queryKey('entriesDetail', 'detail-tag', tagId),
-      queryFn: () => resolveTag.fetch(tagId),
+      queryFn: () => fetchTag.fetch(tagId),
       initialData: initialTagsById.get(tagId),
     }),
-    [initialTagsById, resolveTag]
+    [initialTagsById, fetchTag]
   );
 
-  const resolvedTagsById = useSuspenseQueries({
-    queries: resolvedTagIdsDeferred.map(tagId => ({
-      enabled: true,
-      ...getTagQueryOptions(tagId),
-    })),
-    combine: results =>
-      new Map(results.map((result, index) => [resolvedTagIdsDeferred[index], result.data ?? null])),
-  });
-
-  const fetchTag = useMemo(
+  const fetchTagWithCache = useMemo(
     () =>
       (tagId: string): TagViewItem | null | Promise<TagViewItem | null> => {
         const cachedTag = queryClient.getQueryData<TagViewItem | null>(
@@ -76,7 +59,7 @@ export const useTagsFetcher = ({ tagIds = [] }: UseTagsFetcherInput = {}) => {
   );
 
   return {
-    fetchTag,
-    resolvedTagsById,
+    fetchTag: fetchTagWithCache,
+    getTagQueryOptions,
   };
 };
