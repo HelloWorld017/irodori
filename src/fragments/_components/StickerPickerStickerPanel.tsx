@@ -40,29 +40,31 @@ export const StickerPickerSticker = ({
       type="button"
       onClick={() => onSelect(sticker.id)}
       className={classes(
-        `flex aspect-square flex-col items-center justify-center gap-1 rounded-xl border
-        border-transparent p-2 transition`,
-        selected ? 'text-highlight' : 'text-primary hover:border-line'
+        `group relative flex aspect-square flex-col items-center justify-center gap-1 rounded-xl
+        border border-transparent p-2 transition`
       )}
       title={sticker.label}
     >
-      <div
-        className={classes(
-          'flex aspect-square flex-1 items-center justify-center overflow-hidden rounded-md p-1',
-          selected ? 'bg-highlight-foreground' : 'bg-elevated-background'
-        )}
-      >
+      <div className="flex flex-1 items-center justify-center overflow-hidden">
         {previewUrl && (
           <img
             src={previewUrl}
             alt={sticker.label}
-            className="aspect-square w-full object-contain"
+            className="aspect-square h-full w-full object-contain"
             loading="lazy"
-            style={{ filter: 'url(#effect-sticker-outline)' }}
           />
         )}
       </div>
-      <span className="line-clamp-1 w-full text-[11px]">{sticker.label}</span>
+      <span
+        className={classes(
+          `absolute bottom-1 left-[50%] translate-[-50%] overflow-hidden rounded-sm bg-black/70 px-2
+          text-center text-[11px] text-ellipsis whitespace-nowrap text-white opacity-0 transition
+          group-hover:opacity-100`,
+          selected && 'bg-highlight text-highlight-foreground opacity-100'
+        )}
+      >
+        {sticker.label}
+      </span>
     </button>
   );
 };
@@ -106,19 +108,6 @@ export const StickerPickerStickerPanel = ({
 
   return (
     <>
-      <svg width="0" height="0">
-        <defs>
-          <filter id="effect-sticker-outline" x="-50%" y="-50%" width="200%" height="200%">
-            <feMorphology in="SourceAlpha" operator="dilate" radius="4" result="outline" />
-            <feFlood flood-color="white" result="color" />
-            <feComposite in="color" in2="outline" operator="in" result="outlineColor" />
-            <feMerge>
-              <feMergeNode in="outlineColor" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
-      </svg>
       <div className="mt-3 flex items-center gap-2">
         <label
           className="flex min-w-0 flex-1 items-center gap-2 rounded-lg border border-line
