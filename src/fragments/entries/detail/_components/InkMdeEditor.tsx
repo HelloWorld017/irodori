@@ -2,6 +2,7 @@ import { acceptCompletion, autocompletion } from '@codemirror/autocomplete';
 import { drawSelection, EditorView, keymap } from '@codemirror/view';
 import { ink } from 'ink-mde';
 import { useEffect, useRef, useState } from 'react';
+import { Dropzone } from '@/fragments/_components/Dropzone';
 import { useLatestCallback } from '@/hooks/useLatestCallback';
 import { EditorPortalProvider } from '../_editor/_providers/EditorPortalProvider';
 import { useTagPlugin } from '../_editor/tag';
@@ -143,6 +144,13 @@ const InkMdeEditorInner = ({ value, placeholder = '', onChange }: InkMdeEditorPr
         ref={containerRef}
         className="irodori__ink-mde-editor flex h-[75vh] flex-col rounded-2xl border border-line
           bg-base-background p-3"
+      />
+      <Dropzone
+        onDrop={_files => {
+          // TODO
+        }}
+        title="이미지를 여기에 놓으세요"
+        description="이미지를 여기에 놓아서 본문에 추가할 수 있어요."
       />
     </>
   );

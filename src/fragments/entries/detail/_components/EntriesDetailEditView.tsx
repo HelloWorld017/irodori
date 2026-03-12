@@ -150,11 +150,8 @@ export const EntriesDetailEditView = ({
     clearDraftAndBackMutation.isPending ||
     removeEntryMutation.isPending;
 
-  const handleCoverFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    event.target.value = '';
-
-    if (!file) {
+  const handleCoverUpload = async (file: File) => {
+    if (isUploadingCover) {
       return;
     }
 
@@ -180,6 +177,26 @@ export const EntriesDetailEditView = ({
     } finally {
       setIsUploadingCover(false);
     }
+  };
+
+  const handleCoverUploadFiles = async (files: File[]) => {
+    const file = files.find(candidate => candidate.type.startsWith('image/')) ?? files[0];
+    if (!file) {
+      return;
+    }
+
+    await handleCoverUpload(file);
+  };
+
+  const handleCoverFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+
+    if (!file) {
+      return;
+    }
+
+    await handleCoverUpload(file);
   };
 
   const handleClearDraftAndBack = () => {
