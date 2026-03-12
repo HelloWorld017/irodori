@@ -39,11 +39,18 @@ const [DatabaseContextProvider, useDatabase] = buildContext(() => {
     }
   }, [showToast]);
 
+  const close = useCallback(() => {
+    setClxDB(null);
+    setRepositories(null);
+    setServices(null);
+  }, []);
+
   return {
     clxDB,
     repositories,
     services,
     initialize,
+    close,
   };
 });
 
@@ -92,6 +99,8 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => (
 
 export const useInitializeDatabase = () => useDatabase(state => state.initialize);
 export const useIsDatabaseInitialized = () => !!useDatabase(state => state.repositories);
+export const useCloseDatabase = () => useDatabase(state => state.close);
+
 export const useClxDBWithoutCheck = () => useDatabase(state => state.clxDB);
 export const useClxDB = () => {
   const clxdb = useClxDBWithoutCheck();

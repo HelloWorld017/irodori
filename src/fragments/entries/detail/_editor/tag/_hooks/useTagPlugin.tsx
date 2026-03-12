@@ -4,14 +4,12 @@ import { useEntriesNotebookId } from '@/fragments/entries/_providers/EntriesProv
 import { useTagsFetcher } from '@/fragments/entries/detail/_hooks/useTagsFetcher';
 import { useEntriesDetailEntry } from '@/fragments/entries/detail/_providers/EntriesDetailProvider';
 import { useLatestCallback } from '@/hooks/useLatestCallback';
+import { isPromise } from '@/utils/promise';
 import { useEditorPortal } from '../../_providers/EditorPortalProvider';
 import { createTagCompletionPlugin } from '../_plugins/tagCompletionPlugin';
 import { createTagResolutionPlugin } from '../_plugins/tagResolutionPlugin';
 import { createTagWidgetPlugin } from '../_plugins/tagWidgetPlugin';
 import type { TagViewItem } from '@/repositories/TagsRepository';
-
-const isPromise = <T,>(value: T | Promise<T>): value is Promise<T> =>
-  typeof value === 'object' && value !== null && 'then' in value;
 
 export const useTagPlugin = () => {
   const services = useServices();

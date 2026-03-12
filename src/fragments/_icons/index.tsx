@@ -7,6 +7,7 @@ import {
   Pencil,
   Plus,
   Search,
+  Settings,
   SquarePlus,
   Trash,
   X,
@@ -34,6 +35,7 @@ export const IconDelete = wrapLucideComponent(Delete);
 export const IconPencil = wrapLucideComponent(Pencil);
 export const IconPlus = wrapLucideComponent(Plus);
 export const IconSearch = wrapLucideComponent(Search);
+export const IconSettings = wrapLucideComponent(Settings);
 export const IconSquarePlus = wrapLucideComponent(SquarePlus);
 export const IconTrash = wrapLucideComponent(Trash);
 export const IconX = wrapLucideComponent(X);
