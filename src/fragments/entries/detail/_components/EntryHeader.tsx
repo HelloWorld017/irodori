@@ -12,6 +12,7 @@ export type EntryHeaderProps = {
   title: string;
   titleContent?: ReactNode;
   cover: EntryCoverAsset | null;
+  leadingAction?: ReactNode;
   action?: ReactNode;
 };
 
@@ -21,6 +22,7 @@ export const EntryHeader = ({
   title,
   titleContent,
   cover,
+  leadingAction,
   action,
 }: EntryHeaderProps) => {
   const random = useMemo(() => seededRandom(id), [id]);
@@ -58,8 +60,11 @@ export const EntryHeader = ({
           className="relative z-1 mx-auto flex w-full max-w-360 flex-1 flex-col justify-between p-6
             sm:p-8"
         >
-          <div className="flex items-start justify-end gap-4">{action}</div>
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex min-w-0 flex-1 items-start">{leadingAction}</div>
 
+            <div className="flex items-start justify-end gap-4">{action}</div>
+          </div>
           <div className="max-w-3xl">
             <div className="mb-4 text-xl text-white/90">#{index}</div>
             {titleContent ?? (

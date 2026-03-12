@@ -15,6 +15,7 @@ const [RouterContextProvider, useRouterContext] = buildContext(
     const historyBack = useCallback(() => {
       if (historyLength > 0) {
         history.back();
+        return;
       }
 
       navigate(buildRoute('shelf'), { replace: true });

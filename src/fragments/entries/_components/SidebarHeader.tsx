@@ -3,6 +3,7 @@ import { IconChevronLeft, IconSquarePlus } from '@/fragments/_icons';
 import { useServices } from '@/fragments/_providers/DatabaseProvider';
 import { useHistoryBack, useNavigate } from '@/fragments/_providers/RouterProvider';
 import { useShowToast } from '@/fragments/_providers/ToastProvider';
+import { useBreakPointIsBelow } from '@/hooks/useBreakPointIsBelow';
 import { anyParams, queryKey } from '@/utils/queryKey';
 import { buildRoute } from '@/utils/route';
 import { useEntriesNotebook, useEntriesNotebookId } from '../_providers/EntriesProvider';
@@ -15,6 +16,7 @@ export const SidebarHeader = () => {
   const notebook = useEntriesNotebook();
   const notebookId = useEntriesNotebookId();
   const historyBack = useHistoryBack();
+  const isMobile = useBreakPointIsBelow('lg');
 
   const { data: entriesCount } = useQuery({
     queryKey: queryKey('entries', 'count', notebookId),
@@ -38,7 +40,7 @@ export const SidebarHeader = () => {
           notebookId,
           entryId: entry.id,
         }),
-        { replace: true }
+        { replace: !isMobile }
       );
     },
     onError: error => {

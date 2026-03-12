@@ -7,7 +7,7 @@ import { queryKey } from '@/utils/queryKey';
 const [EntriesProvider, useEntries] = buildContext(() => {
   const services = useServices();
   const { notebookId } = useRouteParams<'entries'>();
-  const { data: notebook } = useQuery({
+  const { data: notebook, isPending } = useQuery({
     queryKey: queryKey('entries', 'notebook', notebookId),
     queryFn: () => services.notebooks.getById(notebookId),
   });
@@ -15,9 +15,11 @@ const [EntriesProvider, useEntries] = buildContext(() => {
   return {
     notebookId,
     notebook,
+    isNotebookPending: isPending,
   };
 });
 
 export { EntriesProvider };
 export const useEntriesNotebook = () => useEntries(state => state.notebook);
 export const useEntriesNotebookId = () => useEntries(state => state.notebookId);
+export const useEntriesIsNotebookPending = () => useEntries(state => state.isNotebookPending);

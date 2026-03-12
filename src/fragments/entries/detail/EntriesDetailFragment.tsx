@@ -2,6 +2,7 @@ import { useSuspenseQuery } from '@tanstack/react-query';
 import { AnimateView } from '@/fragments/_components/AnimateView';
 import { AsyncBoundary } from '@/fragments/_components/AsyncBoundary';
 import { useServices } from '@/fragments/_providers/DatabaseProvider';
+import { useBreakPointIsBelow } from '@/hooks/useBreakPointIsBelow';
 import { useRouteParams } from '@/hooks/useRouteParams';
 import { toEntryDraftData } from '@/services/EntryDraftsService';
 import { createTaggedError, isTaggedError } from '@/utils/error';
@@ -79,8 +80,10 @@ const EntriesDetailFragmentInner = ({ edit = false }: EntriesDetailFragmentProps
 
 export const EntriesDetailFragment = (props: EntriesDetailFragmentProps) => {
   const { entryId } = useRouteParams<'entriesDetail'>();
+  const isMobile = useBreakPointIsBelow('lg');
+
   return (
-    <AnimateView key={`${entryId}_${props.edit ? 'edit' : 'read'}`}>
+    <AnimateView key={`${entryId}_${props.edit ? 'edit' : 'read'}`} disabled={isMobile}>
       <AsyncBoundary animateView>
         {{
           error: ({ error }) =>

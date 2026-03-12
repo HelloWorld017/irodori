@@ -1,5 +1,6 @@
-import { IconPencil } from '@/fragments/_icons';
-import { useNavigate } from '@/fragments/_providers/RouterProvider';
+import { IconChevronLeft, IconPencil } from '@/fragments/_icons';
+import { useHistoryBack, useNavigate } from '@/fragments/_providers/RouterProvider';
+import { useBreakPointIsBelow } from '@/hooks/useBreakPointIsBelow';
 import { buildRoute } from '@/utils/route';
 import { useEntriesNotebookId } from '../../_providers/EntriesProvider';
 import { EntryHeader } from './EntryHeader';
@@ -17,6 +18,8 @@ export const EntriesDetailReadView = ({
 }) => {
   const notebookId = useEntriesNotebookId();
   const navigate = useNavigate();
+  const historyBack = useHistoryBack();
+  const isMobile = useBreakPointIsBelow('lg');
 
   return (
     <div className="space-y-6">
@@ -25,6 +28,19 @@ export const EntriesDetailReadView = ({
         id={entry.id}
         title={entry.title}
         cover={entry.coverAsset}
+        leadingAction={
+          isMobile ? (
+            <button
+              type="button"
+              onClick={historyBack}
+              className="-ml-2 rounded-full p-2 text-2xl text-white/80 transition
+                hover:bg-elevated-background-hover hover:text-white"
+              aria-label="뒤로가기"
+            >
+              <IconChevronLeft />
+            </button>
+          ) : null
+        }
         action={
           <button
             type="button"

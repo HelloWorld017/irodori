@@ -8,15 +8,16 @@ import type { EntryViewItem } from '@/services/EntriesService';
 
 type EntriesItemProps = {
   entry: EntryViewItem;
+  replace?: boolean;
 };
 
-export const EntriesItem = ({ entry }: EntriesItemProps) => {
+export const EntriesItem = ({ entry, replace = false }: EntriesItemProps) => {
   const notebookId = useEntriesNotebookId();
 
   return (
     <Link
       href={buildRoute('entriesDetail', { notebookId, entryId: entry.id })}
-      replace
+      replace={replace}
       className={isActive =>
         classes(
           `flex w-full flex-col rounded-xl border p-4 text-left transition focus-visible:ring-2

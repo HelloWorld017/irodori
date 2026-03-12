@@ -1,5 +1,6 @@
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useRef } from 'react';
+import { useBreakPointIsBelow } from '@/hooks/useBreakPointIsBelow';
 import { classes } from '@/utils/classes';
 import { EntriesItem } from './EntriesItem';
 import type { EntryViewItem } from '@/services/EntriesService';
@@ -13,6 +14,7 @@ type EntriesListProps = {
 
 export const EntriesList = ({ entries, className, children }: EntriesListProps) => {
   const scrollElementRef = useRef<HTMLDivElement>(null);
+  const isMobile = useBreakPointIsBelow('lg');
 
   const virtualizer = useVirtualizer({
     count: entries.length,
@@ -48,7 +50,7 @@ export const EntriesList = ({ entries, className, children }: EntriesListProps) 
                 className="absolute top-0 left-0 w-full py-1"
                 style={{ transform: `translateY(${virtualItem.start}px)` }}
               >
-                <EntriesItem entry={entry} />
+                <EntriesItem entry={entry} replace={!isMobile} />
               </li>
             );
           })}
