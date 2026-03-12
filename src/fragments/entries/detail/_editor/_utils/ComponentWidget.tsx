@@ -31,23 +31,23 @@ export class ComponentWidget extends WidgetType {
     this.portal = portal;
   }
 
-  /*
-   * This makes `eq` impure.
-   * > If you use render or portal, it will certainly have some delay.
-   * > And it would make an flickering artifact when user uses the IME,
-   * > which will always trigger redraw, regardless of the result of the `eq`.
-   *
-   * You can use the `renderToStaticMarkup` instead,
-   * but this will not be compatible with the `DynamicIcon`.
-   *
-   * So, by doing a hand-off, this avoids the remounting.
-   */
   eq(widget: WidgetType): boolean {
     const isEqual = widget instanceof ComponentWidget && widget.id === this.id;
     if (!isEqual) {
       return false;
     }
 
+    /*
+     * This makes `eq` impure.
+     * > If you use render or portal, it will certainly have some delay.
+     * > And it would make an flickering artifact when user uses the IME,
+     * > which will always trigger redraw, regardless of the result of the `eq`.
+     *
+     * You can use the `renderToStaticMarkup` instead,
+     * but this will not be compatible with the `DynamicIcon`.
+     *
+     * So, by doing a hand-off, this avoids the remounting.
+     */
     if (!this.state && widget.state) {
       this.state = widget.state;
     }
@@ -113,6 +113,6 @@ export class ComponentWidget extends WidgetType {
       if (state.refs <= 0) {
         this.portal.removePortal(state.portalId);
       }
-    });
+    }, 50);
   }
 }

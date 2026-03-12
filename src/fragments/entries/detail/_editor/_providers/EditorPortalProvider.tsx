@@ -19,20 +19,7 @@ export type EditorPortal = {
 
 const [EditorPortalStateProvider, useEditorPortalState] = buildContext(() => {
   const [portalsById, setPortalsById] = useState<Record<string, PortalEntry>>({});
-  const isMountedRef = useRef(true);
-
-  useEffect(
-    () => () => {
-      isMountedRef.current = false;
-    },
-    []
-  );
-
   const upsertPortal = useCallback((portalId: string, entry: PortalEntry) => {
-    if (!isMountedRef.current) {
-      return;
-    }
-
     setPortalsById(current => {
       const existing = current[portalId];
       if (existing?.target === entry.target && existing.node === entry.node) {
@@ -47,10 +34,6 @@ const [EditorPortalStateProvider, useEditorPortalState] = buildContext(() => {
   }, []);
 
   const removePortal = useCallback((portalId: string) => {
-    if (!isMountedRef.current) {
-      return;
-    }
-
     setPortalsById(current => {
       if (!(portalId in current)) {
         return current;
