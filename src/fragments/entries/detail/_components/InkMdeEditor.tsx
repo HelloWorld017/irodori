@@ -3,6 +3,7 @@ import { drawSelection, EditorView, keymap } from '@codemirror/view';
 import { ink } from 'ink-mde';
 import { useEffect, useRef, useState } from 'react';
 import { useLatestCallback } from '@/hooks/useLatestCallback';
+import { EditorPortalProvider } from '../_editor/_providers/EditorPortalProvider';
 import { useTagPlugin } from '../_editor/tag';
 import type { Instance, Options } from 'ink-mde';
 
@@ -38,7 +39,7 @@ const editorOptions = {
 
 const css = String.raw;
 
-export const InkMdeEditor = ({ value, placeholder = '', onChange }: InkMdeEditorProps) => {
+const InkMdeEditorInner = ({ value, placeholder = '', onChange }: InkMdeEditorProps) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const editorRef = useRef<Instance | null>(null);
   const onChangeLatest = useLatestCallback(onChange ?? (() => {}));
@@ -146,3 +147,9 @@ export const InkMdeEditor = ({ value, placeholder = '', onChange }: InkMdeEditor
     </>
   );
 };
+
+export const InkMdeEditor = (props: InkMdeEditorProps) => (
+  <EditorPortalProvider>
+    <InkMdeEditorInner {...props} />
+  </EditorPortalProvider>
+);

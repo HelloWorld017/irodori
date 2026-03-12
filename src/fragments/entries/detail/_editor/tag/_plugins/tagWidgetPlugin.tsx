@@ -1,116 +1,17 @@
-import { Decoration, MatchDecorator, ViewPlugin, WidgetType, EditorView } from '@codemirror/view';
+import { Decoration, MatchDecorator, ViewPlugin, EditorView } from '@codemirror/view';
 import { Suspense } from 'react';
-import { flushSync } from 'react-dom';
-import { createRoot } from 'react-dom/client';
 import { TAG_REFERENCE_ID_REGEX } from '@/fragments/entries/detail/_utils/tagReferences';
+import { ComponentWidget } from '../../_utils/ComponentWidget';
 import { TagMarkup } from '../_components/TagMarkup';
+import type { EditorPortal } from '../../_providers/EditorPortalProvider';
 import type { TagPluginProps } from '../_types/TagPluginProps';
 import type { Options as InkMde } from 'ink-mde';
-import type { Root } from 'react-dom/client';
-
-type WidgetState = { root: Root; element: HTMLElement; refs: number };
 
 const EmptyTag = () => (
   <span className="inline-flex h-7 w-18 rounded-full bg-elevated-background" />
 );
 
-class TagChipWidget extends WidgetType {
-  private tagId: string;
-  private fetchTag: TagPluginProps['fetchTag'];
-  private state: WidgetState | null = null;
-
-  constructor(tagId: string, fetchTag: TagPluginProps['fetchTag']) {
-    super();
-    this.tagId = tagId;
-    this.fetchTag = fetchTag;
-  }
-
-  eq(widget: WidgetType): boolean {
-    const isEqual = widget instanceof TagChipWidget && widget.tagId === this.tagId;
-
-    if (!isEqual) {
-      return false;
-    }
-
-    /*
-     * This makes `eq` impure.
-     * > If you use render or portal, it will certainly have some delay.
-     * > And it would make an flickering artifact when user uses the IME,
-     * > which will always trigger redraw, regardless of the result of the `eq`.
-     *
-     * You can use the `renderToStaticMarkup` instead,
-     * but this will not be compatible with the `DynamicIcon`.
-     *
-     * So, by doing a hand-off, this avoids the remounting.
-     */
-
-    if (!this.state && widget.state) {
-      this.state = widget.state;
-    }
-
-    if (!widget.state && this.state) {
-      widget.state = this.state;
-    }
-
-    return true;
-  }
-
-  ensureState(): WidgetState {
-    if (this.state) {
-      return this.state;
-    }
-
-    const element = document.createElement('span');
-    element.contentEditable = 'false';
-    element.style.userSelect = 'none';
-
-    const root = createRoot(element);
-    this.state = { root, element, refs: 0 };
-    this.updateDOM(element);
-    return this.state;
-  }
-
-  toDOM(): HTMLElement {
-    const state = this.ensureState();
-    state.refs++;
-
-    return state.element;
-  }
-
-  updateDOM(dom: HTMLElement): boolean {
-    if (dom !== this.state?.element) {
-      return false;
-    }
-
-    flushSync(() => {
-      this.state?.root.render(
-        <Suspense fallback={<EmptyTag />}>
-          <TagMarkup uuid={this.tagId} fetchTag={this.fetchTag} />
-        </Suspense>
-      );
-    });
-    return true;
-  }
-
-  ignoreEvent(): boolean {
-    return true;
-  }
-
-  destroy(): void {
-    if (!this.state) {
-      return;
-    }
-
-    this.state.refs--;
-    setTimeout(() => {
-      if (this.state && this.state.refs <= 0) {
-        this.state.root.unmount();
-      }
-    });
-  }
-}
-
-const tagReferenceDecorator = (fetchTag: TagPluginProps['fetchTag']) =>
+const tagReferenceDecorator = ({ fetchTag, portal }: Pick<TagPluginProps, 'fetchTag' | 'portal'>) =>
   new MatchDecorator({
     regexp: new RegExp(TAG_REFERENCE_ID_REGEX.source, 'g'),
     decoration: match => {
@@ -120,7 +21,15 @@ const tagReferenceDecorator = (fetchTag: TagPluginProps['fetchTag']) =>
       }
 
       return Decoration.replace({
-        widget: new TagChipWidget(tagId, fetchTag),
+        widget: new ComponentWidget({
+          id: `tag-chip:${tagId}`,
+          portal,
+          render: () => (
+            <Suspense fallback={<EmptyTag />}>
+              <TagMarkup uuid={tagId} fetchTag={fetchTag} />
+            </Suspense>
+          ),
+        }),
         inclusive: false,
       });
     },
@@ -128,8 +37,9 @@ const tagReferenceDecorator = (fetchTag: TagPluginProps['fetchTag']) =>
 
 export const createTagWidgetPlugin = ({
   fetchTag,
-}: Pick<TagPluginProps, 'fetchTag'>): InkMde.Plugin[] => {
-  const decorator = tagReferenceDecorator(fetchTag);
+  portal,
+}: Pick<TagPluginProps, 'fetchTag'> & { portal: EditorPortal }): InkMde.Plugin[] => {
+  const decorator = tagReferenceDecorator({ fetchTag, portal });
   const tagDecorations = ViewPlugin.fromClass(
     class {
       decorations = Decoration.none;

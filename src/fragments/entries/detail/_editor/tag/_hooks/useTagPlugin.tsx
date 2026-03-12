@@ -4,6 +4,7 @@ import { useEntriesNotebookId } from '@/fragments/entries/_providers/EntriesProv
 import { useTagsFetcher } from '@/fragments/entries/detail/_hooks/useTagsFetcher';
 import { useEntriesDetailEntry } from '@/fragments/entries/detail/_providers/EntriesDetailProvider';
 import { useLatestCallback } from '@/hooks/useLatestCallback';
+import { useEditorPortal } from '../../_providers/EditorPortalProvider';
 import { createTagCompletionPlugin } from '../_plugins/tagCompletionPlugin';
 import { createTagResolutionPlugin } from '../_plugins/tagResolutionPlugin';
 import { createTagWidgetPlugin } from '../_plugins/tagWidgetPlugin';
@@ -16,6 +17,7 @@ export const useTagPlugin = () => {
   const services = useServices();
   const notebookId = useEntriesNotebookId();
   const entry = useEntriesDetailEntry();
+  const editorPortal = useEditorPortal();
   const { fetchTag: baseFetchTag } = useTagsFetcher();
   const knownTagsRef = useRef(new Map(entry.tags.map(tag => [tag.id, tag])));
 
@@ -80,6 +82,7 @@ export const useTagPlugin = () => {
       rememberTag,
       searchTags,
       resolveTag,
+      portal: editorPortal,
     };
 
     return [
@@ -87,7 +90,7 @@ export const useTagPlugin = () => {
       ...createTagResolutionPlugin(props),
       ...createTagWidgetPlugin(props),
     ];
-  }, [fetchTag, rememberTag, searchTags, resolveTag]);
+  }, [editorPortal, fetchTag, rememberTag, searchTags, resolveTag]);
 
   return tagPlugin;
 };
