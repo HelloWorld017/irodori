@@ -179,15 +179,6 @@ export const EntriesDetailEditView = ({
     }
   };
 
-  const handleCoverUploadFiles = async (files: File[]) => {
-    const file = files.find(candidate => candidate.type.startsWith('image/')) ?? files[0];
-    if (!file) {
-      return;
-    }
-
-    await handleCoverUpload(file);
-  };
-
   const handleCoverFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     event.target.value = '';

@@ -50,9 +50,8 @@ export const Dropzone = ({
       exit={isStatic ? undefined : { opacity: 0, y: 8, scale: 0.98 }}
       transition={{ type: 'spring', bounce: 0.12, visualDuration: 0.28 }}
       className={classes(
-        `flex w-full flex-col rounded-[2.4rem] bg-base-background/95 p-4 shadow-elevated
-        backdrop-blur-xl`,
-        isStatic ? 'max-w-none' : 'max-w-md',
+        'flex w-full flex-col rounded-[2.4rem] bg-base-background/95 p-4',
+        isStatic ? 'max-w-none' : 'max-w-md shadow-elevated backdrop-blur-xl',
         isDropTargetActive && 'bg-elevated-background',
         className
       )}

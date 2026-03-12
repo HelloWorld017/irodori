@@ -1,11 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useMemo, useRef, useState } from 'react';
-import { IconSearch } from '@/fragments/_icons';
+import { IconPlus, IconSearch } from '@/fragments/_icons';
 import { useServices } from '@/fragments/_providers/DatabaseProvider';
 import { useStickerImageUrl } from '@/fragments/_providers/StickerProvider';
 import { classes } from '@/utils/classes';
 import { queryKey } from '@/utils/queryKey';
+import { StickerUploadModal } from './StickerUploadModal';
 import type { StickerViewItem } from '@/repositories/StickersRepository';
 
 const STICKER_COLUMNS = 3;
@@ -41,15 +42,16 @@ export const StickerPickerSticker = ({
       className={classes(
         'flex h-24 flex-col items-center justify-center gap-1 rounded-xl border px-1 transition',
         selected
-          ? 'border-highlight bg-highlight text-highlight-foreground'
+          ? 'border-highlight bg-base-background text-highlight'
           : 'border-line bg-base-background text-primary hover:bg-elevated-background'
       )}
+      style={{ filter: 'url(#effect-sticker-outline)' }}
       title={sticker.label}
     >
       <div
         className={classes(
           'flex h-14 w-14 items-center justify-center overflow-hidden rounded-lg',
-          selected ? 'bg-highlight-foreground/20' : 'bg-elevated-background'
+          selected ? 'bg-highlight-foreground' : 'bg-elevated-background'
         )}
       >
         {previewUrl && (
@@ -74,6 +76,7 @@ export const StickerPickerStickerPanel = ({
 
   const [search, setSearch] = useState('');
   const scrollElementRef = useRef<HTMLDivElement>(null);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
   const stickersQuery = useQuery({
     queryKey: queryKey('common', 'sticker-picker-list'),
@@ -104,19 +107,44 @@ export const StickerPickerStickerPanel = ({
 
   return (
     <>
-      <label
-        className="mt-3 flex items-center gap-2 rounded-lg border border-line bg-elevated-background
-          px-2.5 py-2"
-      >
-        <IconSearch className="text-base text-secondary" />
-        <input
-          value={search}
-          onChange={event => setSearch(event.target.value)}
-          placeholder="스티커 검색"
-          className="min-w-0 flex-1 bg-transparent text-sm text-primary outline-none
-            placeholder:text-tertiary"
-        />
-      </label>
+      <svg className="hidden">
+        <defs>
+          <filter id="effect-sticker-outline" x="-50%" y="-50%" width="200%" height="200%">
+            <feMorphology in="SourceAlpha" operator="dilate" radius="14" result="outline" />
+            <feFlood flood-color="white" result="color" />
+            <feComposite in="color" in2="outline" operator="in" result="outlineColor" />
+            <feMerge>
+              <feMergeNode in="outlineColor" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+      </svg>
+      <div className="mt-3 flex items-center gap-2">
+        <label
+          className="flex min-w-0 flex-1 items-center gap-2 rounded-lg border border-line
+            bg-elevated-background px-2.5 py-2"
+        >
+          <IconSearch className="text-base text-secondary" />
+          <input
+            value={search}
+            onChange={event => setSearch(event.target.value)}
+            placeholder="스티커 검색"
+            className="min-w-0 flex-1 bg-transparent text-sm text-primary outline-none
+              placeholder:text-tertiary"
+          />
+        </label>
+        <button
+          type="button"
+          onClick={() => setIsUploadModalOpen(true)}
+          className="flex h-10 w-10 flex-none items-center justify-center rounded-lg border
+            border-line bg-base-background text-base text-secondary transition
+            hover:bg-elevated-background hover:text-primary"
+          aria-label="스티커 업로드"
+        >
+          <IconPlus />
+        </button>
+      </div>
 
       {stickersQuery.isPending ? (
         <p className="mt-4 text-center text-sm text-tertiary">스티커를 불러오는 중이에요...</p>
@@ -179,6 +207,14 @@ export const StickerPickerStickerPanel = ({
           </div>
         )
       ) : null}
+      <StickerUploadModal
+        open={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        onUploaded={sticker => {
+          setIsUploadModalOpen(false);
+          onSelect(sticker.id);
+        }}
+      />
     </>
   );
 };
