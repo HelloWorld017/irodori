@@ -40,17 +40,15 @@ export const StickerPickerSticker = ({
       type="button"
       onClick={() => onSelect(sticker.id)}
       className={classes(
-        'flex h-24 flex-col items-center justify-center gap-1 rounded-xl border px-1 transition',
-        selected
-          ? 'border-highlight bg-base-background text-highlight'
-          : 'border-line bg-base-background text-primary hover:bg-elevated-background'
+        `flex aspect-square flex-col items-center justify-center gap-1 rounded-xl border
+        border-transparent p-2 transition`,
+        selected ? 'text-highlight' : 'text-primary hover:border-line'
       )}
-      style={{ filter: 'url(#effect-sticker-outline)' }}
       title={sticker.label}
     >
       <div
         className={classes(
-          'flex h-14 w-14 items-center justify-center overflow-hidden rounded-lg',
+          'flex aspect-square flex-1 items-center justify-center overflow-hidden rounded-md p-1',
           selected ? 'bg-highlight-foreground' : 'bg-elevated-background'
         )}
       >
@@ -58,8 +56,9 @@ export const StickerPickerSticker = ({
           <img
             src={previewUrl}
             alt={sticker.label}
-            className="h-12 w-12 object-contain"
+            className="aspect-square w-full object-contain"
             loading="lazy"
+            style={{ filter: 'url(#effect-sticker-outline)' }}
           />
         )}
       </div>
@@ -107,10 +106,10 @@ export const StickerPickerStickerPanel = ({
 
   return (
     <>
-      <svg className="hidden">
+      <svg width="0" height="0">
         <defs>
           <filter id="effect-sticker-outline" x="-50%" y="-50%" width="200%" height="200%">
-            <feMorphology in="SourceAlpha" operator="dilate" radius="14" result="outline" />
+            <feMorphology in="SourceAlpha" operator="dilate" radius="4" result="outline" />
             <feFlood flood-color="white" result="color" />
             <feComposite in="color" in2="outline" operator="in" result="outlineColor" />
             <feMerge>
