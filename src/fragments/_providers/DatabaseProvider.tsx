@@ -103,8 +103,8 @@ export const useCloseDatabase = () => useDatabase(state => state.close);
 
 export const useClxDBWithoutCheck = () => useDatabase(state => state.clxDB);
 export const useClxDB = () => {
-  const clxdb = useClxDBWithoutCheck();
-  return assertsInitialized(clxdb);
+  const clxDB = useClxDBWithoutCheck();
+  return assertsInitialized(clxDB);
 };
 
 export const useRepositoriesWithoutCheck = () => useDatabase(state => state.repositories);

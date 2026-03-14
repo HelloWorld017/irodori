@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { flattenFileList } from '@/utils/fileList';
 import { useLatestCallback } from './useLatestCallback';
 import type { RefCallback } from 'react';
 
@@ -8,11 +9,6 @@ type UseDropzoneProps = {
 
 const hasTransferFiles = (dataTransfer: DataTransfer | null) =>
   Array.from(dataTransfer?.types ?? []).includes('Files');
-
-const toFiles = (fileList: FileList | null) =>
-  Array.from({ length: fileList?.length ?? 0 }, (_, index) => fileList?.item(index)).filter(
-    (file): file is File => file !== null
-  );
 
 export const useDropzone = ({ onDrop }: UseDropzoneProps) => {
   const onDropLatest = useLatestCallback(onDrop);
@@ -136,7 +132,7 @@ export const useDropzone = ({ onDrop }: UseDropzoneProps) => {
           return;
         }
 
-        const files = toFiles(event.dataTransfer?.files ?? null);
+        const files = flattenFileList(event.dataTransfer?.files ?? null);
         event.preventDefault();
 
         if (files.length > 0) {

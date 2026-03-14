@@ -25,6 +25,7 @@ import { EntryMetadataEdit } from './EntryMetadataEdit';
 import { InkMdeEditor } from './InkMdeEditor';
 import type { TagCategory } from '@/repositories/TagCategoriesRepository';
 import type { EntryDetailItem } from '@/services/EntriesService';
+import type { ChangeEvent } from 'react';
 
 const getDraftStatusLabel = (
   saveState: 'idle' | 'saving' | 'saved' | 'error',
@@ -179,7 +180,7 @@ export const EntriesDetailEditView = ({
     }
   };
 
-  const handleCoverFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCoverFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     event.target.value = '';
 

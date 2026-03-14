@@ -1,17 +1,9 @@
 import { useCallback } from 'react';
+import { flattenFileList } from '@/utils/fileList';
 import { useLatestCallback } from './useLatestCallback';
 import type { RefCallback } from 'react';
 
-type UsePasteProps = {
-  onPaste: (files: File[]) => void;
-};
-
-const toFiles = (fileList: FileList | null) =>
-  Array.from({ length: fileList?.length ?? 0 }, (_, index) => fileList?.item(index)).filter(
-    (file): file is File => file !== null
-  );
-
-export const usePaste = ({ onPaste }: UsePasteProps) => {
+export const usePaste = (onPaste: (files: File[]) => void) => {
   const onPasteLatest = useLatestCallback(onPaste);
 
   const ref = useCallback<RefCallback<HTMLElement>>(
@@ -21,7 +13,7 @@ export const usePaste = ({ onPaste }: UsePasteProps) => {
       }
 
       const handlePaste = (event: ClipboardEvent) => {
-        const files = toFiles(event.clipboardData?.files ?? null);
+        const files = flattenFileList(event.clipboardData?.files ?? null);
         if (files.length === 0) {
           return;
         }
@@ -39,5 +31,5 @@ export const usePaste = ({ onPaste }: UsePasteProps) => {
     [onPasteLatest]
   );
 
-  return { ref };
+  return ref;
 };

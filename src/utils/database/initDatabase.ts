@@ -1,4 +1,5 @@
 import { startClxDBWithUI } from 'clxdb/ui';
+import { NAMESPACE } from '@/constants/common';
 import { initRepositories } from '@/repositories/_utils/initRepositories';
 import { initServices } from '@/services/_utils/initServices';
 import { ClxDBAdapter } from './clxdbAdapter';
@@ -38,7 +39,7 @@ export const initDatabase = async (): Promise<DatabaseInitResult | null> => {
   const adapter = getClxDBAdapter();
   initPromise = startClxDBWithUI({
     database: adapter,
-    options: { cacheStorageKey: 'irodori', syncInterval: 5 * 1000 },
+    options: { cacheStorageKey: NAMESPACE, syncInterval: 5 * 1000 },
     ui: {
       locale: 'ko',
       style: { fontFamily: 'var(--font-sans)', palette: 'var(--color-highlight)' },

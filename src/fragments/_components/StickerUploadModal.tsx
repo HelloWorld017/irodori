@@ -8,6 +8,7 @@ import { useShowToast } from '@/fragments/_providers/ToastProvider';
 import { uploadAssetImage } from '@/utils/assets';
 import { queryKey } from '@/utils/queryKey';
 import type { Sticker } from '@/repositories/StickersRepository';
+import type { SubmitEvent } from 'react';
 
 const resolveDefaultLabel = (file: File) => {
   const normalizedName = file.name.trim();
@@ -106,7 +107,7 @@ export const StickerUploadModal = ({ open, onClose, onUploaded }: StickerUploadM
     setLabel(resolveDefaultLabel(file));
   };
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     const normalizedLabel = label.trim();

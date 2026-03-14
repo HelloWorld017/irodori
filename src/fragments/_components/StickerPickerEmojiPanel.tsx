@@ -1,5 +1,7 @@
 import EmojiMartPicker from '@emoji-mart/react';
 import { useQuery } from '@tanstack/react-query';
+import { NAMESPACE } from '@/constants/common';
+import { classes } from '@/utils/classes';
 import { fetchEmojiData } from '@/utils/emoji';
 import { queryKey } from '@/utils/queryKey';
 
@@ -16,7 +18,7 @@ export const StickerPickerEmojiPanel = ({ onSelect }: EmojiPickerPanelProps) => 
   });
 
   const stylesheet = css`
-    .irodori__sticker-picker em-emoji-picker {
+    .${NAMESPACE}__sticker-picker em-emoji-picker {
       --shadow: none;
       --rgb-color: from var(--color-primary) r g b;
       --rgb-background: from var(--color-base-background) r g b;
@@ -27,7 +29,7 @@ export const StickerPickerEmojiPanel = ({ onSelect }: EmojiPickerPanelProps) => 
   `;
 
   return (
-    <div className="irodori__sticker-picker mt-3 flex flex-col items-center">
+    <div className={classes(`${NAMESPACE}__sticker-picker`, 'mt-3 flex flex-col items-center')}>
       <style>{stylesheet}</style>
 
       {emojiQuery.isPending ? (

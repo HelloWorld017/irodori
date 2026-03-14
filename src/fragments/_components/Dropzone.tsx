@@ -3,6 +3,8 @@ import { useRef } from 'react';
 import { IconSquarePlus } from '@/fragments/_icons';
 import { useDropzone } from '@/hooks/useDropzone';
 import { classes } from '@/utils/classes';
+import { flattenFileList } from '@/utils/fileList';
+import type { ChangeEvent } from 'react';
 
 type DropzoneProps = {
   onDrop: (files: File[]) => void;
@@ -12,11 +14,6 @@ type DropzoneProps = {
   static?: boolean;
   accept?: string;
 };
-
-const toFiles = (fileList: FileList | null) =>
-  Array.from({ length: fileList?.length ?? 0 }, (_, index) => fileList?.item(index)).filter(
-    (file): file is File => file !== null
-  );
 
 export const Dropzone = ({
   onDrop,
@@ -29,8 +26,8 @@ export const Dropzone = ({
   const inputRef = useRef<HTMLInputElement | null>(null);
   const { ref, isDropTargetActive, isGlobalDragging } = useDropzone({ onDrop });
 
-  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = toFiles(event.target.files);
+  const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const files = flattenFileList(event.target.files);
     event.target.value = '';
 
     if (files.length > 0) {
