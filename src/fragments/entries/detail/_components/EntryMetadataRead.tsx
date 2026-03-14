@@ -72,12 +72,14 @@ export const EntryMetadataRead = ({ className, entry, tagCategories }: EntryMeta
                 {sticker.kind === 'emoji' && sticker.emoji ? (
                   <span className="font-emoji text-3xl leading-none">{sticker.emoji}</span>
                 ) : (
-                  <AssetImage
-                    blobDigest={sticker.blobDigest}
-                    alt={sticker.label}
-                    className="h-full w-full"
-                    imageClassName="h-full w-full object-contain p-2"
-                  />
+                  sticker.blobDigest && (
+                    <AssetImage
+                      blobDigest={sticker.blobDigest}
+                      alt={sticker.label}
+                      className="h-full w-full"
+                      imageClassName="h-full w-full object-contain p-2"
+                    />
+                  )
                 )}
               </div>
             ))

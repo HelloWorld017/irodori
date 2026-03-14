@@ -31,13 +31,23 @@ const EntriesDetailFragmentInner = ({ edit = false }: EntriesDetailFragmentProps
     queryFn: () => services.entryDrafts.getByEntryId(entryId),
   });
 
+  const assetsQuery = useSuspenseQuery({
+    queryKey: queryKey('entriesDetail', 'assets', entryId),
+    queryFn: () => services.entryAssets.listByEntryId(entryId),
+  });
+
   const tagCategoriesQuery = useSuspenseQuery({
     queryKey: queryKey('common', 'search-tag-categories', detailQuery.data?.notebookId ?? null),
     queryFn: () =>
       detailQuery.data && services.tagCategories.listByNotebookId(detailQuery.data.notebookId),
   });
 
-  if (detailQuery.isError || tagCategoriesQuery.isError || (edit && draftQuery.isError)) {
+  if (
+    detailQuery.isError ||
+    assetsQuery.isError ||
+    tagCategoriesQuery.isError ||
+    (edit && draftQuery.isError)
+  ) {
     return (
       <section
         className="rounded-[1.75rem] border border-line bg-elevated-background p-8 shadow-elevated"
@@ -54,9 +64,10 @@ const EntriesDetailFragmentInner = ({ edit = false }: EntriesDetailFragmentProps
   }
 
   const tagCategories: TagCategory[] | null = tagCategoriesQuery.data ?? [];
+  const assets = assetsQuery.data ?? [];
   if (!edit) {
     return (
-      <EntriesDetailProvider entry={detailQuery.data}>
+      <EntriesDetailProvider entry={detailQuery.data} assets={assets}>
         <EntriesDetailReadView entry={detailQuery.data} tagCategories={tagCategories} />
       </EntriesDetailProvider>
     );
@@ -66,7 +77,7 @@ const EntriesDetailFragmentInner = ({ edit = false }: EntriesDetailFragmentProps
   const initialSavedAt = draftQuery.data?.updatedAt ?? null;
 
   return (
-    <EntriesDetailProvider entry={detailQuery.data}>
+    <EntriesDetailProvider entry={detailQuery.data} assets={assets}>
       <EntriesDetailEditProvider
         entryId={detailQuery.data.id}
         initialDraft={initialDraft}

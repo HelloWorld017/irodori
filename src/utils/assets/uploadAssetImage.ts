@@ -1,4 +1,9 @@
 import { encode as encodeBlurHash } from 'blurhash';
+import {
+  BLURHASH_COMPONENT_X,
+  BLURHASH_COMPONENT_Y,
+  BLURHASH_MAX_DIMENSION,
+} from '@/constants/blurhash';
 import type { Asset } from '@/repositories/AssetsRepository';
 import type { Services } from '@/services';
 import type { ClxDBWithUI } from 'clxdb/ui';
@@ -8,10 +13,6 @@ type UploadAssetImageInput = {
   services: Services;
   file: File;
 };
-
-const BLURHASH_MAX_DIMENSION = 64;
-const BLURHASH_COMPONENT_X = 4;
-const BLURHASH_COMPONENT_Y = 3;
 
 const loadImage = (file: File): Promise<HTMLImageElement> =>
   new Promise((resolve, reject) => {

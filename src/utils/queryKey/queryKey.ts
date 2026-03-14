@@ -5,6 +5,7 @@ export type QueryRouteKind = 'common' | Exclude<RouteKind, 'entriesEdit'>;
 
 export type QueryActions = {
   common: {
+    'assets': void;
     'emoji': void;
     'sticker-picker-list': void;
     'sticker-picker-selected': string | null | undefined;
@@ -36,7 +37,9 @@ export type QueryActions = {
     };
   };
   entriesDetail: {
+    'assets': string;
     'detail': string;
+    'detail-asset': string;
     'detail-tag': string;
     'draft': string;
   };
@@ -49,6 +52,7 @@ type QueryActionParams<
 
 export type BatchActions = {
   common: {
+    assets: void;
     tags: void;
   };
   onboarding: Record<never, never>;

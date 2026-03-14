@@ -1,11 +1,14 @@
+import { AnimatePresence, motion } from 'motion/react';
 import { useEffect, useState } from 'react';
 import { useClxDB } from '@/fragments/_providers/DatabaseProvider';
 import { classes } from '@/utils/classes';
 import { BlurHash } from './BlurHash';
 
 type AssetImageProps = {
-  blobDigest: string | null;
+  blobDigest: string;
   blurhash?: string | null;
+  width?: number | null;
+  height?: number | null;
   alt?: string;
   className?: string;
   imageClassName?: string;
@@ -15,6 +18,8 @@ type AssetImageProps = {
 export const AssetImage = ({
   blobDigest,
   blurhash = null,
+  width,
+  height,
   alt,
   className,
   imageClassName,
@@ -65,28 +70,38 @@ export const AssetImage = ({
     return null;
   }
 
+  const canUseBlurhash = !!blurhash && !!(width && height);
+  const isBlurhashActive = canUseBlurhash && (!imageUrl || !isLoaded);
+
   return (
     <div className={classes('relative overflow-hidden', className)}>
-      {blurhash && (!imageUrl || !isLoaded) ? (
-        <BlurHash
-          hash={blurhash}
-          className={classes('absolute inset-0 h-full w-full', imageClassName)}
-        />
-      ) : null}
+      <AnimatePresence>
+        {isBlurhashActive ? (
+          <motion.div
+            key="blurhash"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="h-full w-full"
+          >
+            <BlurHash hash={blurhash} className={imageClassName} />
+          </motion.div>
+        ) : null}
 
-      {imageUrl ? (
-        <img
-          src={imageUrl}
-          alt={alt}
-          loading={loading}
-          className={classes(
-            'relative z-1 h-full w-full transition duration-300',
-            isLoaded ? 'opacity-100' : 'opacity-0',
-            imageClassName
-          )}
-          onLoad={() => setIsLoaded(true)}
-        />
-      ) : null}
+        {imageUrl ? (
+          <motion.img
+            key="image"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: +isLoaded }}
+            exit={{ opacity: 0 }}
+            src={imageUrl}
+            alt={alt}
+            loading={loading}
+            className={classes('z-1 h-full w-full text-[0] text-transparent', imageClassName)}
+            onLoad={() => setIsLoaded(true)}
+          />
+        ) : null}
+      </AnimatePresence>
     </div>
   );
 };

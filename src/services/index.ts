@@ -1,5 +1,6 @@
 import { AssetsService } from './AssetsService';
 import { EntriesService } from './EntriesService';
+import { EntryAssetsService } from './EntryAssetsService';
 import { EntryDraftsService } from './EntryDraftsService';
 import { EntryMetadataService } from './EntryMetadataService';
 import { NotebooksService } from './NotebooksService';
@@ -15,6 +16,7 @@ export type Services = {
 export const ServiceClasses = {
   assets: AssetsService,
   entries: EntriesService,
+  entryAssets: EntryAssetsService,
   entryDrafts: EntryDraftsService,
   entryMetadata: EntryMetadataService,
   notebooks: NotebooksService,

@@ -20,6 +20,10 @@ export class AssetsService {
     this.services = services;
   }
 
+  listByIds(ids: string[]): Promise<Asset[]> {
+    return this.repositories.assets.listAssetsByIds(ids);
+  }
+
   async createUploaded(input: CreateUploadedAssetInput): Promise<Asset> {
     const now = Date.now();
     const id = crypto.randomUUID();

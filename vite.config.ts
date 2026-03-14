@@ -8,6 +8,21 @@ export default defineConfig(({ mode }) => ({
   define: {
     'process.env.NODE_ENV': JSON.stringify(mode),
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: id => {
+          if (!id.includes('node_modules')) {
+            return;
+          }
+
+          if (id.includes('lucide')) {
+            return 'vendor-lucide';
+          }
+        },
+      },
+    },
+  },
   resolve: {
     alias: { '@': resolve(__dirname, 'src') },
   },

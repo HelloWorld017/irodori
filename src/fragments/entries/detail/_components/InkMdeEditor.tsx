@@ -11,7 +11,9 @@ import { usePaste } from '@/hooks/usePaste';
 import { uploadAssetImage } from '@/utils/assets';
 import { classes } from '@/utils/classes';
 import { createPromisePoolSettled } from '@/utils/promise';
+import { EditorGalleryProvider } from '../_editor/_providers/EditorGalleryProvider';
 import { EditorPortalProvider } from '../_editor/_providers/EditorPortalProvider';
+import { useImagePlugin } from '../_editor/image';
 import { useTagPlugin } from '../_editor/tag';
 import type { Instance, Options } from 'ink-mde';
 
@@ -54,6 +56,7 @@ const InkMdeEditorInner = ({ value, placeholder = '', onChange }: InkMdeEditorPr
   const [initialValue] = useState(value);
   const isReadOnly = !onChange;
 
+  const imagePlugin = useImagePlugin();
   const tagPlugin = useTagPlugin();
 
   useEffect(() => {
@@ -65,7 +68,7 @@ const InkMdeEditorInner = ({ value, placeholder = '', onChange }: InkMdeEditorPr
 
     let disposed = false;
 
-    const plugins = [...tagPlugin] as const;
+    const plugins = [...imagePlugin, ...tagPlugin] as const;
     const completion = autocompletion({
       defaultKeymap: true,
       icons: false,
@@ -120,7 +123,7 @@ const InkMdeEditorInner = ({ value, placeholder = '', onChange }: InkMdeEditorPr
       editorRef.current = null;
       target.replaceChildren();
     };
-  }, [initialValue, isReadOnly, onChangeLatest, placeholder, tagPlugin]);
+  }, [imagePlugin, initialValue, isReadOnly, onChangeLatest, placeholder, tagPlugin]);
 
   const stylesheet = css`
     .${NAMESPACE}__ink-mde-editor {
@@ -190,7 +193,9 @@ const InkMdeEditorInner = ({ value, placeholder = '', onChange }: InkMdeEditorPr
 };
 
 export const InkMdeEditor = (props: InkMdeEditorProps) => (
-  <EditorPortalProvider>
-    <InkMdeEditorInner {...props} />
-  </EditorPortalProvider>
+  <EditorGalleryProvider>
+    <EditorPortalProvider>
+      <InkMdeEditorInner {...props} />
+    </EditorPortalProvider>
+  </EditorGalleryProvider>
 );
