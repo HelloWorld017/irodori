@@ -1,28 +1,29 @@
 import { AnimatePresence, motion } from 'motion/react';
 import { useEffect, useState } from 'react';
 import { useClxDB } from '@/fragments/_providers/DatabaseProvider';
+import { useBlurHash } from '@/hooks/useBlurHash';
 import { classes } from '@/utils/classes';
-import { BlurHash } from './BlurHash';
 
 type AssetImageProps = {
-  blobDigest: string;
-  blurhash?: string | null;
-  width?: number | null;
-  height?: number | null;
+  asset: {
+    blobDigest: string;
+    blurhash?: string | null;
+    width?: number | null;
+    height?: number | null;
+  };
   alt?: string;
+  cover?: boolean;
   className?: string;
   imageClassName?: string;
   loading?: 'eager' | 'lazy';
 };
 
 export const AssetImage = ({
-  blobDigest,
-  blurhash = null,
-  width,
-  height,
+  asset,
   alt,
   className,
   imageClassName,
+  cover,
   loading = 'lazy',
 }: AssetImageProps) => {
   const clxDB = useClxDB();
@@ -36,13 +37,13 @@ export const AssetImage = ({
     setImageUrl(null);
     setIsLoaded(false);
 
-    if (!blobDigest || !clxDB) {
+    if (!asset.blobDigest || !clxDB) {
       return;
     }
 
     void (async () => {
       try {
-        const storedBlob = await clxDB.blobs.getBlob(blobDigest);
+        const storedBlob = await clxDB.blobs.getBlob(asset.blobDigest);
         const file = await storedBlob.file();
         objectUrl = URL.createObjectURL(file);
 
@@ -64,31 +65,64 @@ export const AssetImage = ({
         URL.revokeObjectURL(objectUrl);
       }
     };
-  }, [blobDigest, clxDB]);
+  }, [asset.blobDigest, clxDB]);
 
-  if (!blobDigest && !blurhash) {
-    return null;
+  const blurhash = asset.blurhash;
+  const canUseBlurhash = !!blurhash && (cover || !!(asset.width && asset.height));
+  const isBlurhashActive = canUseBlurhash && (!imageUrl || !isLoaded);
+  const canvasRef = useBlurHash(canUseBlurhash ? blurhash : null);
+
+  if (!canUseBlurhash) {
+    return (
+      imageUrl && (
+        <motion.img
+          key="image"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: +isLoaded }}
+          src={imageUrl}
+          alt={alt}
+          loading={loading}
+          className={classes(
+            'relative z-1 max-h-full max-w-full overflow-hidden text-[0] text-transparent',
+            cover && 'h-full w-full object-cover',
+            className,
+            imageClassName
+          )}
+          onLoad={() => setIsLoaded(true)}
+        />
+      )
+    );
   }
 
-  const canUseBlurhash = !!blurhash && !!(width && height);
-  const isBlurhashActive = canUseBlurhash && (!imageUrl || !isLoaded);
+  const fillClassName = cover && 'object-cover';
 
   return (
-    <div className={classes('relative overflow-hidden', className)}>
+    <div
+      className={classes(
+        'relative max-h-full max-w-full overflow-hidden',
+        cover && 'h-full w-full',
+        className
+      )}
+    >
+      {!cover && (
+        <svg
+          viewBox={`0 0 ${asset.width} ${asset.height}`}
+          className={classes('h-auto max-h-full w-auto max-w-full', imageClassName)}
+        />
+      )}
       <AnimatePresence>
         {isBlurhashActive ? (
-          <motion.div
+          <motion.canvas
             key="blurhash"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="h-full w-full"
-          >
-            <BlurHash hash={blurhash} className={imageClassName} />
-          </motion.div>
+            ref={canvasRef}
+            className={classes('absolute inset-0 h-full w-full', fillClassName, imageClassName)}
+          />
         ) : null}
 
-        {imageUrl ? (
+        {!!imageUrl && (
           <motion.img
             key="image"
             initial={{ opacity: 0 }}
@@ -97,10 +131,14 @@ export const AssetImage = ({
             src={imageUrl}
             alt={alt}
             loading={loading}
-            className={classes('z-1 h-full w-full text-[0] text-transparent', imageClassName)}
+            className={classes(
+              'absolute inset-0 z-1 h-full w-full text-[0] text-transparent',
+              fillClassName,
+              imageClassName
+            )}
             onLoad={() => setIsLoaded(true)}
           />
-        ) : null}
+        )}
       </AnimatePresence>
     </div>
   );

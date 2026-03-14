@@ -426,7 +426,7 @@ export const Gallery = ({
                               sm:max-h-[calc(100vh-8rem)] sm:max-w-[calc(100vw-8rem)]`,
                             !isDragging && !isPinching && 'transition-transform duration-200'
                           )}
-                          {...currentAsset}
+                          asset={currentAsset}
                         />
                       </div>
                     ) : (

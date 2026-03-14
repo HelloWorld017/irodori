@@ -64,10 +64,9 @@ export const StickerPicker = ({
               <span className="font-emoji text-[1.5rem] leading-none">{emoji}</span>
             ) : displayedSticker?.blobDigest ? (
               <AssetImage
-                blobDigest={displayedSticker.blobDigest}
+                asset={{ ...displayedSticker, blobDigest: displayedSticker.blobDigest }}
                 alt={displayedSticker.label}
-                className="h-full w-full"
-                imageClassName="h-full w-full object-cover"
+                fill="contain"
               />
             ) : null}
           </PopoverButton>

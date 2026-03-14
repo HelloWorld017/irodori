@@ -36,11 +36,10 @@ export const EntryHeader = ({
       <div className="relative flex min-h-72 flex-col sm:min-h-88">
         {cover ? (
           <AssetImage
-            blobDigest={cover.blobDigest}
-            blurhash={cover.blurhash}
+            asset={cover}
             alt={title || `#${index} cover`}
-            className="absolute inset-0 h-full w-full"
-            imageClassName="h-full w-full object-cover"
+            className="absolute inset-0"
+            fill="cover"
             loading="eager"
           />
         ) : (

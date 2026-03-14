@@ -74,10 +74,9 @@ export const EntryMetadataRead = ({ className, entry, tagCategories }: EntryMeta
                 ) : (
                   sticker.blobDigest && (
                     <AssetImage
-                      blobDigest={sticker.blobDigest}
+                      asset={{ ...sticker, blobDigest: sticker.blobDigest }}
                       alt={sticker.label}
-                      className="h-full w-full"
-                      imageClassName="h-full w-full object-contain p-2"
+                      fill="contain"
                     />
                   )
                 )}

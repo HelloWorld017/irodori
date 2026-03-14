@@ -40,23 +40,15 @@ export const ImageMarkup = ({ assetId, alt, fetchAsset }: ImageMarkupProps) => {
     <button
       type="button"
       onClick={() => openGallery(registrationId)}
-      className="group my-4 block max-w-full overflow-hidden rounded-[1.5rem] border border-line/70
-        bg-elevated-background text-left shadow-sm transition hover:border-primary/25"
+      className="relative my-4 block w-full max-w-full overflow-hidden transition
+        hover:brightness-90"
       aria-label="이미지 확대 보기"
     >
       <AssetImage
-        {...asset}
+        asset={asset}
         alt={alt}
-        className="max-w-full bg-elevated-background"
-        imageClassName="max-h-[28rem] w-auto max-w-full object-contain"
+        className="max-h-[28rem] overflow-hidden rounded-[1.5rem]"
       />
-      <span
-        className="flex items-center justify-between gap-3 border-t border-line/60 px-4 py-2.5
-          text-xs text-secondary transition group-hover:text-primary"
-      >
-        <span className="truncate">{alt || '이미지'}</span>
-        <span className="shrink-0">눌러서 확대</span>
-      </span>
     </button>
   );
 };
