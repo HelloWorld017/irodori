@@ -12,7 +12,7 @@ type AssetImageProps = {
     height?: number | null;
   };
   alt?: string;
-  cover?: boolean;
+  fill?: 'contain' | 'cover' | null;
   className?: string;
   imageClassName?: string;
   loading?: 'eager' | 'lazy';
@@ -23,7 +23,7 @@ export const AssetImage = ({
   alt,
   className,
   imageClassName,
-  cover,
+  fill,
   loading = 'lazy',
 }: AssetImageProps) => {
   const clxDB = useClxDB();
@@ -68,9 +68,14 @@ export const AssetImage = ({
   }, [asset.blobDigest, clxDB]);
 
   const blurhash = asset.blurhash;
-  const canUseBlurhash = !!blurhash && (cover || !!(asset.width && asset.height));
+  const canUseBlurhash = !!blurhash && (fill || !!(asset.width && asset.height));
   const isBlurhashActive = canUseBlurhash && (!imageUrl || !isLoaded);
   const canvasRef = useBlurHash(canUseBlurhash ? blurhash : null);
+
+  const fillClassName = classes(
+    fill === 'cover' && 'object-cover',
+    fill === 'contain' && 'object-contain'
+  );
 
   if (!canUseBlurhash) {
     return (
@@ -83,8 +88,9 @@ export const AssetImage = ({
           alt={alt}
           loading={loading}
           className={classes(
-            'relative z-1 max-h-full max-w-full overflow-hidden text-[0] text-transparent',
-            cover && 'h-full w-full object-cover',
+            'relative text-[0] text-transparent',
+            fill && 'h-full w-full',
+            fillClassName,
             className,
             imageClassName
           )}
@@ -94,22 +100,29 @@ export const AssetImage = ({
     );
   }
 
-  const fillClassName = cover && 'object-cover';
+  const aspectRatioStyle =
+    !fill && asset.width && asset.height
+      ? { aspectRatio: `${asset.width} / ${asset.height}` }
+      : undefined;
 
   return (
     <div
       className={classes(
-        'relative max-h-full max-w-full overflow-hidden',
-        cover && 'h-full w-full',
+        'relative inline-grid grid-cols-[1fr] grid-rows-[1fr]',
+        fill && 'h-full w-full',
         className
       )}
+      style={aspectRatioStyle}
     >
-      {!cover && (
+      {!fill && asset.width && asset.height && (
         <svg
-          viewBox={`0 0 ${asset.width} ${asset.height}`}
+          width={`${asset.width}`}
+          height={`${asset.height}`}
           className={classes('h-auto max-h-full w-auto max-w-full', imageClassName)}
+          style={{ gridArea: '1 / 1', ...aspectRatioStyle }}
         />
       )}
+
       <AnimatePresence>
         {isBlurhashActive ? (
           <motion.canvas

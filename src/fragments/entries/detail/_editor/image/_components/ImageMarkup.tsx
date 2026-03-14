@@ -40,8 +40,7 @@ export const ImageMarkup = ({ assetId, alt, fetchAsset }: ImageMarkupProps) => {
     <button
       type="button"
       onClick={() => openGallery(registrationId)}
-      className="relative my-4 block w-full max-w-full overflow-hidden transition
-        hover:brightness-90"
+      className="relative my-4 block max-w-full overflow-hidden transition hover:brightness-90"
       aria-label="이미지 확대 보기"
     >
       <AssetImage
