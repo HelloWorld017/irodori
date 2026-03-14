@@ -77,6 +77,10 @@
     0% { opacity: 1; }
     100% { opacity: 0; }
   }
+
+  /* Breakpoints */
+  --breakpoint-can-hover: (hover: hover);
+  --breakpoint-touch: (hover: none);
 }
 
 @layer base {
