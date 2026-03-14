@@ -6,12 +6,12 @@ import { IconChevronLeft, IconChevronRight, IconCloudDownload, IconX } from '@/f
 import { useClxDB } from '@/fragments/_providers/DatabaseProvider';
 import { useShowToast } from '@/fragments/_providers/ToastProvider';
 import { classes } from '@/utils/classes';
-import { BlurHash } from './BlurHash';
+import { AssetImage } from './AssetImage';
+import type { Asset } from '@/repositories/AssetsRepository';
 
 const GESTURE_DRAG_RATIO = 0.1;
 const MIN_SCALE = 1;
 const MAX_SCALE = 4;
-const INITIAL_DRAG_OFFSET = { x: 0, y: 0 };
 const IMAGE_EXTENSION_BY_MIME: Record<string, string> = {
   'image/avif': 'avif',
   'image/gif': 'gif',
@@ -26,16 +26,7 @@ type GalleryDragOffset = {
   y: number;
 };
 
-export type GalleryAsset = {
-  id: string;
-  blobDigest: string | null;
-  blurhash?: string | null;
-  mime?: string | null;
-  width?: number | null;
-  height?: number | null;
-  alt?: string;
-  filename?: string;
-};
+export type GalleryAsset = Pick<Asset, 'id' | 'blobDigest' | 'blurhash' | 'mime'>;
 
 type GalleryProps = {
   open: boolean;
@@ -55,13 +46,14 @@ const clampIndex = (index: number, length: number) => {
   return clamp(index, 0, length - 1);
 };
 
-const resolveDownloadFilename = (asset: GalleryAsset, index: number) => {
-  if (asset.filename?.trim()) {
-    return asset.filename.trim();
+const resolveDownloadFilename = (file: File, index: number) => {
+  const name = file.name.trim();
+  if (/\.[a-zA-Z0-9]{1,5}$/.test(name)) {
+    return name;
   }
 
-  const extension = asset.mime ? IMAGE_EXTENSION_BY_MIME[asset.mime] : null;
-  const baseName = asset.id.trim() || `image-${index + 1}`;
+  const extension = file.type ? IMAGE_EXTENSION_BY_MIME[file.type] : null;
+  const baseName = name || `image-${index + 1}`;
 
   return extension ? `${baseName}.${extension}` : baseName;
 };
@@ -94,12 +86,8 @@ export const Gallery = ({
   const canHover = useCanHover();
 
   const [activeIndex, setActiveIndex] = useState(() => clampIndex(initialIndex, assets.length));
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const [isImageLoaded, setIsImageLoaded] = useState(false);
-  const [isLoadingImage, setIsLoadingImage] = useState(false);
-  const [imageLoadFailed, setImageLoadFailed] = useState(false);
   const [scale, setScale] = useState(MIN_SCALE);
-  const [dragOffset, setDragOffset] = useState<GalleryDragOffset>(INITIAL_DRAG_OFFSET);
+  const [dragOffset, setDragOffset] = useState<GalleryDragOffset>({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [isPinching, setIsPinching] = useState(false);
 
@@ -127,59 +115,11 @@ export const Gallery = ({
   const controlTabIndex = canHover ? -1 : 0;
 
   useEffect(() => {
-    let cancelled = false;
-    let objectUrl: string | null = null;
-
-    setImageUrl(null);
-    setIsImageLoaded(false);
-    setImageLoadFailed(false);
     setScale(MIN_SCALE);
-    setDragOffset(INITIAL_DRAG_OFFSET);
+    setDragOffset({ x: 0, y: 0 });
     setIsDragging(false);
     setIsPinching(false);
-    setIsLoadingImage(false);
-
-    const blobDigest = currentAsset?.blobDigest;
-
-    if (!open || !blobDigest) {
-      return;
-    }
-
-    setIsLoadingImage(true);
-
-    void (async () => {
-      try {
-        const storedBlob = await clxDB.blobs.getBlob(blobDigest);
-        const file = await storedBlob.file();
-        objectUrl = URL.createObjectURL(file);
-
-        if (cancelled) {
-          URL.revokeObjectURL(objectUrl);
-          return;
-        }
-
-        setImageUrl(objectUrl);
-      } catch (error) {
-        console.error('Failed to load gallery image', error);
-
-        if (!cancelled) {
-          setImageLoadFailed(true);
-        }
-      } finally {
-        if (!cancelled) {
-          setIsLoadingImage(false);
-        }
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-
-      if (objectUrl) {
-        URL.revokeObjectURL(objectUrl);
-      }
-    };
-  }, [clxDB, currentAsset?.blobDigest, open]);
+  }, [currentAsset?.blobDigest]);
 
   const goToIndex = useCallback(
     (nextIndex: number) => {
@@ -259,7 +199,7 @@ export const Gallery = ({
         }
 
         setIsDragging(false);
-        setDragOffset(INITIAL_DRAG_OFFSET);
+        setDragOffset({ x: 0, y: 0 });
 
         if (swipeY > 0) {
           onClose();
@@ -325,7 +265,7 @@ export const Gallery = ({
       const anchor = document.createElement('a');
 
       anchor.href = objectUrl;
-      anchor.download = resolveDownloadFilename(currentAsset, activeIndex);
+      anchor.download = resolveDownloadFilename(file, activeIndex);
       anchor.click();
       URL.revokeObjectURL(objectUrl);
     } catch (error) {
@@ -479,47 +419,15 @@ export const Gallery = ({
                           select-none"
                         style={{ touchAction: 'none', transform: imageTransform }}
                       >
-                        {currentAsset.blurhash && (!imageUrl || !isImageLoaded) ? (
-                          <BlurHash
-                            hash={currentAsset.blurhash}
-                            className="absolute inset-0 h-full w-full rounded-2xl object-cover
-                              opacity-70"
-                          />
-                        ) : null}
-
-                        {imageUrl ? (
-                          <img
-                            src={imageUrl}
-                            alt={currentAsset.alt ?? '갤러리 이미지'}
-                            draggable={false}
-                            className={classes(
-                              `relative z-1 max-h-[calc(100vh-6rem)] max-w-[calc(100vw-3rem)]
-                                rounded-2xl object-contain shadow-elevated transition-opacity
-                                sm:max-h-[calc(100vh-8rem)] sm:max-w-[calc(100vw-8rem)]`,
-                              isImageLoaded ? 'opacity-100' : 'opacity-0',
-                              !isDragging && !isPinching && 'transition-transform duration-200'
-                            )}
-                            onLoad={() => setIsImageLoaded(true)}
-                          />
-                        ) : null}
-
-                        {!imageUrl && isLoadingImage ? (
-                          <div
-                            className="flex h-72 w-72 items-center justify-center rounded-[2rem]
-                              bg-base-background/12 px-6 text-sm text-white/80 backdrop-blur-sm"
-                          >
-                            이미지를 불러오는 중이에요.
-                          </div>
-                        ) : null}
-
-                        {!imageUrl && imageLoadFailed ? (
-                          <div
-                            className="flex h-72 w-72 items-center justify-center rounded-[2rem]
-                              bg-base-background/12 px-6 text-sm text-white/80 backdrop-blur-sm"
-                          >
-                            이미지를 불러오지 못했어요.
-                          </div>
-                        ) : null}
+                        <AssetImage
+                          className={classes(
+                            `relative z-1 max-h-[calc(100vh-6rem)] max-w-[calc(100vw-6rem)]
+                              rounded-2xl object-contain transition-opacity
+                              sm:max-h-[calc(100vh-8rem)] sm:max-w-[calc(100vw-8rem)]`,
+                            !isDragging && !isPinching && 'transition-transform duration-200'
+                          )}
+                          {...currentAsset}
+                        />
                       </div>
                     ) : (
                       <div

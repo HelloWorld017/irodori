@@ -67,12 +67,13 @@ export class StickersService {
     return this.repositories.stickers.listStickers();
   }
 
-  getById(id: string): Promise<StickerViewItem | null> {
-    return this.repositories.stickers.listStickersByIds([id]).then(([sticker]) => sticker ?? null);
+  listByIds(ids: string[]): Promise<StickerViewItem[]> {
+    return this.repositories.stickers.listStickersByIds(ids);
   }
 
-  getByIds(ids: string[]): Promise<StickerViewItem[]> {
-    return this.repositories.stickers.listStickersByIds(ids);
+  async getById(id: string): Promise<StickerViewItem | null> {
+    const [sticker] = await this.repositories.stickers.listStickersByIds([id]);
+    return sticker ?? null;
   }
 
   async create(input: CreateStickerInput): Promise<Sticker> {

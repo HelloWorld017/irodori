@@ -6,7 +6,7 @@ import { BlurHash } from './BlurHash';
 type AssetImageProps = {
   blobDigest: string | null;
   blurhash?: string | null;
-  alt: string;
+  alt?: string;
   className?: string;
   imageClassName?: string;
   loading?: 'eager' | 'lazy';
