@@ -31,7 +31,7 @@ export type GalleryAsset = Pick<Asset, 'id' | 'blobDigest' | 'blurhash' | 'mime'
 type GalleryProps = {
   open: boolean;
   assets: GalleryAsset[];
-  initialIndex?: number;
+  index?: number;
   onClose: () => void;
   onIndexChange?: (index: number) => void;
 };
@@ -74,18 +74,12 @@ const useCanHover = () => {
   return canHover;
 };
 
-export const Gallery = ({
-  open,
-  assets,
-  initialIndex = 0,
-  onClose,
-  onIndexChange,
-}: GalleryProps) => {
+export const Gallery = ({ open, assets, index = 0, onClose, onIndexChange }: GalleryProps) => {
   const clxDB = useClxDB();
   const showToast = useShowToast();
   const canHover = useCanHover();
 
-  const [activeIndex, setActiveIndex] = useState(() => clampIndex(initialIndex, assets.length));
+  const [activeIndex, setActiveIndex] = useState(() => clampIndex(index, assets.length));
   const [scale, setScale] = useState(MIN_SCALE);
   const [dragOffset, setDragOffset] = useState<GalleryDragOffset>({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
@@ -102,8 +96,8 @@ export const Gallery = ({
       return;
     }
 
-    setActiveIndex(clampIndex(initialIndex, assets.length));
-  }, [assets.length, initialIndex, open]);
+    setActiveIndex(clampIndex(index, assets.length));
+  }, [assets.length, index, open]);
 
   useEffect(() => {
     setActiveIndex(currentIndex => clampIndex(currentIndex, assets.length));
@@ -201,18 +195,19 @@ export const Gallery = ({
         setIsDragging(false);
         setDragOffset({ x: 0, y: 0 });
 
-        if (swipeY > 0) {
-          onClose();
-          return;
-        }
-
-        if (swipeX < 0) {
+        if (swipeX > 0) {
           goToPrevious();
           return;
         }
 
-        if (swipeX > 0) {
+        if (swipeX < 0) {
           goToNext();
+          return;
+        }
+
+        if (swipeY > 0) {
+          onClose();
+          return;
         }
       },
       onPinch: ({ active, offset: [nextScale] }) => {
@@ -230,6 +225,7 @@ export const Gallery = ({
           duration: 600,
           velocity: 0.2,
         },
+        preventDefault: true,
       },
       pinch: {
         from: () => [scaleRef.current, 0],
@@ -238,11 +234,11 @@ export const Gallery = ({
           min: MIN_SCALE,
           max: MAX_SCALE,
         },
+        preventDefault: true,
       },
       eventOptions: {
         passive: false,
       },
-      preventDefault: true,
     }
   );
 
@@ -304,7 +300,7 @@ export const Gallery = ({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="absolute inset-0 z-0"
+                  className="absolute inset-0 z-0 cursor-default"
                   aria-label="갤러리 닫기"
                 />
 
@@ -319,7 +315,10 @@ export const Gallery = ({
                   <IconX className="text-lg" />
                 </button>
 
-                <div className="relative z-10 flex h-full w-full items-center justify-center">
+                <div
+                  className="pointer-events-none relative z-10 flex h-full w-full items-center
+                    justify-center"
+                >
                   {assets.length > 1 ? (
                     <>
                       <button
@@ -329,11 +328,12 @@ export const Gallery = ({
                         tabIndex={controlTabIndex}
                         className={classes(
                           `absolute left-4 z-20 inline-flex h-14 w-14 items-center justify-center
-                            rounded-full bg-base-background/55 text-2xl font-medium text-primary
+                            rounded-2xl bg-base-background/55 text-2xl font-medium text-primary
                             backdrop-blur-xl transition sm:left-6`,
                           `group-hover:pointer-events-auto group-hover:opacity-100
-                            can-hover:pointer-events-none can-hover:opacity-0`,
-                          !canMovePrevious && 'cursor-not-allowed opacity-40'
+                            hover:bg-base-background/75 can-hover:pointer-events-none
+                            can-hover:opacity-0`,
+                          'disabled:cursor-not-allowed disabled:opacity-40'
                         )}
                         aria-label="이전 이미지"
                       >
@@ -347,11 +347,12 @@ export const Gallery = ({
                         tabIndex={controlTabIndex}
                         className={classes(
                           `absolute right-4 z-20 inline-flex h-14 w-14 items-center justify-center
-                            rounded-full bg-base-background/55 text-2xl font-medium text-primary
+                            rounded-2xl bg-base-background/55 text-2xl font-medium text-primary
                             backdrop-blur-xl transition sm:right-6`,
                           `group-hover:pointer-events-auto group-hover:opacity-100
-                            can-hover:pointer-events-none can-hover:opacity-0`,
-                          !canMoveNext && 'cursor-not-allowed opacity-40'
+                            hover:bg-base-background/75 can-hover:pointer-events-none
+                            can-hover:opacity-0`,
+                          'disabled:cursor-not-allowed disabled:opacity-40'
                         )}
                         aria-label="다음 이미지"
                       >
@@ -415,19 +416,35 @@ export const Gallery = ({
                     {currentAsset ? (
                       <div
                         {...bindGesture()}
-                        className="relative flex max-h-full max-w-full items-center justify-center
-                          select-none"
-                        style={{ touchAction: 'none', transform: imageTransform }}
+                        className="relative flex max-h-full max-w-full touch-none items-center
+                          justify-center select-none"
                       >
-                        <AssetImage
-                          className={classes(
-                            `relative z-1 max-h-[calc(100vh-6rem)] max-w-[calc(100vw-6rem)]
-                              rounded-2xl object-contain transition-opacity
-                              sm:max-h-[calc(100vh-8rem)] sm:max-w-[calc(100vw-8rem)]`,
-                            !isDragging && !isPinching && 'transition-transform duration-200'
-                          )}
-                          asset={currentAsset}
-                        />
+                        <AnimatePresence mode="popLayout">
+                          <motion.div
+                            key={currentAsset.id}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0, pointerEvents: 'none' }}
+                            layout
+                            transition={{ type: 'spring', visualDuration: 0.4 }}
+                            className="h-[calc(100vh-6rem)] w-[calc(100vw-6rem)]
+                              sm:h-[calc(100vh-8rem)] sm:w-[calc(100vw-8rem)]"
+                          >
+                            <div
+                              className={classes(
+                                !isDragging && !isPinching && 'transition-transform duration-200',
+                                'flex h-full w-full items-center justify-center'
+                              )}
+                              style={{ transform: imageTransform }}
+                            >
+                              <AssetImage
+                                className="pointer-events-auto relative z-1 max-h-full max-w-full
+                                  overflow-hidden rounded-2xl"
+                                asset={currentAsset}
+                              />
+                            </div>
+                          </motion.div>
+                        </AnimatePresence>
                       </div>
                     ) : (
                       <div

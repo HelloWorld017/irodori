@@ -3,7 +3,6 @@ import { Suspense } from 'react';
 import { ASSET_IMAGE_MARKUP_REGEX } from '@/fragments/entries/detail/_utils/assetReferences';
 import { ComponentWidget } from '../../_utils/ComponentWidget';
 import { ImageMarkup } from '../_components/ImageMarkup';
-import type { EditorPortal } from '../../_providers/EditorPortalProvider';
 import type { ImagePluginProps } from '../_types/ImagePluginProps';
 import type { Options as InkMde } from 'ink-mde';
 
@@ -11,7 +10,7 @@ const EmptyImage = () => (
   <span className="my-4 block h-56 w-full max-w-120 rounded-[1.5rem] bg-elevated-background" />
 );
 
-const imageDecorator = ({ fetchAsset, portal }: Pick<ImagePluginProps, 'fetchAsset' | 'portal'>) =>
+const imageDecorator = ({ isReadOnly, fetchAsset, portal }: ImagePluginProps) =>
   new MatchDecorator({
     regexp: new RegExp(ASSET_IMAGE_MARKUP_REGEX.source, 'g'),
     decoration: match => {
@@ -27,7 +26,12 @@ const imageDecorator = ({ fetchAsset, portal }: Pick<ImagePluginProps, 'fetchAss
           portal,
           render: () => (
             <Suspense fallback={<EmptyImage />}>
-              <ImageMarkup assetId={assetId} alt={alt} fetchAsset={fetchAsset} />
+              <ImageMarkup
+                assetId={assetId}
+                alt={alt}
+                fetchAsset={fetchAsset}
+                isGalleryEnabled={isReadOnly}
+              />
             </Suspense>
           ),
         }),
@@ -37,10 +41,11 @@ const imageDecorator = ({ fetchAsset, portal }: Pick<ImagePluginProps, 'fetchAss
   });
 
 export const createImageWidgetPlugin = ({
+  isReadOnly,
   fetchAsset,
   portal,
-}: Pick<ImagePluginProps, 'fetchAsset'> & { portal: EditorPortal }): InkMde.Plugin[] => {
-  const decorator = imageDecorator({ fetchAsset, portal });
+}: ImagePluginProps): InkMde.Plugin[] => {
+  const decorator = imageDecorator({ isReadOnly, fetchAsset, portal });
   const imageDecorations = ViewPlugin.fromClass(
     class {
       decorations = Decoration.none;

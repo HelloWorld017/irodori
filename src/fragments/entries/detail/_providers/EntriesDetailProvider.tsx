@@ -6,18 +6,20 @@ import type { ReactNode } from 'react';
 type EntriesDetailProviderProps = {
   entry: EntryDetailItem;
   assets: Asset[];
+  isReadOnly: boolean;
   children: ReactNode;
 };
 
 const [EntriesDetailProvider, useEntriesDetail] = buildContext(
-  ({ entry, assets }: EntriesDetailProviderProps) => ({
+  ({ entry, assets, isReadOnly }: EntriesDetailProviderProps) => ({
     entry,
     assets,
+    isReadOnly,
   })
 );
 
 export { EntriesDetailProvider };
 
 export const useEntriesDetailEntry = () => useEntriesDetail(state => state.entry);
-
 export const useEntriesDetailAssets = () => useEntriesDetail(state => state.assets);
+export const useEntriesDetailIsReadOnly = () => useEntriesDetail(state => state.isReadOnly);

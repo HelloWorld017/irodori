@@ -22,9 +22,12 @@ export type EntryDraftPublishAsset = {
   usage: EntryAssetUsage;
 };
 
+const toEntryAssetIdentityKey = (asset: EntryDraftPublishAsset) =>
+  `${asset.usage}:${asset.assetId}`;
+
 const toUniquePublishAssets = (assets: EntryDraftPublishAsset[]): EntryDraftPublishAsset[] =>
   Array.from(
-    new Map(assets.map(asset => [`${asset.usage}:${asset.assetId}`, asset] as const)).values()
+    new Map(assets.map(asset => [toEntryAssetIdentityKey(asset), asset] as const)).values()
   );
 
 const normalizeDraftCover = (cover: EntryDraftCover | null): EntryDraftCover | null => {

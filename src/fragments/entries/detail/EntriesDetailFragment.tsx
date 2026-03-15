@@ -67,7 +67,7 @@ const EntriesDetailFragmentInner = ({ edit = false }: EntriesDetailFragmentProps
   const assets = assetsQuery.data ?? [];
   if (!edit) {
     return (
-      <EntriesDetailProvider entry={detailQuery.data} assets={assets}>
+      <EntriesDetailProvider entry={detailQuery.data} assets={assets} isReadOnly>
         <EntriesDetailReadView entry={detailQuery.data} tagCategories={tagCategories} />
       </EntriesDetailProvider>
     );
@@ -77,7 +77,7 @@ const EntriesDetailFragmentInner = ({ edit = false }: EntriesDetailFragmentProps
   const initialSavedAt = draftQuery.data?.updatedAt ?? null;
 
   return (
-    <EntriesDetailProvider entry={detailQuery.data} assets={assets}>
+    <EntriesDetailProvider entry={detailQuery.data} assets={assets} isReadOnly={false}>
       <EntriesDetailEditProvider
         entryId={detailQuery.data.id}
         initialDraft={initialDraft}
