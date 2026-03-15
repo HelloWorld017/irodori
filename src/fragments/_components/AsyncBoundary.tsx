@@ -66,37 +66,31 @@ export const AsyncBoundary = ({ children, animateView, animateViewName }: AsyncB
           node
         );
 
-      const nodeWithTransition = animateView ? (
-        <AnimateView name={animateViewName}>{nodeWithDefault}</AnimateView>
-      ) : (
-        nodeWithDefault
-      );
-
-      return nodeWithTransition;
+      return nodeWithDefault;
     },
-    [children, animateView, animateViewName]
+    [children]
   );
 
-  const fallback = useMemo(() => {
-    const node =
-      typeof children.loading === 'string' ? (
-        <AsyncBoundaryDefaultLoading message={children.loading} />
-      ) : (
-        children.loading
-      );
-
-    const nodeWithTransition = animateView ? (
-      <AnimateView name={animateViewName}>{node}</AnimateView>
+  const fallback =
+    typeof children.loading === 'string' ? (
+      <AsyncBoundaryDefaultLoading message={children.loading} />
     ) : (
-      node
+      children.loading
     );
 
-    return nodeWithTransition;
-  }, [children, animateView, animateViewName]);
-
-  return (
+  const result = (
     <ErrorBoundary fallbackRender={errorFallback}>
       <Suspense fallback={fallback}>{children.default}</Suspense>
     </ErrorBoundary>
   );
+
+  if (animateView) {
+    return (
+      <AnimateView animateUpdate name={animateViewName}>
+        {result}
+      </AnimateView>
+    );
+  }
+
+  return result;
 };

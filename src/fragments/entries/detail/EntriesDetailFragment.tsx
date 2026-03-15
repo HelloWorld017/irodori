@@ -42,23 +42,6 @@ const EntriesDetailFragmentInner = ({ edit = false }: EntriesDetailFragmentProps
       detailQuery.data && services.tagCategories.listByNotebookId(detailQuery.data.notebookId),
   });
 
-  if (
-    detailQuery.isError ||
-    assetsQuery.isError ||
-    tagCategoriesQuery.isError ||
-    (edit && draftQuery.isError)
-  ) {
-    return (
-      <section
-        className="rounded-[1.75rem] border border-line bg-elevated-background p-8 shadow-elevated"
-      >
-        <p className="text-sm text-secondary">
-          일기를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.
-        </p>
-      </section>
-    );
-  }
-
   if (!detailQuery.data) {
     throw createTaggedError('entry-not-found', '선택한 일기를 찾지 못했어요.');
   }
@@ -94,17 +77,15 @@ export const EntriesDetailFragment = (props: EntriesDetailFragmentProps) => {
   const isMobile = useBreakPointIsBelow('lg');
 
   return (
-    <AnimateView key={`${entryId}_${props.edit ? 'edit' : 'read'}`} disabled={isMobile}>
-      <AsyncBoundary animateView>
-        {{
-          error: ({ error }) =>
-            isTaggedError('entry-not-found', error)
-              ? error.message
-              : '일기를 불러오지 못했어요. 잠시 후 다시 시도해주세요.',
-          loading: '일기를 불러오는 중이에요...',
-          default: <EntriesDetailFragmentInner {...props} />,
-        }}
-      </AsyncBoundary>
-    </AnimateView>
+    <AsyncBoundary animateView={!isMobile} key={entryId}>
+      {{
+        error: ({ error }) =>
+          isTaggedError('entry-not-found', error)
+            ? error.message
+            : '일기를 불러오지 못했어요. 잠시 후 다시 시도해주세요.',
+        loading: '일기를 불러오는 중이에요...',
+        default: <EntriesDetailFragmentInner {...props} />,
+      }}
+    </AsyncBoundary>
   );
 };
