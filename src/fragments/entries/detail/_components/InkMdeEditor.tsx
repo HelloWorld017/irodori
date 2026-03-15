@@ -48,7 +48,42 @@ const editorOptions = {
   search: true,
 } satisfies Options;
 
+const autoHeightTheme = EditorView.theme({
+  '&': {
+    height: 'auto',
+    minHeight: '500px',
+  },
+  '.cm-scroller': {
+    overflow: 'visible !important',
+  },
+});
+
 const css = String.raw;
+const stylesheet = css`
+  .${NAMESPACE}__ink-mde-editor {
+    .ink-mde {
+      border: none;
+    }
+
+    .ink-mde .ink-mde-editor {
+      overflow: visible;
+    }
+
+    .cm-editor,
+    .cm-scroller,
+    .cm-content {
+      flex-grow: 1;
+    }
+
+    .cm-focused {
+      outline: 0;
+    }
+
+    .cm-widgetBuffer {
+      display: none;
+    }
+  }
+`;
 
 const InkMdeEditorInner = ({ value, placeholder = '', onChange }: InkMdeEditorProps) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -90,6 +125,7 @@ const InkMdeEditorInner = ({ value, placeholder = '', onChange }: InkMdeEditorPr
         doc: initialValue,
         placeholder,
         plugins: [
+          { type: 'default', value: autoHeightTheme },
           ...plugins,
           ...(!isReadOnly
             ? ([
@@ -126,28 +162,6 @@ const InkMdeEditorInner = ({ value, placeholder = '', onChange }: InkMdeEditorPr
     };
   }, [imagePlugin, initialValue, isReadOnly, onChangeLatest, placeholder, tagPlugin]);
 
-  const stylesheet = css`
-    .${NAMESPACE}__ink-mde-editor {
-      .ink-mde {
-        border: none;
-      }
-
-      .cm-editor,
-      .cm-scroller,
-      .cm-content {
-        flex-grow: 1;
-      }
-
-      .cm-focused {
-        outline: 0;
-      }
-
-      .cm-widgetBuffer {
-        display: none;
-      }
-    }
-  `;
-
   const clxDB = useClxDB();
   const services = useServices();
   const onUploadImage = useCallback(
@@ -179,10 +193,7 @@ const InkMdeEditorInner = ({ value, placeholder = '', onChange }: InkMdeEditorPr
       <style>{stylesheet}</style>
       <div
         ref={mergedRef}
-        className={classes(
-          `${NAMESPACE}__ink-mde-editor`,
-          'flex h-[75vh] flex-col rounded-2xl border border-line bg-base-background p-3'
-        )}
+        className={classes(`${NAMESPACE}__ink-mde-editor`, 'flex flex-col rounded-2xl')}
       />
       <Dropzone
         onDrop={onUploadImage}
