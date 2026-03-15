@@ -9,8 +9,7 @@ export const ASSET_REFERENCE_URL_REGEX = new RegExp(
 );
 
 export const ASSET_IMAGE_MARKUP_REGEX = new RegExp(
-  `!\\[([^\\]\r\n]*)\\]\\(web\\+${NAMESPACE}_asset:(${UUID_PATTERN})\\)`,
-  'g'
+  `!\\[([^\\]\r\n]*)\\]\\(web\\+${NAMESPACE}_asset:(${UUID_PATTERN})\\)`
 );
 
 export const isAssetReferenceId = (value: string): boolean => ASSET_REFERENCE_ID_REGEX.test(value);
