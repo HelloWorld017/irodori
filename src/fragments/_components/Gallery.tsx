@@ -6,10 +6,11 @@ import { IconChevronLeft, IconChevronRight, IconCloudDownload, IconX } from '@/f
 import { useClxDB } from '@/fragments/_providers/DatabaseProvider';
 import { useShowToast } from '@/fragments/_providers/ToastProvider';
 import { classes } from '@/utils/classes';
+import { AnimatedModal } from './AnimatedModal';
 import { AssetImage } from './AssetImage';
 import type { Asset } from '@/repositories/AssetsRepository';
 
-const GESTURE_DRAG_RATIO = 0.1;
+const GESTURE_DRAG_RATIO = 0.2;
 const MIN_SCALE = 1;
 const MAX_SCALE = 4;
 const IMAGE_EXTENSION_BY_MIME: Record<string, string> = {
@@ -185,7 +186,10 @@ export const Gallery = ({ open, assets, index = 0, onClose, onIndexChange }: Gal
         setIsDragging(active);
         setDragOffset({
           x: movementX * GESTURE_DRAG_RATIO,
-          y: Math.max(movementY, 0) * GESTURE_DRAG_RATIO,
+          y:
+            movementY < 0
+              ? Math.tanh((movementY * GESTURE_DRAG_RATIO) / 32) * 32
+              : movementY * GESTURE_DRAG_RATIO,
         });
 
         if (!last) {
@@ -274,193 +278,167 @@ export const Gallery = ({ open, assets, index = 0, onClose, onIndexChange }: Gal
   }, [activeIndex, clxDB, currentAsset, showToast]);
 
   return (
-    <AnimatePresence>
-      {open ? (
-        <Dialog static open onClose={onClose} className="fixed inset-0 z-50">
-          <DialogBackdrop
-            as={motion.div}
-            className="fixed inset-0 bg-backdrop"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          />
+    <AnimatedModal open={open} onClose={onClose}>
+      <div
+        className="group relative flex h-full w-full items-center justify-center overflow-hidden
+          px-4 py-8 sm:px-8 sm:py-12"
+      >
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute inset-0 z-0 cursor-default"
+          aria-label="갤러리 닫기"
+        />
 
-          <div className="fixed inset-0">
-            <DialogPanel
-              as={motion.div}
-              className="relative h-full w-full"
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.98 }}
-            >
-              <div
-                className="group relative flex h-full w-full items-center justify-center
-                  overflow-hidden px-4 py-8 sm:px-8 sm:py-12"
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute top-4 right-4 z-30 inline-flex h-11 w-11 items-center justify-center
+            rounded-full bg-base-background/65 text-primary backdrop-blur-xl transition
+            hover:bg-base-background/85"
+          aria-label="갤러리 닫기"
+        >
+          <IconX className="text-lg" />
+        </button>
+
+        <div
+          className="pointer-events-none relative z-10 flex h-full w-full items-center
+            justify-center"
+        >
+          {assets.length > 1 ? (
+            <>
+              <button
+                type="button"
+                onClick={goToPrevious}
+                disabled={!canMovePrevious}
+                tabIndex={controlTabIndex}
+                className={classes(
+                  `absolute left-4 z-20 inline-flex h-14 w-14 items-center justify-center
+                    rounded-2xl bg-base-background/55 text-2xl font-medium text-primary
+                    backdrop-blur-xl transition sm:left-6`,
+                  `group-hover:pointer-events-auto group-hover:opacity-100
+                    hover:bg-base-background/75 can-hover:pointer-events-none can-hover:opacity-0`,
+                  'disabled:cursor-not-allowed disabled:opacity-40'
+                )}
+                aria-label="이전 이미지"
               >
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="absolute inset-0 z-0 cursor-default"
-                  aria-label="갤러리 닫기"
-                />
+                <IconChevronLeft />
+              </button>
 
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="absolute top-4 right-4 z-30 inline-flex h-11 w-11 items-center
-                    justify-center rounded-full bg-base-background/65 text-primary backdrop-blur-xl
-                    transition hover:bg-base-background/85"
-                  aria-label="갤러리 닫기"
-                >
-                  <IconX className="text-lg" />
-                </button>
+              <button
+                type="button"
+                onClick={goToNext}
+                disabled={!canMoveNext}
+                tabIndex={controlTabIndex}
+                className={classes(
+                  `absolute right-4 z-20 inline-flex h-14 w-14 items-center justify-center
+                    rounded-2xl bg-base-background/55 text-2xl font-medium text-primary
+                    backdrop-blur-xl transition sm:right-6`,
+                  `group-hover:pointer-events-auto group-hover:opacity-100
+                    hover:bg-base-background/75 can-hover:pointer-events-none can-hover:opacity-0`,
+                  'disabled:cursor-not-allowed disabled:opacity-40'
+                )}
+                aria-label="다음 이미지"
+              >
+                <IconChevronRight />
+              </button>
+            </>
+          ) : null}
 
-                <div
-                  className="pointer-events-none relative z-10 flex h-full w-full items-center
-                    justify-center"
-                >
-                  {assets.length > 1 ? (
-                    <>
-                      <button
-                        type="button"
-                        onClick={goToPrevious}
-                        disabled={!canMovePrevious}
-                        tabIndex={controlTabIndex}
-                        className={classes(
-                          `absolute left-4 z-20 inline-flex h-14 w-14 items-center justify-center
-                            rounded-2xl bg-base-background/55 text-2xl font-medium text-primary
-                            backdrop-blur-xl transition sm:left-6`,
-                          `group-hover:pointer-events-auto group-hover:opacity-100
-                            hover:bg-base-background/75 can-hover:pointer-events-none
-                            can-hover:opacity-0`,
-                          'disabled:cursor-not-allowed disabled:opacity-40'
-                        )}
-                        aria-label="이전 이미지"
-                      >
-                        <IconChevronLeft />
-                      </button>
+          <div
+            className="pointer-events-none absolute inset-x-4 bottom-4 z-20 flex justify-center
+              sm:bottom-6"
+          >
+            <div
+              className={classes(
+                `pointer-events-auto inline-flex items-center gap-3 rounded-full
+                bg-base-background/70 px-4 py-2.5 text-sm font-medium text-primary shadow-elevated
+                backdrop-blur-xl transition`,
+                `group-hover:pointer-events-auto group-hover:translate-y-0 group-hover:opacity-100
+                can-hover:pointer-events-none can-hover:translate-y-2 can-hover:opacity-0`
+              )}
+            >
+              <button
+                type="button"
+                onClick={goToPrevious}
+                disabled={!canMovePrevious}
+                tabIndex={controlTabIndex}
+                className="disabled:cursor-not-allowed disabled:opacity-40"
+                aria-label="이전 이미지"
+              >
+                <IconChevronLeft />
+              </button>
+              <span className="min-w-18 text-center tabular-nums">
+                {assets.length > 0 ? `${activeIndex + 1} / ${assets.length}` : '0 / 0'}
+              </span>
+              <button
+                type="button"
+                onClick={goToNext}
+                disabled={!canMoveNext}
+                tabIndex={controlTabIndex}
+                className="disabled:cursor-not-allowed disabled:opacity-40"
+                aria-label="다음 이미지"
+              >
+                <IconChevronRight />
+              </button>
+              <button
+                type="button"
+                onClick={handleDownload}
+                disabled={!currentAsset?.blobDigest}
+                tabIndex={controlTabIndex}
+                className="text-base leading-none disabled:cursor-not-allowed disabled:opacity-40"
+                aria-label="이미지 다운로드"
+              >
+                <IconCloudDownload />
+              </button>
+            </div>
+          </div>
 
-                      <button
-                        type="button"
-                        onClick={goToNext}
-                        disabled={!canMoveNext}
-                        tabIndex={controlTabIndex}
-                        className={classes(
-                          `absolute right-4 z-20 inline-flex h-14 w-14 items-center justify-center
-                            rounded-2xl bg-base-background/55 text-2xl font-medium text-primary
-                            backdrop-blur-xl transition sm:right-6`,
-                          `group-hover:pointer-events-auto group-hover:opacity-100
-                            hover:bg-base-background/75 can-hover:pointer-events-none
-                            can-hover:opacity-0`,
-                          'disabled:cursor-not-allowed disabled:opacity-40'
-                        )}
-                        aria-label="다음 이미지"
-                      >
-                        <IconChevronRight />
-                      </button>
-                    </>
-                  ) : null}
-
-                  <div
-                    className="pointer-events-none absolute inset-x-4 bottom-4 z-20 flex
-                      justify-center sm:bottom-6"
+          <div className="relative flex h-full w-full items-center justify-center">
+            {currentAsset ? (
+              <div
+                {...bindGesture()}
+                className="relative flex max-h-full max-w-full touch-none items-center
+                  justify-center select-none"
+              >
+                <AnimatePresence mode="popLayout">
+                  <motion.div
+                    key={currentAsset.id}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0, pointerEvents: 'none' }}
+                    layout
+                    transition={{ type: 'spring', visualDuration: 0.4 }}
+                    className="h-[calc(100vh-6rem)] w-[calc(100vw-6rem)] sm:h-[calc(100vh-8rem)]
+                      sm:w-[calc(100vw-8rem)]"
                   >
                     <div
                       className={classes(
-                        `pointer-events-auto inline-flex items-center gap-3 rounded-full
-                          bg-base-background/70 px-4 py-2.5 text-sm font-medium text-primary
-                          shadow-elevated backdrop-blur-xl transition`,
-                        `group-hover:pointer-events-auto group-hover:translate-y-0
-                          group-hover:opacity-100 can-hover:pointer-events-none
-                          can-hover:translate-y-2 can-hover:opacity-0`
+                        !isDragging && !isPinching && 'transition-transform duration-200',
+                        'flex h-full w-full items-center justify-center'
                       )}
+                      style={{ transform: imageTransform }}
                     >
-                      <button
-                        type="button"
-                        onClick={goToPrevious}
-                        disabled={!canMovePrevious}
-                        tabIndex={controlTabIndex}
-                        className="disabled:cursor-not-allowed disabled:opacity-40"
-                        aria-label="이전 이미지"
-                      >
-                        <IconChevronLeft />
-                      </button>
-                      <span className="min-w-18 text-center tabular-nums">
-                        {assets.length > 0 ? `${activeIndex + 1} / ${assets.length}` : '0 / 0'}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={goToNext}
-                        disabled={!canMoveNext}
-                        tabIndex={controlTabIndex}
-                        className="disabled:cursor-not-allowed disabled:opacity-40"
-                        aria-label="다음 이미지"
-                      >
-                        <IconChevronRight />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleDownload}
-                        disabled={!currentAsset?.blobDigest}
-                        tabIndex={controlTabIndex}
-                        className="text-base leading-none disabled:cursor-not-allowed
-                          disabled:opacity-40"
-                        aria-label="이미지 다운로드"
-                      >
-                        <IconCloudDownload />
-                      </button>
+                      <AssetImage
+                        className="pointer-events-auto relative z-1 max-h-full max-w-full
+                          overflow-hidden rounded-2xl"
+                        asset={currentAsset}
+                      />
                     </div>
-                  </div>
-
-                  <div className="relative flex h-full w-full items-center justify-center">
-                    {currentAsset ? (
-                      <div
-                        {...bindGesture()}
-                        className="relative flex max-h-full max-w-full touch-none items-center
-                          justify-center select-none"
-                      >
-                        <AnimatePresence mode="popLayout">
-                          <motion.div
-                            key={currentAsset.id}
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0, pointerEvents: 'none' }}
-                            layout
-                            transition={{ type: 'spring', visualDuration: 0.4 }}
-                            className="h-[calc(100vh-6rem)] w-[calc(100vw-6rem)]
-                              sm:h-[calc(100vh-8rem)] sm:w-[calc(100vw-8rem)]"
-                          >
-                            <div
-                              className={classes(
-                                !isDragging && !isPinching && 'transition-transform duration-200',
-                                'flex h-full w-full items-center justify-center'
-                              )}
-                              style={{ transform: imageTransform }}
-                            >
-                              <AssetImage
-                                className="pointer-events-auto relative z-1 max-h-full max-w-full
-                                  overflow-hidden rounded-2xl"
-                                asset={currentAsset}
-                              />
-                            </div>
-                          </motion.div>
-                        </AnimatePresence>
-                      </div>
-                    ) : (
-                      <div
-                        className="flex h-72 w-72 items-center justify-center rounded-[2rem]
-                          bg-base-background/12 px-6 text-sm text-white/80 backdrop-blur-sm"
-                      >
-                        표시할 이미지가 없어요.
-                      </div>
-                    )}
-                  </div>
-                </div>
+                  </motion.div>
+                </AnimatePresence>
               </div>
-            </DialogPanel>
+            ) : (
+              <div
+                className="flex h-72 w-72 items-center justify-center rounded-[2rem]
+                  bg-base-background/12 px-6 text-sm text-white/80 backdrop-blur-sm"
+              >
+                표시할 이미지가 없어요.
+              </div>
+            )}
           </div>
-        </Dialog>
-      ) : null}
-    </AnimatePresence>
+        </div>
+      </div>
+    </AnimatedModal>
   );
 };

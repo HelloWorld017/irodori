@@ -77,9 +77,11 @@ const EntriesView = ({ children }: { children: ReactNode }) => {
   }
 
   return (
-    <div className="flex min-h-screen w-full">
-      <Sidebar className="max-w-100 flex-2 py-5 sm:py-6" />
-      <main className="flex-5 px-8 py-5 sm:px-10 sm:py-6">{children}</main>
+    <div className="flex h-screen w-full">
+      <Sidebar className="h-full min-h-0 max-w-100 flex-2 py-5 sm:py-6" />
+      <main className="h-full min-h-0 flex-5 overflow-auto px-8 py-5 sm:px-10 sm:py-6">
+        {children}
+      </main>
     </div>
   );
 };

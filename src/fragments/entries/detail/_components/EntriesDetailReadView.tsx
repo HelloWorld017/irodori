@@ -61,7 +61,7 @@ export const EntriesDetailReadView = ({
 
       <div
         className="m-auto grid max-w-360 gap-8 p-6 sm:p-8
-          lg:grid-cols-[minmax(0,1.8fr)_minmax(18rem,0.6fr)] lg:gap-10"
+          xl:grid-cols-[minmax(0,1.8fr)_minmax(14rem,0.6fr)] xl:gap-10"
       >
         <section className="rounded-[1.75rem]">
           <div className="space-y-4">

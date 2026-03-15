@@ -45,6 +45,8 @@ const [DatabaseContextProvider, useDatabase] = buildContext(() => {
     setServices(null);
   }, []);
 
+  useEffect(() => () => clxDB?.destroy(), [clxDB]);
+
   return {
     clxDB,
     repositories,

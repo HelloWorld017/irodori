@@ -193,7 +193,11 @@ const InkMdeEditorInner = ({ value, placeholder = '', onChange }: InkMdeEditorPr
       <style>{stylesheet}</style>
       <div
         ref={mergedRef}
-        className={classes(`${NAMESPACE}__ink-mde-editor`, 'flex flex-col rounded-2xl')}
+        className={classes(
+          `${NAMESPACE}__ink-mde-editor`,
+          'flex flex-col rounded-2xl',
+          !isReadOnly && 'rounded-2xl border border-line bg-base-background p-3'
+        )}
       />
       <Dropzone
         onDrop={onUploadImage}
