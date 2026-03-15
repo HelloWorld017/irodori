@@ -13,6 +13,7 @@ import { anyParams, queryKey } from '@/utils/queryKey';
 import { buildRoute } from '@/utils/route';
 import { useEntriesNotebookId } from '../../_providers/EntriesProvider';
 import {
+  usePublishEntriesDetailDraft,
   useEntriesDetailDraft,
   useEntriesDetailIsDirty,
   useEntriesDetailSaveState,
@@ -75,15 +76,17 @@ export const EntriesDetailEditView = ({
   const setTitle = useSetEntriesDetailTitle();
   const setBody = useSetEntriesDetailBody();
   const setCover = useSetEntriesDetailCover();
+  const publishDraft = usePublishEntriesDetailDraft();
   const confirm = useConfirm();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [isUploadingCover, setIsUploadingCover] = useState(false);
 
   const publishMutation = useMutation({
-    mutationFn: async () => services.entryDrafts.publish({ entryId: entry.id, data: draft }),
+    mutationFn: publishDraft,
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: queryKey('entriesDetail', 'detail', entry.id) }),
+        queryClient.invalidateQueries({ queryKey: queryKey('entriesDetail', 'assets', entry.id) }),
         queryClient.invalidateQueries({ queryKey: queryKey('entries', 'list', anyParams) }),
       ]);
       queryClient.removeQueries({ queryKey: queryKey('entriesDetail', 'draft', entry.id) });

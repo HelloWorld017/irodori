@@ -15,6 +15,7 @@ import { EditorGalleryProvider } from '../_editor/_providers/EditorGalleryProvid
 import { EditorPortalProvider } from '../_editor/_providers/EditorPortalProvider';
 import { useImagePlugin } from '../_editor/image';
 import { useTagPlugin } from '../_editor/tag';
+import { toAssetImageReference } from '../_utils/assetReferences';
 import type { Instance, Options } from 'ink-mde';
 
 type InkMdeEditorProps = {
@@ -165,7 +166,7 @@ const InkMdeEditorInner = ({ value, placeholder = '', onChange }: InkMdeEditorPr
         .filter(result => result.status === 'fulfilled')
         .map(result => result.value);
 
-      const images = assets.map(asset => `![](web+${NAMESPACE}_asset:${asset.id})\n`).join('');
+      const images = assets.map(asset => `${toAssetImageReference(asset.id)}\n`).join('');
       editor.insert(images, selection);
     },
     [clxDB, services]

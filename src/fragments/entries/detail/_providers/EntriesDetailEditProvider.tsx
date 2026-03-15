@@ -7,10 +7,12 @@ import { normalizeEntryDraftData } from '@/services/EntryDraftsService';
 import { buildContext } from '@/utils/context';
 import { queryKey } from '@/utils/queryKey';
 import { useTagsFetcher } from '../_hooks/useTagsFetcher';
+import { extractAssetReferenceIds } from '../_utils/assetReferences';
 import { extractTagReferenceIds } from '../_utils/tagReferences';
 import type { StickerPickerValue } from '@/fragments/_components/StickerPicker';
 import type { EntryDraftCover, EntryDraftData } from '@/repositories/EntryDraftsRepository';
 import type { TagViewItem } from '@/repositories/TagsRepository';
+import type { EntryDraftPublishAsset } from '@/services/EntryDraftsService';
 import type { ReactNode } from 'react';
 
 type DraftSaveState = 'idle' | 'saving' | 'saved' | 'error';
@@ -156,8 +158,27 @@ const [EntriesDetailEditProvider, useEntriesDetailEdit] = buildContext(
       [documentState, effectiveTagIds, excludedTagIds, stickers]
     );
 
+    const publishAssets = useMemo<EntryDraftPublishAsset[]>(() => {
+      const assets = [
+        ...extractAssetReferenceIds(draft.body).map(assetId => ({
+          assetId,
+          usage: 'inline' as const,
+        })),
+        ...(draft.cover?.id ? [{ assetId: draft.cover.id, usage: 'cover' as const }] : []),
+      ] satisfies EntryDraftPublishAsset[];
+
+      return Array.from(
+        new Map(assets.map(asset => [`${asset.usage}:${asset.assetId}`, asset] as const)).values()
+      );
+    }, [draft.body, draft.cover?.id]);
+
     const draftSnapshot = useMemo(() => JSON.stringify(draft), [draft]);
     const isDirty = draftSnapshot !== savedSnapshotRef.current;
+
+    const publish = useCallback(
+      () => services.entryDrafts.publish({ entryId, data: draft, assets: publishAssets }),
+      [draft, entryId, publishAssets, services]
+    );
 
     const updateDocumentState = useCallback(
       (updater: (current: DraftDocumentState) => DraftDocumentState) => {
@@ -307,6 +328,7 @@ const [EntriesDetailEditProvider, useEntriesDetailEdit] = buildContext(
       appendTag,
       removeTag,
       setStickerValue,
+      publish,
     };
   }
 );
@@ -328,3 +350,4 @@ export const useAppendEntriesDetailTag = () => useEntriesDetailEdit(state => sta
 export const useRemoveEntriesDetailTag = () => useEntriesDetailEdit(state => state.removeTag);
 export const useSetEntriesDetailStickerValue = () =>
   useEntriesDetailEdit(state => state.setStickerValue);
+export const usePublishEntriesDetailDraft = () => useEntriesDetailEdit(state => state.publish);

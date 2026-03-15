@@ -1,9 +1,11 @@
+import { toEntryAssetEntityId } from '@/repositories/EntryAssetsRepository';
 import { toEntryStickerEntityId } from '@/repositories/EntryStickersRepository';
 import { toEntryTagEntityId } from '@/repositories/EntryTagsRepository';
 import type { Services } from '.';
 import type { EntryDetailItem } from './EntriesService';
 import type { Executor, Repositories } from '@/repositories';
 import type { Entry } from '@/repositories/EntriesRepository';
+import type { EntryAsset, EntryAssetUsage } from '@/repositories/EntryAssetsRepository';
 import type {
   EntryDraft,
   EntryDraftCover,
@@ -14,6 +16,16 @@ import type { EntrySticker } from '@/repositories/EntryStickersRepository';
 import type { EntryTag } from '@/repositories/EntryTagsRepository';
 
 const MAX_ENTRY_STICKER_SLOT = 3;
+
+export type EntryDraftPublishAsset = {
+  assetId: string;
+  usage: EntryAssetUsage;
+};
+
+const toUniquePublishAssets = (assets: EntryDraftPublishAsset[]): EntryDraftPublishAsset[] =>
+  Array.from(
+    new Map(assets.map(asset => [`${asset.usage}:${asset.assetId}`, asset] as const)).values()
+  );
 
 const normalizeDraftCover = (cover: EntryDraftCover | null): EntryDraftCover | null => {
   if (!cover) {
@@ -177,9 +189,14 @@ export class EntryDraftsService {
     });
   }
 
-  async publish(input: { entryId: string; data: EntryDraftData }): Promise<void> {
+  async publish(input: {
+    entryId: string;
+    data: EntryDraftData;
+    assets: EntryDraftPublishAsset[];
+  }): Promise<void> {
     const now = Date.now();
     const data = normalizeEntryDraftData(input.data);
+    const assets = toUniquePublishAssets(input.assets);
     const title = toPublishedTitle(data.title);
 
     await this.repositories.withTransaction(async trx => {
@@ -198,6 +215,7 @@ export class EntryDraftsService {
       await this.stageEntry(trx, entry);
       await this.publishTags(trx, input.entryId, data.tagIds, now);
       await this.publishStickers(trx, input.entryId, data.stickers, now);
+      await this.publishAssets(trx, input.entryId, assets, now);
 
       const deletedDraft = await this.repositories.entryDrafts.deleteEntryDraft(trx, {
         entryId: input.entryId,
@@ -309,6 +327,67 @@ export class EntryDraftsService {
     }
   }
 
+  private async publishAssets(
+    trx: Executor,
+    entryId: string,
+    assets: EntryDraftPublishAsset[],
+    now: number
+  ): Promise<void> {
+    const currentEntryAssets = await this.repositories.entryAssets.listEntryAssetsByEntryId(
+      entryId,
+      {
+        executor: trx,
+      }
+    );
+    const currentEntryAssetsByIdentity = new Map(
+      currentEntryAssets.map(
+        entryAsset => [toEntryAssetIdentityKey(entryAsset), entryAsset] as const
+      )
+    );
+    const nextAssetIdentitySet = new Set(assets.map(toEntryAssetIdentityKey));
+    const changedEntryAssets: EntryAsset[] = [];
+
+    for (const asset of assets) {
+      const currentEntryAsset = currentEntryAssetsByIdentity.get(toEntryAssetIdentityKey(asset));
+      if (currentEntryAsset) {
+        continue;
+      }
+
+      const nextEntryAsset = await this.repositories.entryAssets.upsertEntryAsset(trx, {
+        entryId,
+        assetId: asset.assetId,
+        usage: asset.usage,
+        createdAt: now,
+        updatedAt: now,
+      });
+
+      changedEntryAssets.push(nextEntryAsset);
+    }
+
+    for (const currentEntryAsset of currentEntryAssets) {
+      const identityKey = toEntryAssetIdentityKey(currentEntryAsset);
+
+      if (nextAssetIdentitySet.has(identityKey)) {
+        continue;
+      }
+
+      const deletedEntryAsset = await this.repositories.entryAssets.deleteEntryAsset(trx, {
+        entryId,
+        assetId: currentEntryAsset.assetId,
+        usage: currentEntryAsset.usage,
+        deletedAt: now,
+      });
+
+      if (deletedEntryAsset) {
+        changedEntryAssets.push(deletedEntryAsset);
+      }
+    }
+
+    if (changedEntryAssets.length > 0) {
+      await this.stageEntryAssets(trx, changedEntryAssets);
+    }
+  }
+
   private stageEntry(trx: Executor, entry: Entry): Promise<void> {
     return this.services.sync.stageUpdatedDocuments(trx, this.repositories.entries, [
       { id: entry.id, data: this.repositories.entries.toSyncData(entry) },
@@ -339,6 +418,17 @@ export class EntryDraftsService {
       entryStickers.map(entrySticker => ({
         id: toEntryStickerEntityId(entrySticker.entryId, entrySticker.slot),
         data: this.repositories.entryStickers.toSyncData(entrySticker),
+      }))
+    );
+  }
+
+  private stageEntryAssets(trx: Executor, entryAssets: EntryAsset[]): Promise<void> {
+    return this.services.sync.stageUpdatedDocuments(
+      trx,
+      this.repositories.entryAssets,
+      entryAssets.map(entryAsset => ({
+        id: toEntryAssetEntityId(entryAsset.entryId, entryAsset.assetId, entryAsset.usage),
+        data: this.repositories.entryAssets.toSyncData(entryAsset),
       }))
     );
   }

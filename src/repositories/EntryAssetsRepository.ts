@@ -121,9 +121,11 @@ export class EntryAssetsRepository
 
   async listEntryAssetsByEntryId(
     entryId: string,
-    options?: { usage?: EntryAssetUsage }
+    options?: { usage?: EntryAssetUsage; executor?: Executor }
   ): Promise<EntryAsset[]> {
-    let query = this.db
+    const db = options?.executor ?? this.db;
+
+    let query = db
       .selectFrom('entry_assets')
       .selectAll()
       .where('entry_id', '=', entryId)
