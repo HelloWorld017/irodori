@@ -1,4 +1,4 @@
-import { use, useEffect, useId, useMemo } from 'react';
+import { use, useMemo } from 'react';
 import { AssetImage } from '@/fragments/_components/AssetImage';
 import { isPromise } from '@/utils/promise';
 import { useEditorOpenGallery } from '../../_providers/EditorGalleryProvider';

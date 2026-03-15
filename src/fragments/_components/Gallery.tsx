@@ -316,7 +316,7 @@ export const Gallery = ({ open, assets, index = 0, onClose, onIndexChange }: Gal
                   `absolute left-4 z-20 inline-flex h-14 w-14 items-center justify-center
                     rounded-2xl bg-base-background/55 text-2xl font-medium text-primary
                     backdrop-blur-xl transition sm:left-6`,
-                  `group-hover:pointer-events-auto group-hover:opacity-100
+                  `pointer-events-auto group-hover:pointer-events-auto group-hover:opacity-100
                     hover:bg-base-background/75 can-hover:pointer-events-none can-hover:opacity-0`,
                   'disabled:cursor-not-allowed disabled:opacity-40'
                 )}
@@ -334,7 +334,7 @@ export const Gallery = ({ open, assets, index = 0, onClose, onIndexChange }: Gal
                   `absolute right-4 z-20 inline-flex h-14 w-14 items-center justify-center
                     rounded-2xl bg-base-background/55 text-2xl font-medium text-primary
                     backdrop-blur-xl transition sm:right-6`,
-                  `group-hover:pointer-events-auto group-hover:opacity-100
+                  `pointer-events-auto group-hover:pointer-events-auto group-hover:opacity-100
                     hover:bg-base-background/75 can-hover:pointer-events-none can-hover:opacity-0`,
                   'disabled:cursor-not-allowed disabled:opacity-40'
                 )}

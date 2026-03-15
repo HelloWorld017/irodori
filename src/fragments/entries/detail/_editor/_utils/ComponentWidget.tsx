@@ -11,6 +11,7 @@ type ComponentWidgetState = {
 type ComponentWidgetProps = {
   id: string;
   render: () => ReactNode;
+  getEstimatedHeight?: () => number;
   portal: EditorPortal;
 };
 
@@ -23,12 +24,14 @@ export class ComponentWidget extends WidgetType {
   private renderComponent: () => ReactNode;
   private portal: EditorPortal;
   private state: ComponentWidgetState | null = null;
+  private getEstimatedHeight: (() => number) | null = null;
 
-  constructor({ id, render, portal }: ComponentWidgetProps) {
+  constructor({ id, render, portal, getEstimatedHeight }: ComponentWidgetProps) {
     super();
     this.id = id;
     this.renderComponent = render;
     this.portal = portal;
+    this.getEstimatedHeight = getEstimatedHeight ?? null;
   }
 
   eq(widget: WidgetType): boolean {
@@ -114,5 +117,9 @@ export class ComponentWidget extends WidgetType {
         this.portal.removePortal(state.portalId);
       }
     }, 50);
+  }
+
+  get estimatedHeight() {
+    return this.getEstimatedHeight?.() ?? -1;
   }
 }
