@@ -86,7 +86,7 @@ export const NotebookEdit = ({
           </div>
         ) : null}
 
-        <div className="flex flex-1 flex-col items-center justify-center">
+        <div className="flex-1 overflow-auto">
           {isCreateMode || tab === 'detail' ? (
             <NotebookEditDetail
               className="p-8"

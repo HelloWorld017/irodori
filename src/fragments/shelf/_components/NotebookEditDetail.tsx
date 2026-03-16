@@ -27,7 +27,7 @@ export const NotebookEditDetail = ({
 
   return (
     <form
-      className={classes('flex h-full w-full flex-col gap-4', className)}
+      className={classes('flex min-h-full w-full flex-col gap-4', className)}
       onSubmit={event => {
         event.preventDefault();
         onSubmit({ title, description, color });

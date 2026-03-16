@@ -124,8 +124,7 @@ const ShelfView = () => {
 
   return (
     <main
-      className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-12 px-5 py-8 sm:px-8
-        sm:py-10"
+      className="mx-auto flex min-h-dvh w-full max-w-6xl flex-col gap-12 px-5 py-8 sm:px-8 sm:py-10"
     >
       <ShelfHeader notebookCount={notebooksQuery.data?.length ?? null} />
       <AsyncBoundary>

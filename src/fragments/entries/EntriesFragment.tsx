@@ -39,8 +39,8 @@ const EntriesView = ({ children }: { children: ReactNode }) => {
 
   if (isMobile) {
     return (
-      <div className="relative min-h-screen w-full overflow-x-hidden lg:hidden">
-        <Sidebar className="min-h-screen w-full border-r-0 py-5 sm:py-6" />
+      <div className="relative min-h-dvh w-full overflow-x-hidden lg:hidden">
+        <Sidebar className="min-h-dvh w-full border-r-0 py-5 sm:py-6" />
 
         <AnimatePresence>
           {!isSelfRoute ? (
@@ -77,7 +77,7 @@ const EntriesView = ({ children }: { children: ReactNode }) => {
   }
 
   return (
-    <div className="flex h-screen w-full">
+    <div className="flex h-dvh w-full">
       <Sidebar className="h-full min-h-0 max-w-100 flex-2 py-5 sm:py-6" />
       <main className="h-full min-h-0 flex-5 overflow-auto px-8 py-5 sm:px-10 sm:py-6">
         {children}
