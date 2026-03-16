@@ -1,12 +1,25 @@
-import { precacheAndRoute } from 'workbox-precaching';
+import { clientsClaim } from 'workbox-core';
+import { cleanupOutdatedCaches, precacheAndRoute } from 'workbox-precaching';
 
-const sw = self as unknown as ServiceWorkerGlobalScope & {
-  __WB_MANIFEST: unknown[];
-};
+declare let self: ServiceWorkerGlobalScope;
 
-precacheAndRoute(sw.__WB_MANIFEST);
+clientsClaim();
+precacheAndRoute(self.__WB_MANIFEST);
+cleanupOutdatedCaches();
 
-sw.addEventListener('fetch', event => {
+self.addEventListener('message', event => {
+  const data: unknown = event.data;
+
+  if (!data || typeof data !== 'object' || !('type' in data)) {
+    return;
+  }
+
+  if (data.type === 'SKIP_WAITING') {
+    void self.skipWaiting();
+  }
+});
+
+self.addEventListener('fetch', event => {
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request).then(response => {

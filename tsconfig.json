@@ -22,7 +22,8 @@
       "react",
       "react/canary",
       "react-dom",
-      "vite/client"
+      "vite/client",
+      "vite-plugin-pwa/client"
     ],
     "typeRoots": ["./node_modules", "./node_modules/@types"],
 

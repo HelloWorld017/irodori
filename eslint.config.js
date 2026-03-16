@@ -59,6 +59,7 @@ const config = defineConfig(
       'import-x/newline-after-import': 'error',
       'import-x/no-duplicates': 'error',
       'import-x/no-named-as-default-member': 'off',
+      'import-x/no-unresolved': ['error', { ignore: ['^virtual:'] }],
       'import-x/order': [
         'error',
         {

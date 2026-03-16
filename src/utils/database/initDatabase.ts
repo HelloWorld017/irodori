@@ -36,6 +36,10 @@ export const initDatabase = async (): Promise<DatabaseInitResult | null> => {
     return initPromise;
   }
 
+  if (!window.crossOriginIsolated) {
+    throw new Error('Cross-Origin isolation is disabled');
+  }
+
   const adapter = getClxDBAdapter();
   initPromise = startClxDBWithUI({
     database: adapter,

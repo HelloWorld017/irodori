@@ -10,6 +10,7 @@ import { EntriesFragment } from '@/fragments/entries';
 import { OnboardingFragment } from '@/fragments/onboarding';
 import { ShelfFragment } from '@/fragments/shelf';
 import { getRoute } from '@/utils/route';
+import { ServiceWorkerManager } from './fragments/_components/ServiceWorkerManager';
 import { QueryProvider } from './fragments/_providers/QueryProvider';
 import { RouterProvider } from './fragments/_providers/RouterProvider';
 import { EntriesDefaultFragment } from './fragments/entries/default';
@@ -29,6 +30,7 @@ const AppFrame = ({ children }: { children: ReactNode }) => (
         </QueryProvider>
         <ToastList />
         <AlertList />
+        <ServiceWorkerManager />
       </AlertProvider>
     </ToastProvider>
   </MotionConfig>
