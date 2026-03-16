@@ -1,5 +1,5 @@
 import { useQueryErrorResetBoundary } from '@tanstack/react-query';
-import { Suspense, useCallback, useMemo } from 'react';
+import { Suspense, useCallback } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { AnimateView } from './AnimateView';
 import type { AnimateViewName } from './AnimateView';
@@ -10,7 +10,7 @@ type AsyncBoundaryDefaultErrorProps = {
   reset: () => void;
 };
 
-const AsyncBoundaryDefaultError = ({ reset, message }: AsyncBoundaryDefaultErrorProps) => {
+const AsyncBoundaryDefaultError = ({ message, reset }: AsyncBoundaryDefaultErrorProps) => {
   const { reset: resetQuery } = useQueryErrorResetBoundary();
   const onReset = () => {
     resetQuery();
@@ -32,26 +32,26 @@ const AsyncBoundaryDefaultError = ({ reset, message }: AsyncBoundaryDefaultError
   );
 };
 
-const AsyncBoundaryDefaultLoading = ({ message }: { message: string }) => (
+type AsyncBoundaryDefaultLoadingProps = {
+  message: string;
+};
+
+const AsyncBoundaryDefaultLoading = ({ message }: AsyncBoundaryDefaultLoadingProps) => (
   <section className="p-6 py-12">
     <p className="text-center text-sm text-secondary">{message}</p>
   </section>
 );
 
-type AsyncBoundaryProps = {
-  animateView?: boolean;
-  animateViewName?: AnimateViewName;
-  children: {
-    default: ReactNode;
-    loading: string | ReactNode;
-    error:
-      | string
-      | ReactNode
-      | ((props: { error: unknown; reset: () => void }) => ReactNode | string);
-  };
+type AsyncBoundaryRenderDescriptor = {
+  default: ReactNode;
+  loading: string | ReactNode;
+  error:
+    | string
+    | ReactNode
+    | ((props: { error: unknown; reset: () => void }) => ReactNode | string);
 };
 
-export const AsyncBoundary = ({ children, animateView, animateViewName }: AsyncBoundaryProps) => {
+const AsyncBoundaryContents = ({ children }: { children: AsyncBoundaryRenderDescriptor }) => {
   const errorFallback = useCallback(
     ({ error, resetErrorBoundary }: { error: unknown; resetErrorBoundary: () => void }) => {
       const node =
@@ -84,13 +84,42 @@ export const AsyncBoundary = ({ children, animateView, animateViewName }: AsyncB
     </ErrorBoundary>
   );
 
+  return result;
+};
+
+type AsyncBoundaryRenderFn = (descriptor: AsyncBoundaryRenderDescriptor) => ReactNode;
+type AsyncBoundaryProps = {
+  animateView?: boolean;
+  animateViewName?: AnimateViewName;
+  animateViewMorphDisabled?: boolean;
+  defaultClassName?: string;
+  children: AsyncBoundaryRenderDescriptor | ((render: AsyncBoundaryRenderFn) => ReactNode);
+};
+
+export const AsyncBoundary = ({
+  children,
+  animateView,
+  animateViewName,
+  animateViewMorphDisabled,
+}: AsyncBoundaryProps) => {
+  const renderContents =
+    typeof children === 'function' ? children : (render: AsyncBoundaryRenderFn) => render(children);
+
+  const contents = renderContents(descriptor => (
+    <AsyncBoundaryContents>{descriptor}</AsyncBoundaryContents>
+  ));
+
   if (animateView) {
     return (
-      <AnimateView animateUpdate name={animateViewName}>
-        {result}
+      <AnimateView
+        animateUpdate
+        morphDisabled={animateViewMorphDisabled ?? true}
+        name={animateViewName}
+      >
+        {contents}
       </AnimateView>
     );
   }
 
-  return result;
+  return contents;
 };

@@ -1,6 +1,7 @@
 import { IconChevronLeft, IconPencil } from '@/fragments/_icons';
 import { useHistoryBack, useNavigate } from '@/fragments/_providers/RouterProvider';
 import { useBreakPointIsBelow } from '@/hooks/useBreakPointIsBelow';
+import { classes } from '@/utils/classes';
 import { buildRoute } from '@/utils/route';
 import { useEntriesNotebookId } from '../../_providers/EntriesProvider';
 import { EntryHeader } from './EntryHeader';
@@ -12,9 +13,11 @@ import type { EntryDetailItem } from '@/services/EntriesService';
 export const EntriesDetailReadView = ({
   entry,
   tagCategories,
+  className,
 }: {
   entry: EntryDetailItem;
   tagCategories: TagCategory[];
+  className?: string;
 }) => {
   const notebookId = useEntriesNotebookId();
   const navigate = useNavigate();
@@ -22,7 +25,7 @@ export const EntriesDetailReadView = ({
   const isMobile = useBreakPointIsBelow('lg');
 
   return (
-    <div className="space-y-6">
+    <div className={classes('space-y-6', className)}>
       <EntryHeader
         index={entry.index}
         id={entry.id}

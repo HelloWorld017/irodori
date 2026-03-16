@@ -8,6 +8,7 @@ import { useClxDB, useServices } from '@/fragments/_providers/DatabaseProvider';
 import { useNavigate } from '@/fragments/_providers/RouterProvider';
 import { useShowToast } from '@/fragments/_providers/ToastProvider';
 import { uploadAssetImage } from '@/utils/assets';
+import { classes } from '@/utils/classes';
 import { formatDate } from '@/utils/date';
 import { anyParams, queryKey } from '@/utils/queryKey';
 import { buildRoute } from '@/utils/route';
@@ -60,9 +61,11 @@ const getDraftStatusLabel = (
 export const EntriesDetailEditView = ({
   entry,
   tagCategories,
+  className,
 }: {
   entry: EntryDetailItem;
   tagCategories: TagCategory[];
+  className?: string;
 }) => {
   const services = useServices();
   const clxDB = useClxDB();
@@ -223,7 +226,7 @@ export const EntriesDetailEditView = ({
   };
 
   return (
-    <div className="space-y-6">
+    <div className={classes('space-y-6', className)}>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-secondary">{statusLabel}</p>
         <div className="flex gap-3">

@@ -64,9 +64,7 @@
 
   /* Animations */
   --animate-fade-in: fade-in 0.35s cubic-bezier(0.33, 1, 0.68, 1) forwards;
-  --animate-fade-in-lg: fade-in 0.5s cubic-bezier(0.33, 1, 0.68, 1) forwards;
   --animate-fade-out: fade-out 0.35s cubic-bezier(0.33, 1, 0.68, 1) forwards;
-  --animate-fade-out-lg: fade-out 0.5s cubic-bezier(0.33, 1, 0.68, 1) forwards;
 
   @keyframes fade-in {
     0% { opacity: 0; }
@@ -90,6 +88,25 @@
 
   ::view-transition {
     pointer-events: none;
+  }
+
+  ::view-transition-group(.view-transition-fade) {
+    animation: none;
+  }
+
+  ::view-transition-new(.view-transition-fade),
+  ::view-transition-old(.view-transition-fade) {
+    height: 100%;
+  }
+
+  ::view-transition-new(.view-transition-fade),
+  ::view-transition-new(.view-transition-fade-morph) {
+    animation: fade-in 0.5s cubic-bezier(0.33, 1, 0.68, 1) both;
+  }
+
+  ::view-transition-old(.view-transition-fade)
+  ::view-transition-old(.view-transition-fade-morph) {
+    animation: fade-out 0.5s cubic-bezier(0.33, 1, 0.68, 1) both;
   }
 
   button:where(:not([disabled])) {

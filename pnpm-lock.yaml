@@ -29,9 +29,9 @@ importers:
       '@lezer/markdown':
         specifier: ^1.6.3
         version: 1.6.3
-      '@mesh-gradient/react':
+      '@mesh-gradient/core':
         specifier: ^1.5.0
-        version: 1.5.0(react-dom@19.3.0-canary-46103596-20260305(react@19.3.0-canary-46103596-20260305))(react@19.3.0-canary-46103596-20260305)
+        version: 1.5.0
       '@tanstack/react-query':
         specifier: 5.90.21
         version: 5.90.21(react@19.3.0-canary-46103596-20260305)
@@ -668,12 +668,6 @@ packages:
 
   '@mesh-gradient/core@1.5.0':
     resolution: {integrity: sha512-68kCPIoY24EZsexxVT/w3B9/jGnscB7ntgy/GSBt4UVIJxNxq0VB5YmLSadRdoSdYa5WTOm8BgAwiXUnzVzD6Q==}
-
-  '@mesh-gradient/react@1.5.0':
-    resolution: {integrity: sha512-zJ7JJzWzVU1Z/XHkYnRDKcbXhjlfqGEkZni5eT5xDBqi8/NQFJj3g6AO1n5FxAeCkjUbaFKwVNay8etbEy0lzQ==}
-    peerDependencies:
-      react: '>=18.0.0'
-      react-dom: '>=18.0.0'
 
   '@microsoft/api-extractor-model@7.33.4':
     resolution: {integrity: sha512-u1LTaNTikZAQ9uK6KG1Ms7nvNedsnODnspq/gH2dcyETWvH4hVNGNDvRAEutH66kAmxA4/necElqGNs1FggC8w==}
@@ -3661,12 +3655,6 @@ snapshots:
   '@marijn/find-cluster-break@1.0.2': {}
 
   '@mesh-gradient/core@1.5.0': {}
-
-  '@mesh-gradient/react@1.5.0(react-dom@19.3.0-canary-46103596-20260305(react@19.3.0-canary-46103596-20260305))(react@19.3.0-canary-46103596-20260305)':
-    dependencies:
-      '@mesh-gradient/core': 1.5.0
-      react: 19.3.0-canary-46103596-20260305
-      react-dom: 19.3.0-canary-46103596-20260305(react@19.3.0-canary-46103596-20260305)
 
   '@microsoft/api-extractor-model@7.33.4(@types/node@25.3.2)':
     dependencies:

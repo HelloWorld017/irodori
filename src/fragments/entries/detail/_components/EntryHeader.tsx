@@ -1,6 +1,6 @@
-import { MeshGradient } from '@mesh-gradient/react';
 import { useMemo } from 'react';
 import { AssetImage } from '@/fragments/_components/AssetImage';
+import { MeshGradient } from '@/fragments/_components/MeshGradient';
 import { seededRandom } from '@/utils/random';
 import { GRADIENT_COLORS } from '../_constants/gradient';
 import type { EntryCoverAsset } from '@/repositories/EntriesRepository';
@@ -46,6 +46,7 @@ export const EntryHeader = ({
           <MeshGradient
             className="absolute inset-0 h-full w-full"
             options={{
+              appearance: 'default',
               colors: gradientColors as [string, string, string, string],
               seed: random,
               animationSpeed: 0.25,

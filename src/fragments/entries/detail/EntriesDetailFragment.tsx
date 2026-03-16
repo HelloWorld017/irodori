@@ -78,14 +78,18 @@ export const EntriesDetailFragment = (props: EntriesDetailFragmentProps) => {
 
   return (
     <AsyncBoundary animateView={!isMobile} key={entryId}>
-      {{
-        error: ({ error }) =>
-          isTaggedError('entry-not-found', error)
-            ? error.message
-            : '일기를 불러오지 못했어요. 잠시 후 다시 시도해주세요.',
-        loading: '일기를 불러오는 중이에요...',
-        default: <EntriesDetailFragmentInner {...props} />,
-      }}
+      {render => (
+        <div className="min-h-full bg-base-background px-8 py-5 sm:px-10 sm:py-6">
+          {render({
+            error: ({ error }) =>
+              isTaggedError('entry-not-found', error)
+                ? error.message
+                : '일기를 불러오지 못했어요. 잠시 후 다시 시도해주세요.',
+            loading: '일기를 불러오는 중이에요...',
+            default: <EntriesDetailFragmentInner {...props} />,
+          })}
+        </div>
+      )}
     </AsyncBoundary>
   );
 };
