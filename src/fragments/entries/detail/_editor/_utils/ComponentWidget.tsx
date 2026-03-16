@@ -1,5 +1,6 @@
 import { WidgetType } from '@codemirror/view';
 import type { EditorPortal } from '../_providers/EditorPortalProvider';
+import type { EditorView } from '@codemirror/view';
 import type { ReactNode } from 'react';
 
 type ComponentWidgetState = {
@@ -10,7 +11,7 @@ type ComponentWidgetState = {
 
 type ComponentWidgetProps = {
   id: string;
-  render: () => ReactNode;
+  render: (view: EditorView) => ReactNode;
   getEstimatedHeight?: () => number;
   portal: EditorPortal;
 };
@@ -21,7 +22,7 @@ const buildPortalId = () => `component-widget:${nextPortalId++}`;
 
 export class ComponentWidget extends WidgetType {
   private id: string;
-  private renderComponent: () => ReactNode;
+  private renderComponent: (view: EditorView) => ReactNode;
   private portal: EditorPortal;
   private state: ComponentWidgetState | null = null;
   private getEstimatedHeight: (() => number) | null = null;
@@ -62,7 +63,7 @@ export class ComponentWidget extends WidgetType {
     return true;
   }
 
-  private ensureState(): ComponentWidgetState {
+  private ensureState(view: EditorView): ComponentWidgetState {
     if (this.state) {
       return this.state;
     }
@@ -77,24 +78,24 @@ export class ComponentWidget extends WidgetType {
       refs: 0,
     };
 
-    this.updateDOM(element);
+    this.updateDOM(element, view);
     return this.state;
   }
 
-  toDOM(): HTMLElement {
-    const state = this.ensureState();
+  toDOM(view: EditorView): HTMLElement {
+    const state = this.ensureState(view);
     state.refs++;
     return state.element;
   }
 
-  updateDOM(dom: HTMLElement): boolean {
+  updateDOM(dom: HTMLElement, view: EditorView): boolean {
     if (dom !== this.state?.element) {
       return false;
     }
 
     this.portal.upsertPortal(this.state.portalId, {
       target: dom,
-      node: this.renderComponent(),
+      node: this.renderComponent(view),
     });
 
     return true;

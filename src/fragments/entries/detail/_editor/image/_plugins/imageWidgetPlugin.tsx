@@ -38,13 +38,14 @@ const imageDecorator =
               widget: new ComponentWidget({
                 id: `asset-image:${assetId}`,
                 portal,
-                render: () => (
+                render: view => (
                   <Suspense fallback={<EmptyImage />}>
                     <ImageMarkup
                       assetId={assetId}
                       alt={alt}
                       fetchAsset={fetchAsset}
                       isGalleryEnabled={isReadOnly}
+                      requestMeasure={() => view.requestMeasure()}
                     />
                   </Suspense>
                 ),

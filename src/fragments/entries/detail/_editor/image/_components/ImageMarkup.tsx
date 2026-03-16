@@ -1,4 +1,4 @@
-import { use, useMemo } from 'react';
+import { use, useEffect, useMemo } from 'react';
 import { AssetImage } from '@/fragments/_components/AssetImage';
 import { isPromise } from '@/utils/promise';
 import { useEditorOpenGallery } from '../../_providers/EditorGalleryProvider';
@@ -9,12 +9,23 @@ type ImageMarkupProps = {
   alt: string;
   fetchAsset: ImagePluginProps['fetchAsset'];
   isGalleryEnabled: boolean;
+  requestMeasure: () => void;
 };
 
-export const ImageMarkup = ({ assetId, alt, fetchAsset, isGalleryEnabled }: ImageMarkupProps) => {
+export const ImageMarkup = ({
+  assetId,
+  alt,
+  fetchAsset,
+  isGalleryEnabled,
+  requestMeasure,
+}: ImageMarkupProps) => {
   const openGallery = useEditorOpenGallery();
   const result = useMemo(() => fetchAsset(assetId), [assetId, fetchAsset]);
   const asset = isPromise(result) ? use(result) : result;
+
+  useEffect(() => {
+    requestMeasure();
+  }, [requestMeasure]);
 
   if (!asset || !asset.mime.startsWith('image/')) {
     return null;
