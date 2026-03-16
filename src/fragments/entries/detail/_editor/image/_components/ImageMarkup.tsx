@@ -1,4 +1,4 @@
-import { use, useEffect, useMemo } from 'react';
+import { use, useEffect, useEffectEvent, useMemo } from 'react';
 import { AssetImage } from '@/fragments/_components/AssetImage';
 import { isPromise } from '@/utils/promise';
 import { useEditorOpenGallery } from '../../_providers/EditorGalleryProvider';
@@ -23,9 +23,10 @@ export const ImageMarkup = ({
   const result = useMemo(() => fetchAsset(assetId), [assetId, fetchAsset]);
   const asset = isPromise(result) ? use(result) : result;
 
+  const onRequestMeasureEvent = useEffectEvent(requestMeasure);
   useEffect(() => {
-    requestMeasure();
-  }, [requestMeasure]);
+    onRequestMeasureEvent();
+  }, []);
 
   if (!asset || !asset.mime.startsWith('image/')) {
     return null;
@@ -35,7 +36,7 @@ export const ImageMarkup = ({
     <AssetImage
       asset={asset}
       alt={alt}
-      className="max-h-[28rem] overflow-hidden rounded-[1.5rem]"
+      className="max-h-[480px] overflow-hidden rounded-[1.5rem]"
     />
   );
 

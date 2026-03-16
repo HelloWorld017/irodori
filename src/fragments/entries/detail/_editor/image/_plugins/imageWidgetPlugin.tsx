@@ -38,6 +38,7 @@ const imageDecorator =
               widget: new ComponentWidget({
                 id: `asset-image:${assetId}`,
                 portal,
+                getEstimatedHeight: () => 480,
                 render: view => (
                   <Suspense fallback={<EmptyImage />}>
                     <ImageMarkup

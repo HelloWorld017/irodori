@@ -116,6 +116,7 @@ export class ComponentWidget extends WidgetType {
     setTimeout(() => {
       if (state.refs <= 0) {
         this.portal.removePortal(state.portalId);
+        this.state = null;
       }
     }, 50);
   }
