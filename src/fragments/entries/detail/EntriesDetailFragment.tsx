@@ -79,7 +79,7 @@ export const EntriesDetailFragment = (props: EntriesDetailFragmentProps) => {
   return (
     <AsyncBoundary animateView={!isMobile} key={entryId}>
       {render => (
-        <div className="min-h-full bg-base-background px-8 py-5 sm:px-10 sm:py-6">
+        <div className="h-full">
           {render({
             error: ({ error }) =>
               isTaggedError('entry-not-found', error)
