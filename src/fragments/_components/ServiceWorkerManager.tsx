@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { registerSW } from 'virtual:pwa-register';
+import { NAMESPACE } from '@/constants/common';
 import { useConfirm } from '../_providers/AlertProvider';
 import { useShowToast } from '../_providers/ToastProvider';
 
@@ -21,7 +22,20 @@ export const ServiceWorkerManager = () => {
     });
 
     if ('serviceWorker' in navigator) {
-      if (!window.crossOriginIsolated) {
+      const installingKey = `${NAMESPACE}__installing`;
+      const isInstalling = window.sessionStorage.getItem(installingKey);
+      if (isInstalling && !window.crossOriginIsolated) {
+        showToast({
+          durationMs: -1,
+          kind: 'error',
+          message: '앱 초기화에 실패했습니다. 잠시 후 다시 시도해주세요.',
+        });
+
+        window.sessionStorage.removeItem(installingKey);
+        return;
+      }
+
+      if (window.crossOriginIsolated === false) {
         showToast({
           durationMs: -1,
           kind: 'error',
@@ -29,8 +43,11 @@ export const ServiceWorkerManager = () => {
         });
 
         void navigator.serviceWorker.ready.then(() => {
+          window.sessionStorage.setItem(installingKey, 'true');
           window.location.reload();
         });
+
+        return;
       }
     }
   }, [confirm, showToast]);
