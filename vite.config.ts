@@ -4,9 +4,19 @@ import react from '@vitejs/plugin-react-swc';
 import sqlocal from 'sqlocal/vite';
 import { defineConfig } from 'vite';
 
+type EnvDefinition = {
+  [K in keyof ImportMetaEnvExtra as `import.meta.env.${K}`]: ImportMetaEnvExtra[K];
+};
+
+const env = {
+  'import.meta.env.BASE_PATH': JSON.stringify('/irodori'),
+} satisfies EnvDefinition;
+
 export default defineConfig(({ mode }) => ({
+  base: '/irodori',
   define: {
     'process.env.NODE_ENV': JSON.stringify(mode),
+    ...env,
   },
   build: {
     rollupOptions: {

@@ -1,3 +1,5 @@
+import { BASE_PATH } from '@/constants/common';
+
 type ExtractParamName<Segment extends string> = Segment extends `:${infer ParamName}`
   ? ParamName
   : never;
@@ -21,7 +23,7 @@ export type RouteParams = Simplify<{
 export type RouteKind = keyof typeof RouteMap;
 
 export const getRoute = (kind: RouteKind, nest = false): string =>
-  `${RouteMap[kind]}${nest ? '/*?' : ''}`;
+  `${BASE_PATH}${RouteMap[kind]}${nest ? '/*?' : ''}`;
 
 export const buildRoute = <TKind extends RouteKind>(
   kind: TKind,
