@@ -35,7 +35,13 @@ export default defineConfig(({ mode }) => ({
     },
   },
   resolve: {
-    alias: { '@': resolve(__dirname, 'src') },
+    alias: {
+      '@': resolve(__dirname, 'src'),
+      '@codemirror/language-data': resolve(
+        __dirname,
+        './src/utils/codemirror/languageDataSubset.ts'
+      ),
+    },
   },
   server: {
     watch: {
