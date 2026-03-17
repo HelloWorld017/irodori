@@ -69,6 +69,10 @@ const stylesheet = css`
       overflow: visible;
     }
 
+    &[data-readonly='true'] .ink-mde .ink-mde-editor {
+      padding: 0;
+    }
+
     .cm-editor,
     .cm-scroller,
     .cm-content {
@@ -198,6 +202,7 @@ const InkMdeEditorInner = ({ value, placeholder = '', onChange }: InkMdeEditorPr
           'flex flex-col rounded-2xl',
           !isReadOnly && 'rounded-2xl border border-line bg-base-background p-3'
         )}
+        data-readonly={!!isReadOnly}
       />
       <Dropzone
         onDrop={onUploadImage}

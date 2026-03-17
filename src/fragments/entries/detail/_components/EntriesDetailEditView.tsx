@@ -351,13 +351,11 @@ export const EntriesDetailEditView = ({
         }
       />
       <div
-        className="m-auto grid max-w-360 gap-8 p-6 sm:p-8
-          xl:grid-cols-[minmax(0,1.8fr)_minmax(14rem,0.6fr)] xl:gap-10"
+        className="m-auto grid max-w-360 gap-8 p-0 sm:p-2
+          xl:grid-cols-[minmax(0,1.8fr)_minmax(14rem,0.6fr)] xl:gap-10 xl:p-8"
       >
-        <section className="space-y-4 rounded-[1.75rem]">
-          <div className="space-y-1">
-            <p className="text-sm font-medium text-secondary">본문</p>
-          </div>
+        <section className="rounded-[1.75rem]">
+          <p className="mb-2 text-sm font-medium text-secondary">본문</p>
 
           <InkMdeEditor
             value={draft.body}

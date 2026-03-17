@@ -63,20 +63,18 @@ export const EntriesDetailReadView = ({
       />
 
       <div
-        className="m-auto grid max-w-360 gap-8 p-6 sm:p-8
-          xl:grid-cols-[minmax(0,1.8fr)_minmax(14rem,0.6fr)] xl:gap-10"
+        className="m-auto grid max-w-360 gap-8 p-0 sm:p-2
+          xl:grid-cols-[minmax(0,1.8fr)_minmax(14rem,0.6fr)] xl:gap-10 xl:p-8"
       >
         <section className="rounded-[1.75rem]">
-          <div className="space-y-4">
-            <p className="text-sm font-medium text-secondary">본문</p>
-            {entry.body.trim() ? (
-              <article className="text-[15px] leading-7 whitespace-pre-wrap text-primary">
-                <InkMdeEditor value={entry.body} />
-              </article>
-            ) : (
-              <p className="text-sm text-tertiary">아직 작성된 본문이 없어요.</p>
-            )}
-          </div>
+          <p className="mb-2 text-sm font-medium text-secondary">본문</p>
+          {entry.body.trim() ? (
+            <article className="text-[15px] leading-7 whitespace-pre-wrap text-primary">
+              <InkMdeEditor value={entry.body} />
+            </article>
+          ) : (
+            <p className="text-sm text-tertiary">아직 작성된 본문이 없어요.</p>
+          )}
         </section>
 
         <EntryMetadataRead
