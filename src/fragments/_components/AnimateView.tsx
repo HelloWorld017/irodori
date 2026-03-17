@@ -24,7 +24,7 @@ export const AnimateView = ({
   ) : (
     <ViewTransition
       name={name}
-      default={`view-transition-${animation ?? 'fade'}`}
+      default={`view-transition-${animation || 'fade'}`}
       update={!animateUpdate ? 'none' : undefined}
     >
       {children}

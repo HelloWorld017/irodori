@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { Activity, useEffect } from 'react';
 import { useRoute } from 'wouter';
 import { useBreakPointIsBelow } from '@/hooks/useBreakPointIsBelow';
 import { buildRoute, getRoute } from '@/utils/route';
@@ -29,13 +29,17 @@ const EntriesView = ({ children }: { children: ReactNode }) => {
   if (isMobile) {
     return (
       <div className="relative min-h-dvh w-full overflow-x-hidden lg:hidden">
-        {isSelfRoute ? (
-          <AnimateView>
+        <Activity mode={isSelfRoute ? 'visible' : 'hidden'}>
+          <AnimateView animation="fade">
             <Sidebar className="min-h-dvh w-full border-r-0 py-5 sm:py-6" />
           </AnimateView>
-        ) : (
-          <div className="min-h-dvh px-4 py-4 sm:px-6 sm:py-5">{children}</div>
-        )}
+        </Activity>
+
+        <Activity mode={isSelfRoute ? 'hidden' : 'visible'}>
+          <AnimateView animation="slide" key="slide">
+            <main className="min-h-dvh px-4 py-4 sm:px-6 sm:py-5">{children}</main>
+          </AnimateView>
+        </Activity>
       </div>
     );
   }

@@ -1,7 +1,7 @@
 import { acceptCompletion, autocompletion } from '@codemirror/autocomplete';
 import { drawSelection, EditorView, keymap } from '@codemirror/view';
 import { ink } from 'ink-mde';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import { NAMESPACE } from '@/constants/common';
 import { Dropzone } from '@/fragments/_components/Dropzone';
 import { useClxDB, useServices } from '@/fragments/_providers/DatabaseProvider';
@@ -95,7 +95,7 @@ const InkMdeEditorInner = ({ value, placeholder = '', onChange }: InkMdeEditorPr
   const imagePlugin = useImagePlugin();
   const tagPlugin = useTagPlugin();
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const target = containerRef.current;
 
     if (!target) {

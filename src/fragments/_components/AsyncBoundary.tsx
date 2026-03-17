@@ -89,19 +89,13 @@ const AsyncBoundaryContents = ({ children }: { children: AsyncBoundaryRenderDesc
 
 type AsyncBoundaryRenderFn = (descriptor: AsyncBoundaryRenderDescriptor) => ReactNode;
 type AsyncBoundaryProps = {
-  animateView?: boolean;
+  animateView?: boolean | AnimateViewAnimation;
   animateViewName?: AnimateViewName;
-  animateViewAnimation?: AnimateViewAnimation;
   defaultClassName?: string;
   children: AsyncBoundaryRenderDescriptor | ((render: AsyncBoundaryRenderFn) => ReactNode);
 };
 
-export const AsyncBoundary = ({
-  children,
-  animateView,
-  animateViewName,
-  animateViewAnimation,
-}: AsyncBoundaryProps) => {
+export const AsyncBoundary = ({ children, animateView, animateViewName }: AsyncBoundaryProps) => {
   const renderContents =
     typeof children === 'function' ? children : (render: AsyncBoundaryRenderFn) => render(children);
 
@@ -111,7 +105,11 @@ export const AsyncBoundary = ({
 
   if (animateView) {
     return (
-      <AnimateView animateUpdate animation={animateViewAnimation} name={animateViewName}>
+      <AnimateView
+        animateUpdate
+        animation={typeof animateView === 'string' ? animateView : undefined}
+        name={animateViewName}
+      >
         {contents}
       </AnimateView>
     );

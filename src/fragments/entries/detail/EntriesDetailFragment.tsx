@@ -73,10 +73,9 @@ const EntriesDetailFragmentInner = ({ edit = false }: EntriesDetailFragmentProps
 
 export const EntriesDetailFragment = (props: EntriesDetailFragmentProps) => {
   const { entryId } = useRouteParams<'entriesDetail'>();
-  const isMobile = useBreakPointIsBelow('lg');
 
   return (
-    <AsyncBoundary animateViewAnimation={isMobile ? 'slide' : 'fade'} key={entryId}>
+    <AsyncBoundary animateView key={entryId}>
       {render => (
         <div className="h-full">
           {render({
