@@ -67,7 +67,7 @@ export const EntriesDetailReadView = ({
           xl:grid-cols-[minmax(0,1.8fr)_minmax(14rem,0.6fr)] xl:gap-10 xl:p-8"
       >
         <section className="rounded-[1.75rem]">
-          <p className="mb-2 text-sm font-medium text-secondary">본문</p>
+          <p className="mt-6 mb-2 text-sm font-medium text-secondary xl:mt-0">본문</p>
           {entry.body.trim() ? (
             <article className="text-[15px] leading-7 whitespace-pre-wrap text-primary">
               <InkMdeEditor value={entry.body} />

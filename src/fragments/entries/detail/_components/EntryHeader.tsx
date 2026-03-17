@@ -32,7 +32,7 @@ export const EntryHeader = ({
   );
 
   return (
-    <section className="relative overflow-hidden rounded-[2rem]">
+    <section className="relative -mx-2 -mt-2 overflow-hidden rounded-[2rem] md:mt-0 xl:m-0">
       <div className="relative flex min-h-72 flex-col sm:min-h-88">
         {cover ? (
           <AssetImage
