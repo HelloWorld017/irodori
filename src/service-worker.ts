@@ -43,7 +43,14 @@ const handleCrossOriginIsolation = async (
 const manifest = self.__MANIFEST;
 self.addEventListener('install', () => {
   void caches.open(CACHE_NAME).then(cache => {
-    cache.addAll(manifest.map(entry => entry.url)).catch(console.error);
+    cache
+      .addAll(
+        manifest.map(entry => {
+          const revisionSuffix = entry.revision ? `?__REVISION__=${entry.revision}` : '';
+          return `${entry.url}${revisionSuffix}`;
+        })
+      )
+      .catch(console.error);
   });
 });
 
@@ -67,7 +74,7 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const request = event.request;
   const response = (async () => {
-    let response = await caches.match(request);
+    let response = await caches.match(request, { ignoreSearch: true });
     if (!response) {
       response = await fetch(request);
     }
