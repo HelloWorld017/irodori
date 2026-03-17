@@ -1,4 +1,3 @@
-import { Dialog, DialogBackdrop, DialogPanel } from '@headlessui/react';
 import { useGesture } from '@use-gesture/react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';

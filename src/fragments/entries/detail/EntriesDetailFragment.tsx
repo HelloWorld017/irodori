@@ -1,7 +1,6 @@
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { AsyncBoundary } from '@/fragments/_components/AsyncBoundary';
 import { useServices } from '@/fragments/_providers/DatabaseProvider';
-import { useBreakPointIsBelow } from '@/hooks/useBreakPointIsBelow';
 import { useRouteParams } from '@/hooks/useRouteParams';
 import { toEntryDraftData } from '@/services/EntryDraftsService';
 import { createTaggedError, isTaggedError } from '@/utils/error';
