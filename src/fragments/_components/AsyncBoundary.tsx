@@ -2,7 +2,7 @@ import { useQueryErrorResetBoundary } from '@tanstack/react-query';
 import { Suspense, useCallback } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { AnimateView } from './AnimateView';
-import type { AnimateViewName } from './AnimateView';
+import type { AnimateViewAnimation, AnimateViewName } from './AnimateView';
 import type { ReactNode } from 'react';
 
 type AsyncBoundaryDefaultErrorProps = {
@@ -91,7 +91,7 @@ type AsyncBoundaryRenderFn = (descriptor: AsyncBoundaryRenderDescriptor) => Reac
 type AsyncBoundaryProps = {
   animateView?: boolean;
   animateViewName?: AnimateViewName;
-  animateViewMorphDisabled?: boolean;
+  animateViewAnimation?: AnimateViewAnimation;
   defaultClassName?: string;
   children: AsyncBoundaryRenderDescriptor | ((render: AsyncBoundaryRenderFn) => ReactNode);
 };
@@ -100,7 +100,7 @@ export const AsyncBoundary = ({
   children,
   animateView,
   animateViewName,
-  animateViewMorphDisabled,
+  animateViewAnimation,
 }: AsyncBoundaryProps) => {
   const renderContents =
     typeof children === 'function' ? children : (render: AsyncBoundaryRenderFn) => render(children);
@@ -111,11 +111,7 @@ export const AsyncBoundary = ({
 
   if (animateView) {
     return (
-      <AnimateView
-        animateUpdate
-        morphDisabled={animateViewMorphDisabled ?? true}
-        name={animateViewName}
-      >
+      <AnimateView animateUpdate animation={animateViewAnimation} name={animateViewName}>
         {contents}
       </AnimateView>
     );

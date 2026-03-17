@@ -1,5 +1,4 @@
 import { useSuspenseQuery } from '@tanstack/react-query';
-import { AnimateView } from '@/fragments/_components/AnimateView';
 import { AsyncBoundary } from '@/fragments/_components/AsyncBoundary';
 import { useServices } from '@/fragments/_providers/DatabaseProvider';
 import { useBreakPointIsBelow } from '@/hooks/useBreakPointIsBelow';
@@ -77,7 +76,7 @@ export const EntriesDetailFragment = (props: EntriesDetailFragmentProps) => {
   const isMobile = useBreakPointIsBelow('lg');
 
   return (
-    <AsyncBoundary animateView={!isMobile} key={entryId}>
+    <AsyncBoundary animateViewAnimation={isMobile ? 'slide' : 'fade'} key={entryId}>
       {render => (
         <div className="h-full">
           {render({

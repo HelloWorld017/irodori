@@ -2,20 +2,21 @@ import { ViewTransition } from 'react';
 import type { ReactNode } from 'react';
 
 export type AnimateViewName = 'root' | 'entries';
+export type AnimateViewAnimation = 'fade' | 'fade-morph' | 'slide';
 
 type AnimateViewProps = {
   name?: AnimateViewName;
+  animation?: AnimateViewAnimation;
   animateUpdate?: boolean;
   disabled?: boolean;
-  morphDisabled?: boolean;
   children: ReactNode;
 };
 
 export const AnimateView = ({
   name,
+  animation,
   animateUpdate,
   disabled,
-  morphDisabled,
   children,
 }: AnimateViewProps) =>
   disabled ? (
@@ -23,7 +24,7 @@ export const AnimateView = ({
   ) : (
     <ViewTransition
       name={name}
-      default={morphDisabled ? 'view-transition-fade' : 'view-transition-fade-morph'}
+      default={`view-transition-${animation ?? 'fade'}`}
       update={!animateUpdate ? 'none' : undefined}
     >
       {children}

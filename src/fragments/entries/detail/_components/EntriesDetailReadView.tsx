@@ -37,7 +37,7 @@ export const EntriesDetailReadView = ({
               type="button"
               onClick={historyBack}
               className="-ml-2 rounded-full p-2 text-2xl text-white/80 transition
-                hover:bg-elevated-background-hover hover:text-white"
+                hover:bg-elevated-background/20 hover:text-white"
               aria-label="뒤로가기"
             >
               <IconChevronLeft />

@@ -11,6 +11,26 @@
   src: url('@/assets/fonts/tossface.woff2');
 }
 
+@keyframes fade-in {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes fade-out {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes slide-in {
+  0% { opacity: 0; transform: translate(100vw); }
+  100% { opacity: 1; transform: translate(0); }
+}
+
+@keyframes slide-out {
+  0% { opacity: 1; transform: translate(0); }
+  100% { opacity: 0; transform: translate(100vw); }
+}
+
 @theme {
   /* Default Palette */
   --color-default-900: #211a13;
@@ -65,16 +85,6 @@
   /* Animations */
   --animate-fade-in: fade-in 0.35s cubic-bezier(0.33, 1, 0.68, 1) forwards;
   --animate-fade-out: fade-out 0.35s cubic-bezier(0.33, 1, 0.68, 1) forwards;
-
-  @keyframes fade-in {
-    0% { opacity: 0; }
-    100% { opacity: 1; }
-  }
-
-  @keyframes fade-out {
-    0% { opacity: 1; }
-    100% { opacity: 0; }
-  }
 }
 
 @custom-variant can-hover (@media (hover: hover));
@@ -90,15 +100,20 @@
     pointer-events: none;
   }
 
-  ::view-transition-group(.view-transition-fade) {
+  /* Disable morphs for not *-morph variants */
+  ::view-transition-group(.view-transition-fade),
+  ::view-transition-group(.view-transition-slide) {
     animation: none;
   }
 
   ::view-transition-new(.view-transition-fade),
-  ::view-transition-old(.view-transition-fade) {
+  ::view-transition-old(.view-transition-fade),
+  ::view-transition-new(.view-transition-slide),
+  ::view-transition-old(.view-transition-slide) {
     height: 100%;
   }
 
+  /* Fade */
   ::view-transition-new(.view-transition-fade),
   ::view-transition-new(.view-transition-fade-morph) {
     animation: fade-in 0.6s cubic-bezier(0.33, 1, 0.68, 1) both;
@@ -107,6 +122,15 @@
   ::view-transition-old(.view-transition-fade),
   ::view-transition-old(.view-transition-fade-morph) {
     animation: fade-out 0.6s cubic-bezier(0.33, 1, 0.68, 1) both;
+  }
+
+  /* Slide */
+  ::view-transition-new(.view-transition-slide) {
+    animation: slide-in 0.6s cubic-bezier(0.33, 1, 0.68, 1) both;
+  }
+
+  ::view-transition-old(.view-transition-slide) {
+    animation: slide-out 0.6s cubic-bezier(0.33, 1, 0.68, 1) both;
   }
 
   button:where(:not([disabled])) {
