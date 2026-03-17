@@ -4,9 +4,24 @@ import type { WorkboxPlugin } from 'workbox-core';
 
 declare let self: ServiceWorkerGlobalScope;
 
+const coepRequiredSet = new Set([
+  'document',
+  'iframe',
+  'frame',
+  'worker',
+  'sharedworker',
+  'serviceworker',
+  'audioworklet',
+  'paintworklet',
+]);
+
 const crossOriginIsolationPlugin: WorkboxPlugin = {
   handlerWillRespond: async ({ request, response }) => {
-    if (request.mode === 'navigate' && response) {
+    if (!response) {
+      return response;
+    }
+
+    if (coepRequiredSet.has(request.destination)) {
       const newHeaders = new Headers(response.headers);
 
       newHeaders.set('Cross-Origin-Embedder-Policy', 'require-corp');

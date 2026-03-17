@@ -28,7 +28,7 @@ export const ServiceWorkerManager = () => {
         showToast({
           durationMs: -1,
           kind: 'error',
-          message: '앱 초기화에 실패했습니다. 잠시 후 다시 시도해주세요.',
+          message: '최초 작업에 실패했습니다. 잠시 후 다시 시도해주세요.',
         });
 
         window.sessionStorage.removeItem(installingKey);
@@ -39,7 +39,7 @@ export const ServiceWorkerManager = () => {
         showToast({
           durationMs: -1,
           kind: 'error',
-          message: '앱을 초기화하고 있습니다. 완료되는 대로 새로고침됩니다.',
+          message: '앱을 사용하기 위해 최초 작업을 하고 있습니다. 완료되는 대로 새로고침됩니다.',
         });
 
         void navigator.serviceWorker.ready.then(() => {
