@@ -48,6 +48,9 @@ export default defineConfig(({ mode }) => ({
     tailwindcss(),
     pwa({
       strategies: 'injectManifest',
+      injectManifest: {
+        injectionPoint: 'self.__MANIFEST',
+      },
       registerType: 'prompt',
       srcDir: 'src',
       filename: 'service-worker.ts',
