@@ -1,7 +1,8 @@
 import { acceptCompletion, autocompletion } from '@codemirror/autocomplete';
 import { drawSelection, EditorView, keymap } from '@codemirror/view';
+import { throttle } from 'es-toolkit';
 import { ink } from 'ink-mde';
-import { useCallback, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { NAMESPACE } from '@/constants/common';
 import { Dropzone } from '@/fragments/_components/Dropzone';
 import { useClxDB, useServices } from '@/fragments/_providers/DatabaseProvider';
@@ -93,6 +94,7 @@ const InkMdeEditorInner = ({ value, placeholder = '', onChange }: InkMdeEditorPr
   const containerRef = useRef<HTMLDivElement | null>(null);
   const editorRef = useRef<Instance | null>(null);
   const onChangeLatest = useLatestCallback(onChange ?? (() => {}));
+  const onChangeThrottled = useMemo(() => throttle(onChangeLatest, 200), [onChangeLatest]);
   const [initialValue] = useState(value);
   const isReadOnly = !onChange;
 
@@ -145,7 +147,7 @@ const InkMdeEditorInner = ({ value, placeholder = '', onChange }: InkMdeEditorPr
         hooks: {
           ...editorOptions.hooks,
           afterUpdate: (doc: string) => {
-            onChangeLatest(doc);
+            onChangeThrottled(doc);
           },
         },
       })
@@ -164,7 +166,7 @@ const InkMdeEditorInner = ({ value, placeholder = '', onChange }: InkMdeEditorPr
       editorRef.current = null;
       target.replaceChildren();
     };
-  }, [imagePlugin, initialValue, isReadOnly, onChangeLatest, placeholder, tagPlugin]);
+  }, [imagePlugin, initialValue, isReadOnly, onChangeThrottled, placeholder, tagPlugin]);
 
   const clxDB = useClxDB();
   const services = useServices();

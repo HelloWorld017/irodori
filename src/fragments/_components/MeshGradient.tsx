@@ -44,7 +44,7 @@ export const MeshGradient = (props: MeshGradientProps) => {
   const onUpdateEvent = useEffectEvent(onUpdate ?? (() => {}));
   useLayoutEffect(() => {
     const instance = instanceRef.current;
-    if (!instance || !canvasRef.current) {
+    if (!instance || !canvasRef.current || prevOptionsIdRef.current) {
       return;
     }
 
