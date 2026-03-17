@@ -1,5 +1,5 @@
-import { useQueryClient, useSuspenseQueries } from '@tanstack/react-query';
-import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
+import { useQueries, useQueryClient } from '@tanstack/react-query';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useServices } from '@/fragments/_providers/DatabaseProvider';
 import { useShowToast } from '@/fragments/_providers/ToastProvider';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
@@ -130,16 +130,13 @@ const [EntriesDetailEditProvider, useEntriesDetailEdit] = buildContext(
       [contentTagIds, excludedTagIds, metadataTagIds]
     );
 
-    const resolvedTagIdsDeferred = useDeferredValue(resolvedTagIds);
-    const resolvedTagsById = useSuspenseQueries({
-      queries: resolvedTagIdsDeferred.map(tagId => ({
+    const resolvedTagsById = useQueries({
+      queries: resolvedTagIds.map(tagId => ({
         enabled: true,
         ...getTagQueryOptions(tagId),
       })),
       combine: results =>
-        new Map(
-          results.map((result, index) => [resolvedTagIdsDeferred[index], result.data ?? null])
-        ),
+        new Map(results.map((result, index) => [resolvedTagIds[index], result.data ?? null])),
     });
 
     const effectiveTags = useMemo<TagViewItem[]>(

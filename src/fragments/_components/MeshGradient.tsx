@@ -1,5 +1,6 @@
 import { MeshGradient as CoreMeshGradient } from '@mesh-gradient/core';
 import { useEffectEvent, useLayoutEffect, useRef } from 'react';
+import { useLatestRef } from '@/hooks/useLatestRef';
 import type {
   MeshGradientInitOptions,
   MeshGradientOptions,
@@ -38,20 +39,21 @@ export const MeshGradient = (props: MeshGradientProps) => {
   }, []);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const optionsRef = useLatestRef(options);
   const prevOptionsIdRef = useRef<string | null>(null);
 
   const onInitEvent = useEffectEvent(onInit ?? (() => {}));
   const onUpdateEvent = useEffectEvent(onUpdate ?? (() => {}));
   useLayoutEffect(() => {
     const instance = instanceRef.current;
-    if (!instance || !canvasRef.current || prevOptionsIdRef.current) {
+    if (!instance || !canvasRef.current) {
       return;
     }
 
-    instance.init(canvasRef.current, options);
+    instance.init(canvasRef.current, optionsRef.current);
     onInitEvent(instance);
-    prevOptionsIdRef.current = JSON.stringify(options);
-  }, [options]);
+    prevOptionsIdRef.current = JSON.stringify(optionsRef.current);
+  }, [optionsRef]);
 
   useLayoutEffect(() => {
     const instance = instanceRef.current;
