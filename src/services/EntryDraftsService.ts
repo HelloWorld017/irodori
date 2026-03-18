@@ -7,6 +7,8 @@ import type {
   EntryDraft,
   EntryDraftCover,
   EntryDraftData,
+  EntryDraftField,
+  EntryDraftLocation,
   EntryDraftSticker,
 } from '@/repositories/EntryDraftsRepository';
 
@@ -55,6 +57,36 @@ const normalizeDraftSticker = (sticker: EntryDraftSticker): EntryDraftSticker | 
   };
 };
 
+const normalizeDraftLocation = (location: EntryDraftLocation | null): EntryDraftLocation | null => {
+  if (!location || !Number.isFinite(location.lat) || !Number.isFinite(location.lng)) {
+    return null;
+  }
+
+  const name = location.name?.trim();
+
+  return {
+    lat: location.lat,
+    lng: location.lng,
+    name: name ? name : null,
+  };
+};
+
+const normalizeDraftField = (field: EntryDraftField): EntryDraftField | null => {
+  const fieldId = field.fieldId.trim();
+  const value = field.value?.trim() ? field.value.trim() : null;
+  const location = normalizeDraftLocation(field.location);
+
+  if (!fieldId || (value === null && location === null)) {
+    return null;
+  }
+
+  return {
+    fieldId,
+    value,
+    location,
+  };
+};
+
 const toUniqueTagIds = (tagIds: string[]): string[] => {
   const normalizedTagIds = new Set<string>();
 
@@ -87,6 +119,22 @@ const toUniqueStickers = (stickers: EntryDraftSticker[]): EntryDraftSticker[] =>
   return [...stickersBySlot.values()].sort((left, right) => left.slot - right.slot);
 };
 
+const toUniqueFields = (fields: EntryDraftField[]): EntryDraftField[] => {
+  const fieldsById = new Map<string, EntryDraftField>();
+
+  fields.forEach(field => {
+    const normalizedField = normalizeDraftField(field);
+
+    if (!normalizedField) {
+      return;
+    }
+
+    fieldsById.set(normalizedField.fieldId, normalizedField);
+  });
+
+  return [...fieldsById.values()];
+};
+
 const normalizeDraftDate = (date: number): number => (Number.isFinite(date) ? date : Date.now());
 
 const toPublishedTitle = (value: string): string => {
@@ -105,6 +153,7 @@ export const normalizeEntryDraftData = (data: EntryDraftData): EntryDraftData =>
   date: normalizeDraftDate(data.date),
   cover: normalizeDraftCover(data.cover),
   tagIds: toUniqueTagIds(data.tagIds),
+  fields: toUniqueFields(data.fields),
   stickers: toUniqueStickers(data.stickers),
   excludedTagIds: toUniqueTagIds(data.excludedTagIds),
 });
@@ -122,6 +171,11 @@ export const toEntryDraftData = (entry: EntryDetailItem): EntryDraftData =>
           }
         : null,
     tagIds: entry.tags.map(tag => tag.id),
+    fields: entry.fields.map(({ field, value, location }) => ({
+      fieldId: field.id,
+      value,
+      location,
+    })),
     stickers: entry.stickers.map(({ slot, sticker }) => ({
       slot,
       stickerId: sticker.id,
@@ -210,7 +264,9 @@ export class EntryDraftsService {
       await this.stageEntry(trx, entry);
       await this.services.entryMetadata.publishDraft(trx, {
         entryId: input.entryId,
+        notebookId: entry.notebookId,
         tagIds: data.tagIds,
+        fields: data.fields,
         stickers: data.stickers,
         now,
       });

@@ -41,17 +41,20 @@ const buildDocumentState = (draft: EntryDraftData): DraftDocumentState => ({
 const buildDraftData = ({
   documentState,
   tagIds,
+  fields,
   stickers,
   excludedTagIds,
 }: {
   documentState: DraftDocumentState;
   tagIds: string[];
+  fields: EntryDraftData['fields'];
   stickers: EntryDraftData['stickers'];
   excludedTagIds: string[];
 }): EntryDraftData =>
   normalizeEntryDraftData({
     ...documentState,
     tagIds,
+    fields,
     stickers,
     excludedTagIds,
   });
@@ -92,6 +95,7 @@ const [EntriesDetailEditProvider, useEntriesDetailEdit] = buildContext(
           buildDraftData({
             documentState: initialDocumentState,
             tagIds: initialEffectiveTagIds,
+            fields: normalizedInitialDraft.fields,
             stickers: normalizedInitialDraft.stickers,
             excludedTagIds: normalizedInitialDraft.excludedTagIds,
           })
@@ -100,6 +104,7 @@ const [EntriesDetailEditProvider, useEntriesDetailEdit] = buildContext(
         initialDocumentState,
         initialEffectiveTagIds,
         normalizedInitialDraft.excludedTagIds,
+        normalizedInitialDraft.fields,
         normalizedInitialDraft.stickers,
       ]
     );
@@ -107,6 +112,7 @@ const [EntriesDetailEditProvider, useEntriesDetailEdit] = buildContext(
     const [documentState, setDocumentState] = useState(initialDocumentState);
     const [metadataTagIds, setMetadataTagIds] = useState(normalizedInitialDraft.tagIds);
     const [excludedTagIds, setExcludedTagIds] = useState(normalizedInitialDraft.excludedTagIds);
+    const [fields] = useState(normalizedInitialDraft.fields);
     const [stickers, setStickers] = useState(normalizedInitialDraft.stickers);
     const [saveState, setSaveState] = useState<DraftSaveState>(initialSavedAt ? 'saved' : 'idle');
     const [lastSavedAt, setLastSavedAt] = useState<number | null>(initialSavedAt);
@@ -149,10 +155,11 @@ const [EntriesDetailEditProvider, useEntriesDetailEdit] = buildContext(
         buildDraftData({
           documentState,
           tagIds: effectiveTagIds,
+          fields,
           stickers,
           excludedTagIds,
         }),
-      [documentState, effectiveTagIds, excludedTagIds, stickers]
+      [documentState, effectiveTagIds, excludedTagIds, fields, stickers]
     );
 
     const publishAssets = useMemo<EntryDraftPublishAsset[]>(() => {

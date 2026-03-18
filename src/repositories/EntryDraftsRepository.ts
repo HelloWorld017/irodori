@@ -14,6 +14,8 @@ import type { Kysely, Selectable } from 'kysely';
 export type {
   EntryDraftCover,
   EntryDraftData,
+  EntryDraftField,
+  EntryDraftLocation,
   EntryDraftSticker,
   EntryDraftSyncData,
 } from './_schema/EntryDraftsSchema';

@@ -14,12 +14,25 @@ export const entryDraftStickerSchema = z.object({
   stickerId: z.string(),
 });
 
+export const entryDraftLocationSchema = z.object({
+  lat: z.number(),
+  lng: z.number(),
+  name: z.string().nullable(),
+});
+
+export const entryDraftFieldSchema = z.object({
+  fieldId: z.string(),
+  value: z.string().nullable(),
+  location: entryDraftLocationSchema.nullable(),
+});
+
 export const entryDraftDataSchema = z.object({
   title: z.string(),
   body: z.string(),
   date: z.number(),
   cover: entryDraftCoverSchema.nullable(),
   tagIds: z.array(z.string()),
+  fields: z.array(entryDraftFieldSchema),
   stickers: z.array(entryDraftStickerSchema),
   excludedTagIds: z.array(z.string()),
 });
@@ -34,6 +47,8 @@ export const entryDraftSyncDataSchema = z.object({
 });
 
 export type EntryDraftCover = z.output<typeof entryDraftCoverSchema>;
+export type EntryDraftField = z.output<typeof entryDraftFieldSchema>;
+export type EntryDraftLocation = z.output<typeof entryDraftLocationSchema>;
 export type EntryDraftSticker = z.output<typeof entryDraftStickerSchema>;
 export type EntryDraftData = z.output<typeof entryDraftDataSchema>;
 export type EntryDraftSyncData = z.output<typeof entryDraftSyncDataSchema>;

@@ -3,6 +3,7 @@ import { EntriesService } from './EntriesService';
 import { EntryAssetsService } from './EntryAssetsService';
 import { EntryDraftsService } from './EntryDraftsService';
 import { EntryMetadataService } from './EntryMetadataService';
+import { FieldsService } from './FieldsService';
 import { NotebooksService } from './NotebooksService';
 import { StickersService } from './StickersService';
 import { SyncService } from './SyncService';
@@ -19,6 +20,7 @@ export const ServiceClasses = {
   entryAssets: EntryAssetsService,
   entryDrafts: EntryDraftsService,
   entryMetadata: EntryMetadataService,
+  fields: FieldsService,
   notebooks: NotebooksService,
   stickers: StickersService,
   sync: SyncService,

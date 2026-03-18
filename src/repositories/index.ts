@@ -2,8 +2,11 @@ import { AssetsRepository } from './AssetsRepository';
 import { EntriesRepository } from './EntriesRepository';
 import { EntryAssetsRepository } from './EntryAssetsRepository';
 import { EntryDraftsRepository } from './EntryDraftsRepository';
+import { EntryFieldsRepository } from './EntryFieldsRepository';
+import { EntryLocationsRepository } from './EntryLocationsRepository';
 import { EntryStickersRepository } from './EntryStickersRepository';
 import { EntryTagsRepository } from './EntryTagsRepository';
+import { FieldsRepository } from './FieldsRepository';
 import { NotebooksRepository } from './NotebooksRepository';
 import { StickersRepository } from './StickersRepository';
 import { SyncDocumentsRepository } from './SyncDocumentsRepository';
@@ -13,8 +16,11 @@ import type { AssetsDatabase } from './AssetsRepository';
 import type { EntriesDatabase } from './EntriesRepository';
 import type { EntryAssetsDatabase } from './EntryAssetsRepository';
 import type { EntryDraftsDatabase } from './EntryDraftsRepository';
+import type { EntryFieldsDatabase } from './EntryFieldsRepository';
+import type { EntryLocationsDatabase } from './EntryLocationsRepository';
 import type { EntryStickersDatabase } from './EntryStickersRepository';
 import type { EntryTagsDatabase } from './EntryTagsRepository';
+import type { FieldsDatabase } from './FieldsRepository';
 import type { NotebooksDatabase } from './NotebooksRepository';
 import type { StickersDatabase } from './StickersRepository';
 import type { SyncDocumentsDatabase } from './SyncDocumentsRepository';
@@ -28,8 +34,11 @@ export type Database =
   & EntriesDatabase
   & EntryDraftsDatabase
   & EntryAssetsDatabase
+  & EntryFieldsDatabase
+  & EntryLocationsDatabase
   & EntryStickersDatabase
   & EntryTagsDatabase
+  & FieldsDatabase
   & NotebooksDatabase
   & StickersDatabase
   & SyncDocumentsDatabase
@@ -49,8 +58,11 @@ export const RepositoryClasses = {
   entries: EntriesRepository,
   entryDrafts: EntryDraftsRepository,
   entryAssets: EntryAssetsRepository,
+  entryFields: EntryFieldsRepository,
+  entryLocations: EntryLocationsRepository,
   entryStickers: EntryStickersRepository,
   entryTags: EntryTagsRepository,
+  fields: FieldsRepository,
   notebooks: NotebooksRepository,
   stickers: StickersRepository,
   syncDocuments: SyncDocumentsRepository,
