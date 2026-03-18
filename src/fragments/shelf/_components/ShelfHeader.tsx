@@ -11,8 +11,7 @@ export const ShelfHeader = ({ notebookCount }: ShelfHeaderProps) => {
   const clxDB = useClxDB();
   const onDatabaseSettings = (closePopover: () => void) => {
     closePopover();
-    // FIXME remove storage field
-    void clxDB.ui.openDatabaseSettings({ client: clxDB, storage: clxDB.storage });
+    void clxDB.ui.openDatabaseSettings({ client: clxDB });
   };
 
   return (

@@ -1,19 +1,14 @@
-import { toEntryAssetEntityId } from '@/repositories/EntryAssetsRepository';
-import { toEntryStickerEntityId } from '@/repositories/EntryStickersRepository';
-import { toEntryTagEntityId } from '@/repositories/EntryTagsRepository';
 import type { Services } from '.';
 import type { EntryDetailItem } from './EntriesService';
 import type { Executor, Repositories } from '@/repositories';
 import type { Entry } from '@/repositories/EntriesRepository';
-import type { EntryAsset, EntryAssetUsage } from '@/repositories/EntryAssetsRepository';
+import type { EntryAssetUsage } from '@/repositories/EntryAssetsRepository';
 import type {
   EntryDraft,
   EntryDraftCover,
   EntryDraftData,
   EntryDraftSticker,
 } from '@/repositories/EntryDraftsRepository';
-import type { EntrySticker } from '@/repositories/EntryStickersRepository';
-import type { EntryTag } from '@/repositories/EntryTagsRepository';
 
 const MAX_ENTRY_STICKER_SLOT = 3;
 
@@ -22,12 +17,9 @@ export type EntryDraftPublishAsset = {
   usage: EntryAssetUsage;
 };
 
-const toEntryAssetIdentityKey = (asset: EntryDraftPublishAsset) =>
-  `${asset.usage}:${asset.assetId}`;
-
 const toUniquePublishAssets = (assets: EntryDraftPublishAsset[]): EntryDraftPublishAsset[] =>
   Array.from(
-    new Map(assets.map(asset => [toEntryAssetIdentityKey(asset), asset] as const)).values()
+    new Map(assets.map(asset => [`${asset.usage}:${asset.assetId}`, asset] as const)).values()
   );
 
 const normalizeDraftCover = (cover: EntryDraftCover | null): EntryDraftCover | null => {
@@ -216,9 +208,17 @@ export class EntryDraftsService {
       );
 
       await this.stageEntry(trx, entry);
-      await this.publishTags(trx, input.entryId, data.tagIds, now);
-      await this.publishStickers(trx, input.entryId, data.stickers, now);
-      await this.publishAssets(trx, input.entryId, assets, now);
+      await this.services.entryMetadata.publishDraft(trx, {
+        entryId: input.entryId,
+        tagIds: data.tagIds,
+        stickers: data.stickers,
+        now,
+      });
+      await this.services.entryAssets.publishDraft(trx, {
+        entryId: input.entryId,
+        assets,
+        now,
+      });
 
       const deletedDraft = await this.repositories.entryDrafts.deleteEntryDraft(trx, {
         entryId: input.entryId,
@@ -231,166 +231,6 @@ export class EntryDraftsService {
     });
   }
 
-  private async publishTags(
-    trx: Executor,
-    entryId: string,
-    tagIds: string[],
-    now: number
-  ): Promise<void> {
-    const currentEntryTags = await this.repositories.entryTags.listEntryTagsByEntryId(entryId, trx);
-    const currentTagIds = new Set(currentEntryTags.map(entryTag => entryTag.tagId));
-    const nextTagIdSet = new Set(tagIds);
-    const changedEntryTags: EntryTag[] = [];
-
-    for (const tagId of tagIds) {
-      if (currentTagIds.has(tagId)) {
-        continue;
-      }
-
-      const entryTag = await this.repositories.entryTags.upsertEntryTag(trx, {
-        entryId,
-        tagId,
-        createdAt: now,
-        updatedAt: now,
-      });
-
-      changedEntryTags.push(entryTag);
-    }
-
-    for (const entryTag of currentEntryTags) {
-      if (nextTagIdSet.has(entryTag.tagId)) {
-        continue;
-      }
-
-      const deletedEntryTag = await this.repositories.entryTags.deleteEntryTag(trx, {
-        entryId,
-        tagId: entryTag.tagId,
-        deletedAt: now,
-      });
-
-      if (deletedEntryTag) {
-        changedEntryTags.push(deletedEntryTag);
-      }
-    }
-
-    if (changedEntryTags.length > 0) {
-      await this.stageEntryTags(trx, changedEntryTags);
-    }
-  }
-
-  private async publishStickers(
-    trx: Executor,
-    entryId: string,
-    stickers: EntryDraftSticker[],
-    now: number
-  ): Promise<void> {
-    const currentEntryStickers = await this.repositories.entryStickers.listEntryStickersByEntryId(
-      entryId,
-      trx
-    );
-    const currentEntryStickersBySlot = new Map(
-      currentEntryStickers.map(entrySticker => [entrySticker.slot, entrySticker])
-    );
-    const changedEntryStickers: EntrySticker[] = [];
-
-    for (const draftSticker of stickers) {
-      const currentEntrySticker = currentEntryStickersBySlot.get(draftSticker.slot);
-
-      if (currentEntrySticker?.stickerId === draftSticker.stickerId) {
-        currentEntryStickersBySlot.delete(draftSticker.slot);
-        continue;
-      }
-
-      const nextEntrySticker = await this.repositories.entryStickers.upsertEntrySticker(trx, {
-        entryId,
-        slot: draftSticker.slot,
-        stickerId: draftSticker.stickerId,
-        createdAt: currentEntrySticker?.createdAt ?? now,
-        updatedAt: now,
-      });
-
-      changedEntryStickers.push(nextEntrySticker);
-      currentEntryStickersBySlot.delete(draftSticker.slot);
-    }
-
-    for (const entrySticker of currentEntryStickersBySlot.values()) {
-      const deletedEntrySticker = await this.repositories.entryStickers.deleteEntrySticker(trx, {
-        entryId,
-        slot: entrySticker.slot,
-        deletedAt: now,
-      });
-
-      if (deletedEntrySticker) {
-        changedEntryStickers.push(deletedEntrySticker);
-      }
-    }
-
-    if (changedEntryStickers.length > 0) {
-      await this.stageEntryStickers(trx, changedEntryStickers);
-    }
-  }
-
-  private async publishAssets(
-    trx: Executor,
-    entryId: string,
-    assets: EntryDraftPublishAsset[],
-    now: number
-  ): Promise<void> {
-    const currentEntryAssets = await this.repositories.entryAssets.listEntryAssetsByEntryId(
-      entryId,
-      {
-        executor: trx,
-      }
-    );
-    const currentEntryAssetsByIdentity = new Map(
-      currentEntryAssets.map(
-        entryAsset => [toEntryAssetIdentityKey(entryAsset), entryAsset] as const
-      )
-    );
-    const nextAssetIdentitySet = new Set(assets.map(toEntryAssetIdentityKey));
-    const changedEntryAssets: EntryAsset[] = [];
-
-    for (const asset of assets) {
-      const currentEntryAsset = currentEntryAssetsByIdentity.get(toEntryAssetIdentityKey(asset));
-      if (currentEntryAsset) {
-        continue;
-      }
-
-      const nextEntryAsset = await this.repositories.entryAssets.upsertEntryAsset(trx, {
-        entryId,
-        assetId: asset.assetId,
-        usage: asset.usage,
-        createdAt: now,
-        updatedAt: now,
-      });
-
-      changedEntryAssets.push(nextEntryAsset);
-    }
-
-    for (const currentEntryAsset of currentEntryAssets) {
-      const identityKey = toEntryAssetIdentityKey(currentEntryAsset);
-
-      if (nextAssetIdentitySet.has(identityKey)) {
-        continue;
-      }
-
-      const deletedEntryAsset = await this.repositories.entryAssets.deleteEntryAsset(trx, {
-        entryId,
-        assetId: currentEntryAsset.assetId,
-        usage: currentEntryAsset.usage,
-        deletedAt: now,
-      });
-
-      if (deletedEntryAsset) {
-        changedEntryAssets.push(deletedEntryAsset);
-      }
-    }
-
-    if (changedEntryAssets.length > 0) {
-      await this.stageEntryAssets(trx, changedEntryAssets);
-    }
-  }
-
   private stageEntry(trx: Executor, entry: Entry): Promise<void> {
     return this.services.sync.stageUpdatedDocuments(trx, this.repositories.entries, [
       { id: entry.id, data: this.repositories.entries.toSyncData(entry) },
@@ -401,38 +241,5 @@ export class EntryDraftsService {
     return this.services.sync.stageUpdatedDocuments(trx, this.repositories.entryDrafts, [
       { id: entryDraft.entryId, data: this.repositories.entryDrafts.toSyncData(entryDraft) },
     ]);
-  }
-
-  private stageEntryTags(trx: Executor, entryTags: EntryTag[]): Promise<void> {
-    return this.services.sync.stageUpdatedDocuments(
-      trx,
-      this.repositories.entryTags,
-      entryTags.map(entryTag => ({
-        id: toEntryTagEntityId(entryTag.entryId, entryTag.tagId),
-        data: this.repositories.entryTags.toSyncData(entryTag),
-      }))
-    );
-  }
-
-  private stageEntryStickers(trx: Executor, entryStickers: EntrySticker[]): Promise<void> {
-    return this.services.sync.stageUpdatedDocuments(
-      trx,
-      this.repositories.entryStickers,
-      entryStickers.map(entrySticker => ({
-        id: toEntryStickerEntityId(entrySticker.entryId, entrySticker.slot),
-        data: this.repositories.entryStickers.toSyncData(entrySticker),
-      }))
-    );
-  }
-
-  private stageEntryAssets(trx: Executor, entryAssets: EntryAsset[]): Promise<void> {
-    return this.services.sync.stageUpdatedDocuments(
-      trx,
-      this.repositories.entryAssets,
-      entryAssets.map(entryAsset => ({
-        id: toEntryAssetEntityId(entryAsset.entryId, entryAsset.assetId, entryAsset.usage),
-        data: this.repositories.entryAssets.toSyncData(entryAsset),
-      }))
-    );
   }
 }
